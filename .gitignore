@@ -1,8 +1,25 @@
-# Compiled class file
+# IDE (IntelliJ)
+.idea/
+.idea*
+*.im
+*.iml
+
+# Class files
 *.class
+src/*.class
+src/*/*.class
+
+# Bin folder
+bin/
+
+# Makefile
+src/Makefile
 
 # Log file
 *.log
+
+# CSV file
+*.csv
 
 # BlueJ files
 *.ctxt
@@ -10,7 +27,7 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
+# Package Files
 *.jar
 *.war
 *.nar
@@ -18,6 +35,8 @@
 *.zip
 *.tar.gz
 *.rar
+*.txt
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+out
