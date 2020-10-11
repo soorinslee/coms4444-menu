@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>PPS 2020 - Menu</title>
+
+    <style type="text/css">
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: black;
+      }
+
+      h1 {
+        text-align: center;
+        color: white;
+      }
+
+      h2 {
+        text-align: center;
+        color: white;
+      }
+
+      h3 {
+        text-align: center;
+        color: white;
+      }
+
+      #pantryWrapper {
+        overflow: hidden;
+        width: 100%;
+        height: 20%;
+      }
+
+      #breakfastPantryWrapper {
+        width: 25%;
+        height: 100%;
+        float: left;
+      }
+
+      #lunchPantryWrapper {
+        width: 25%;
+        height: 100%;
+        float: left;
+      }
+
+      #dinnerPantryWrapper {
+        width: 50%;
+        height: 100%;
+        float: left;
+      }
+
+      #shopWrapper {
+        width: 100%;
+        height: 20%;
+        float: left;
+      }
+
+      #breakfastShopWrapper {
+        width: 25%;
+        height: 100%;
+        float: left;
+      }
+
+      #lunchShopWrapper {
+        width: 25%;
+        height: 100%;
+        float: left;
+      }
+
+      #dinnerShopWrapper {
+        overflow: hidden;
+        width: 50%;
+        height: 100%;
+      }
+
+      #weeklyMealsWrapper {
+        overflow: hidden;
+        width: 100%;
+        height: 60%;
+      }
+
+      #weeklyMealsGrid {
+        display: grid;
+        margin: 10px;
+        padding-left: 5px;
+        float: left;
+        grid-gap: 0.1em;
+        grid-template-rows: repeat(var(--grid-rows), 1fr);
+        grid-template-columns: repeat(var(--grid-cols), 1fr);
+      }
+
+      :root {
+        --grid-cols: 1;
+        --grid-rows: 1;
+      }
+
+      .grid-item {
+        background-color: black;
+        border: 1px solid black;
+        position: relative;
+        font-size: 25px;
+        text-align: center;
+        color: white;
+      }
+
+      table {
+        font-size: 20px;
+        border-collapse: collapse;
+        width: 100%;
+        height: 100%;
+      }
+
+      td, th {
+        text-align: center;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #444444;
+        color: white;
+        text-align: center;
+      }
+
+      tr:nth-child(odd) {
+        background-color: black;
+        color: white;
+        text-align: center
+      }
+
+      .previous, .next {
+        background-color: white;
+        color: black;
+      }
+
+      a {
+        text-decoration: none;
+        display: inline-block;
+        padding: 8px 16px;
+      }
+
+      a:hover {
+        background-color: #ddd;
+        color: black;
+        cursor: pointer;
+      }
+
+    </style>
+
+  </head>
+  <body>
+  	<h1>PPS 2020 - Menu</h1>
+    <div>
+      <h2>Pantry</h2>
+      <div id="pantryWrapper">      
+        <div id="breakfastPantryWrapper"><h3>Breakfast</h3></div>
+        <div id="lunchPantryWrapper"><h3>Lunch</h3></div>
+        <div id="dinnerPantryWrapper"><h3>Dinner</h3></div>
+      </div></br>
+      <h2>Shop</h2>
+      <div id="shopWrapper">
+        <div id="breakfastShopWrapper"><h3>Breakfast</h3></div>
+        <div id="lunchShopWrapper"><h3>Lunch</h3></div>
+        <div id="dinnerShopWrapper"><h3>Dinner</h3></div>        
+      </div></br>
+      <h2>Weekly Meals</h2> <div id="weeklyMealsWrapper"><div id="weeklyMealsGrid"></div></div></br>
+      <h2 id="week">Week: 0/0</h2>
+    </br></br></br></br>
+    <h2 id="legend">Legend</h2>
+    </div>
+
+  
+    <script>
+      var regexAlpha = /[^a-zA-Z]/g;
+      var regexNumeric = /[^0-9]/g;
+
+      var allResultsMap = {};
+      var discreteCurrentWeek = "week_1";
+
+      var days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+
+      var memberImageMap = {
+          "MICHAEL": "michael.jpg",
+          "DWIGHT": "dwight.jpg",
+          "JIM": "jim.jpg",
+          "PAM": "pam.jpg",
+          "ANDY": "andy.jpg",
+          "RYAN": "ryan.jpg",
+          "ANGELA": "anglea.jpg",
+          "KEVIN": "kevin.jpg",
+          "STANLEY": "stanley.jpg",
+          "PHYLLIS": "phyllis.jpg",
+          "OSCAR": "oscar.jpg",
+          "DARRYL": "darryl.jpg",
+          "KELLY": "kelly.jpg",
+          "ERIN": "erin.jpg",
+          "MEREDITH": "meredith.jpg",
+          "CREED": "creed.jpg",
+          "TOBY": "toby.jpg",
+          "HOLLY": "holly.jpg",
+          "JAN": "jan.jpg",
+          "GABE": "gabe.jpg",
+          "WALLACE": "wallace.jpg",
+          "CALIFORNIA": "california.jpg",
+          "JO": "jo.jpg",
+          "KAREN": "karen.jpg",
+          "MINER": "miner.jpg",
+          "ROY": "roy.jpg",
+          "NELLIE": "nellie.jpg",
+          "VANCE": "vance.jpg",
+          "PACKER": "packer.jpg",
+          "HANK": "hank.jpg",
+      };
+
+      var legendMap = {
+          "BREAKFAST1": "bagels.jpeg",
+          "BREAKFAST2": "bacon.jpeg",
+          "BREAKFAST3": "cereal.jpg",
+          "BREAKFAST4": "frenchToast.jpeg",
+          "BREAKFAST5": "hashBrowns.jpg",
+          "BREAKFAST6": "milk.jpeg",
+          "BREAKFAST7": "omelette.png",
+          "BREAKFAST8": "orangeJuice.png",
+          "BREAKFAST9": "pancakes.jpg",
+          "BREAKFAST10": "waffles.jpg",
+          "LUNCH1": "fishAndChips.jpg",
+          "LUNCH2": "hamburger.jpg",
+          "LUNCH3": "hotDog.jpg",
+          "LUNCH4": "pasta.jpg",
+          "LUNCH5": "pizza.jpg",
+          "LUNCH6": "salad.jpg",
+          "LUNCH7": "sandwich.jpg",
+          "LUNCH8": "sub.jpg",
+          "LUNCH9": "tacos.jpeg",
+          "LUNCH10": "wraps.jpg",
+          "DINNER1": "afghan.jpg",
+          "DINNER2": "chickenParmesan.jpg",
+          "DINNER3": "chinese.jpg",
+          "DINNER4": "chipotle.jpg",
+          "DINNER5": "fishAndChips.jpg",
+          "DINNER6": "frenchToast.jpeg",
+          "DINNER7": "garlicBread.jpg",
+          "DINNER8": "indian.jpg",
+          "DINNER9": "kebabs.jpg",
+          "DINNER10": "mediterranean.jpg",
+          "DINNER11": "pasta.jpg",
+          "DINNER12": "pizza.jpg",
+          "DINNER13": "salad.jpg",
+          "DINNER14": "sandwich.jpg",
+          "DINNER15": "seafood.jpg",
+          "DINNER16": "soup.jpg",
+          "DINNER17": "sub.jpg",
+          "DINNER18": "tacos.jpeg",
+          "DINNER19": "thai.jpg",
+          "DINNER20": "wraps.jpg",
+      };
+
+      function sortAlphaNumeric(a, b) {
+        var aAlpha = a.replace(regexAlpha, "");
+        var bAlpha = b.replace(regexAlpha, "");
+        if(aAlpha === bAlpha) {
+          var aNumeric = parseInt(a.replace(regexNumeric, ""), 10);
+          var bNumeric = parseInt(b.replace(regexNumeric, ""), 10);
+          return aNumeric === bNumeric ? 0 : aNumeric > bNumeric ? 1 : -1;
+        }
+        return aAlpha > bAlpha ? 1 : -1;
+      }
+
+      function createPantry(result) {
+
+      }
+
+      function createShop(result) {
+
+      }
+
+      function createWeeklyMealsGrid(result) {
+          console.log(result);
+          var container = document.getElementById("weeklyMealsGrid");
+          container.innerHTML = "";
+
+          container.style.setProperty('--grid-rows', parseInt(result.numMembers) * 3 + 1);
+          container.style.setProperty('--grid-cols', 11);
+
+          // First row
+          var firstCell = document.createElement("div");
+          container.appendChild(firstCell).className = "grid-item";
+          var secondCell = document.createElement("div");
+          container.appendChild(secondCell).className = "grid-item";
+          for(var i = 0; i < days.length; i++) {
+              var dayCell = document.createElement("div");
+              dayCell.innerText = days[i].charAt(0) + days[i].slice(1).toLowerCase();
+              container.appendChild(dayCell).className = "grid-item";
+          }
+          var satisfactionCell = document.createElement("div");
+          satisfactionCell.innerText = "Weekly Satisfaction";
+          container.appendChild(satisfactionCell).className = "grid-item";
+          var averageSatisfactionCell = document.createElement("div");
+          averageSatisfactionCell.innerText = "Average Satisfaction";
+          container.appendChild(averageSatisfactionCell).className = "grid-item";
+
+          for(var i = 0; i < result.numMembers * 3; i++) {
+              var memberID = Math.floor(i / 3);
+              for(var j = 0; j < 11; j++) {
+                  var cell = document.createElement("div");
+                  if(i % 3 == 0) {
+                      if(j == 0) {
+                          var img = document.createElement('img');
+                          img.src = "family/" + memberImageMap[Object.keys(memberImageMap)[memberID]];
+                          img.width = 100;
+                          img.height = 60;
+                          cell.appendChild(img);
+                      }
+                      else if(j == 1)
+                          cell.innerText = "Breakfast";
+                      else if(j >= 2 && j <= 8) {
+                          if(result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]] == undefined || result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].BREAKFAST == undefined)
+                              cell.innerText = "";
+                          else {
+                              var food = result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].BREAKFAST;
+                              var img = document.createElement('img');
+                              img.src = "breakfast/" + legendMap[food];
+                              img.width = 100;
+                              img.height = 60;
+                              cell.appendChild(img);
+                          }
+                      }
+                      else if(j == 9)
+                          cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].satisfaction;
+                      else if(j == 10)
+                          cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].averageSatisfaction;
+                  }
+                  else if(i % 3 == 1) {
+                      if(j == 1)
+                          cell.innerText = "Lunch";
+                      else if(j >= 2 && j <= 8) {
+                          if(result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]] == undefined || result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].LUNCH == undefined)
+                              cell.innerText = "";
+                          else {
+                              var food = result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].LUNCH;
+                              var img = document.createElement('img');
+                              img.src = "lunch/" + legendMap[food];
+                              img.width = 100;
+                              img.height = 60;
+                              cell.appendChild(img);
+                          }
+                      }
+                      else
+                          cell.innerText = "";
+                  }
+                  else if(i % 3 == 2) {
+                      if(j == 1)
+                          cell.innerText = "Dinner";
+                      else if(j >= 2 && j <= 8) {
+                          if(result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]] == undefined || result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].DINNER == undefined)
+                              cell.innerText = "";
+                          else {
+                              var food = result.family[Object.keys(memberImageMap)[memberID]].assignedMeals[days[j - 2]].DINNER;
+                              var img = document.createElement('img');
+                              img.src = "dinner/" + legendMap[food];
+                              img.width = 100;
+                              img.height = 60;
+                              cell.appendChild(img);
+                          }
+                      }
+                      else
+                          cell.innerText = "";
+                  }
+                  container.appendChild(cell).className = "grid-item";                
+              }
+          }
+      }
+
+      function process(data) {
+          var result = JSON.parse(data)
+          console.log(result);
+
+          var continuous = result.continuous;
+          if(continuous)
+              return processContinuous(result);
+          else
+              return processDiscrete(result, true);
+      }
+
+      function processContinuous(result) {
+          var refresh = parseFloat(result.refresh);
+          var currentWeek = result.currentWeek;
+          var totalWeeks = result.totalWeeks;
+
+
+          createWeeklyMealsGrid(result);
+
+          
+          var weekElement = document.getElementById('week');
+          weekElement.innerHTML = `Week: ${currentWeek}/${totalWeeks}`;
+
+          return refresh;
+      }
+
+      function processDiscrete(result, processIsCaller) {
+          var currentWeek = result.currentWeek;
+          var totalWeeks = result.totalWeeks;
+
+          allResultsMap[`week_${result.currentWeek}`] = result;
+
+          if(processIsCaller && currentWeek != 1)
+              return 0;
+
+          discreteCurrentWeek = `week_${result.currentWeek}`;
+
+
+          createWeeklyMealsGrid(result);
+
+
+          var weekElement = document.getElementById('week');
+
+          var previousButton = "", nextButton = "";
+
+          if(currentWeek != 1)
+              previousButton = "<a onClick='processDiscreteDecrement()' class='previous'>&laquo; Previous Week</a>";
+          if(currentWeek != totalWeeks)
+              nextButton = "<a onClick='processDiscreteIncrement()' class='next'>Next Week &raquo;</a>";
+
+          weekElement.innerHTML = `
+              ${previousButton}&nbsp;&nbsp;&nbsp;&nbsp;Week: ${currentWeek}/${totalWeeks}&nbsp;&nbsp;&nbsp;&nbsp;${nextButton}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${result.leastAverageSatisfaction}
+          `;
+
+          if(currentWeek == totalWeeks)
+              alert(`The average satisfaction of the least satisfied member is ${result.leastAverageSatisfaction}!`);            
+
+
+          return 0;
+      }
+
+      function processDiscreteDecrement() {
+          discreteCurrentWeek = `${discreteCurrentWeek.split("_")[0]}_${parseInt(discreteCurrentWeek.split("_")[1]) - 1}`;
+          processDiscrete(allResultsMap[discreteCurrentWeek], false);
+      }
+
+      function processDiscreteIncrement() {
+          discreteCurrentWeek = `${discreteCurrentWeek.split("_")[0]}_${parseInt(discreteCurrentWeek.split("_")[1]) + 1}`;
+          processDiscrete(allResultsMap[discreteCurrentWeek], false);
+      }
+
+      var latest_version = -1;
+
+      function ajax(version, retries, timeout) {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onload = (function() {
+              var refresh = -1;
+              try {
+                  if(xhttp.readyState != 4)   
+                      throw "Incomplete HTTP request: " + xhttp.readyState;
+                  if(xhttp.status != 200)
+                      throw "Invalid HTTP status: " + xhttp.status;
+
+                  refresh = process(xhttp.responseText);
+                  if(latest_version < version)
+                      latest_version = version;
+                  else
+                      refresh = -1;
+              } catch(message) {
+                  alert(message);
+              }
+
+              if(refresh >= 0)
+                  setTimeout(function() { ajax(version + 1, 10, 100); }, refresh);
+          });
+          xhttp.onabort = (function() {});
+          xhttp.onerror = (function() {});
+          xhttp.ontimeout = (function() {
+              if(version <= latest_version)
+                  console.log("AJAX timeout (version " + version + " <= " + latest_version + ")");
+              else if(retries == 0)
+                  location.reload(true);
+              else {
+                  console.log("AJAX timeout (version " + version + ", retries: " + retries + ")");
+                  ajax(version, retries - 1, timeout * 2);
+              }
+          });
+          xhttp.open("GET", "data.txt", true);
+          xhttp.responseType = "text";
+          xhttp.timeout = timeout;
+          xhttp.send();
+      }
+
+      ajax(1, 10, 100);
+    </script>
+  </body>
+</html>
