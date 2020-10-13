@@ -307,7 +307,7 @@ public class Simulator {
 		Log.writeToLogFile("Seed: " + seed);
 		Log.writeToLogFile("Configuration: " + configName);
 		Log.writeToLogFile("Average satisfaction of least satisfied member: " + satisfactionFormat.format(leastAverageSatisfaction));
-		Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name());
+		Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name().substring(0, 1).toUpperCase() + leastSatisfiedMember.name().substring(1).toLowerCase());
 		
 		if(!showGUI)
 			System.exit(1);
@@ -706,6 +706,7 @@ public class Simulator {
 		jsonObj.put("capacity", capacity);
 		jsonObj.put("numEmptySlots", pantry.getNumEmptySlots());
 		jsonObj.put("leastAverageSatisfaction", satisfactionFormat.format(getLeastAverageSatisfaction(week)));
+		jsonObj.put("leastSatisfiedMember", getLeastSatisfiedMember(week));
 
 		JSONObject pantryJSONObj = new JSONObject();
 		Map<MealType, Map<FoodType, Integer>> mealsMap = pantry.getMealsMap();

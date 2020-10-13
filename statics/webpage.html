@@ -33,13 +33,25 @@
       #pantryWrapper {
         overflow: hidden;
         width: 100%;
-        height: 20%;
+        height: 17%;
       }
 
       #breakfastPantryWrapper {
         width: 25%;
         height: 100%;
         float: left;
+      }
+
+      #breakfastPantryGrid, #lunchPantryGrid, #dinnerPantryGrid,
+      #breakfastShopGrid, #lunchShopGrid, #dinnerShopGrid,
+      #weeklyMealsGrid, #legendGrid {
+        display: grid;
+        margin: 10px;
+        padding-right: 20px;
+        float: center;
+        grid-gap: 0.1em;
+        grid-template-rows: repeat(var(--grid-rows), 1fr);
+        grid-template-columns: repeat(var(--grid-cols), 1fr);
       }
 
       #lunchPantryWrapper {
@@ -56,7 +68,7 @@
 
       #shopWrapper {
         width: 100%;
-        height: 20%;
+        height: 17%;
         float: left;
       }
 
@@ -73,25 +85,21 @@
       }
 
       #dinnerShopWrapper {
-        overflow: hidden;
         width: 50%;
         height: 100%;
+        float: left;
       }
 
       #weeklyMealsWrapper {
-        overflow: hidden;
         width: 100%;
-        height: 60%;
+        height: 56%;
+        float: left;
       }
 
-      #weeklyMealsGrid {
-        display: grid;
-        margin: 10px;
-        padding-left: 5px;
+      #legendWrapper {
+        width: 100%;
+        height: 10%;
         float: left;
-        grid-gap: 0.1em;
-        grid-template-rows: repeat(var(--grid-rows), 1fr);
-        grid-template-columns: repeat(var(--grid-cols), 1fr);
       }
 
       :root {
@@ -155,22 +163,57 @@
   <body>
   	<h1>PPS 2020 - Menu</h1>
     <div>
-      <h2>Pantry</h2>
-      <div id="pantryWrapper">      
-        <div id="breakfastPantryWrapper"><h3>Breakfast</h3></div>
-        <div id="lunchPantryWrapper"><h3>Lunch</h3></div>
-        <div id="dinnerPantryWrapper"><h3>Dinner</h3></div>
-      </div></br>
-      <h2>Shop</h2>
+      <h2 style="color:limegreen">Shop</h2>
       <div id="shopWrapper">
-        <div id="breakfastShopWrapper"><h3>Breakfast</h3></div>
-        <div id="lunchShopWrapper"><h3>Lunch</h3></div>
-        <div id="dinnerShopWrapper"><h3>Dinner</h3></div>        
-      </div></br>
-      <h2>Weekly Meals</h2> <div id="weeklyMealsWrapper"><div id="weeklyMealsGrid"></div></div></br>
-      <h2 id="week">Week: 0/0</h2>
-    </br></br></br></br>
-    <h2 id="legend">Legend</h2>
+        <div id="breakfastShopWrapper">
+          <h3 style="color:yellow;">Breakfast</h3>
+          </br>
+          <div id="breakfastShopGrid"></div>
+        </div>
+        <div id="lunchShopWrapper">
+          <h3 style="color:yellow;">Lunch</h3>
+          </br>
+          <div id="lunchShopGrid"></div>
+        </div>
+        <div id="dinnerShopWrapper">
+          <h3 style="color:yellow;">Dinner</h3>
+          </br>
+          <div id="dinnerShopGrid"></div>
+        </div>
+      </div>
+      </br>
+      </br>
+      <h2 style="color:limegreen">Pantry</h2>
+      <div id="pantryWrapper">      
+        <div id="breakfastPantryWrapper">
+          <h3 style="color:yellow;">Breakfast</h3>
+          </br>
+          <div id="breakfastPantryGrid"></div>
+        </div>
+        <div id="lunchPantryWrapper">
+          <h3 style="color:yellow;">Lunch</h3>
+          </br>
+          <div id="lunchPantryGrid"></div>
+        </div>
+        <div id="dinnerPantryWrapper">
+          <h3 style="color:yellow;">Dinner</h3>
+          </br>
+          <div id="dinnerPantryGrid"></div>
+        </div>
+      </div>
+      </br>
+      </br>
+      <h2 style="color:limegreen">Weekly Meals</h2>
+      <div id="weeklyMealsWrapper">
+        <div id="weeklyMealsGrid"></div>
+      </div>
+      </br>
+      <h3 id="week">Week: 0/0</h3>
+      </br></br></br></br>
+      <h2 style="color:limegreen">Legend</h2>
+      <div id="legendWrapper">
+        <div id="legendGrid"></div>
+      </div>
     </div>
 
   
@@ -271,15 +314,238 @@
       }
 
       function createPantry(result) {
+          var breakfastContainer = document.getElementById("breakfastPantryGrid");
+          breakfastContainer.innerHTML = "";
 
+          breakfastContainer.style.setProperty('--grid-rows', 4);
+          breakfastContainer.style.setProperty('--grid-cols', 6);
+
+          var border = "border-right: 4px solid red;"
+
+          for(var i = 0; i < 10; i++) {
+              var food = Object.keys(result.pantry.BREAKFAST)[i];
+              var count = result.pantry.BREAKFAST[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "breakfast/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+              if((i + 1) % 3 == 0 && i != 9)
+                  countCell.style = border;
+
+              breakfastContainer.appendChild(foodCell).className = "grid-item";
+              breakfastContainer.appendChild(countCell).className = "grid-item";
+          }
+
+          var emptyBreakfastCell1 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell1).className = "grid-item";
+          var emptyBreakfastCell2 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell2).className = "grid-item";
+          var emptyBreakfastCell3 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell3).className = "grid-item";
+          var emptyBreakfastCell4 = document.createElement("div");
+          emptyBreakfastCell4.style = border;
+          breakfastContainer.appendChild(emptyBreakfastCell4).className = "grid-item";
+
+          var lunchContainer = document.getElementById("lunchPantryGrid");
+          lunchContainer.innerHTML = "";
+
+          lunchContainer.style.setProperty('--grid-rows', 4);
+          lunchContainer.style.setProperty('--grid-cols', 6);
+
+          for(var i = 0; i < 10; i++) {
+              var food = Object.keys(result.pantry.LUNCH)[i];
+              var count = result.pantry.LUNCH[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "lunch/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+              if((i + 1) % 3 == 0 && i != 9)
+                  countCell.style = border;
+
+              lunchContainer.appendChild(foodCell).className = "grid-item";
+              lunchContainer.appendChild(countCell).className = "grid-item";
+          }
+
+          var emptyLunchCell1 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell1).className = "grid-item";
+          var emptyLunchCell2 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell2).className = "grid-item";
+          var emptyLunchCell3 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell3).className = "grid-item";
+          var emptyLunchCell4 = document.createElement("div");
+          emptyLunchCell4.style = border;
+          lunchContainer.appendChild(emptyLunchCell4).className = "grid-item";
+
+          var dinnerContainer = document.getElementById("dinnerPantryGrid");
+          dinnerContainer.innerHTML = "";
+
+          dinnerContainer.style.setProperty('--grid-rows', 4);
+          dinnerContainer.style.setProperty('--grid-cols', 10);
+
+          for(var i = 0; i < 20; i++) {
+              var food = Object.keys(result.pantry.DINNER)[i];
+              var count = result.pantry.DINNER[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "dinner/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+
+              dinnerContainer.appendChild(foodCell).className = "grid-item";
+              dinnerContainer.appendChild(countCell).className = "grid-item";
+          }
       }
 
       function createShop(result) {
+          var breakfastContainer = document.getElementById("breakfastShopGrid");
+          breakfastContainer.innerHTML = "";
 
+          breakfastContainer.style.setProperty('--grid-rows', 4);
+          breakfastContainer.style.setProperty('--grid-cols', 6);
+
+          var border = "border-right: 4px solid red;"
+
+          for(var i = 0; i < 10; i++) {
+              var food = Object.keys(result.shop.BREAKFAST)[i];
+              var count = result.shop.BREAKFAST[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "breakfast/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+              if((i + 1) % 3 == 0 && i != 9)
+                  countCell.style = border;
+
+              breakfastContainer.appendChild(foodCell).className = "grid-item";
+              breakfastContainer.appendChild(countCell).className = "grid-item";
+          }
+
+          var emptyBreakfastCell1 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell1).className = "grid-item";
+          var emptyBreakfastCell2 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell2).className = "grid-item";
+          var emptyBreakfastCell3 = document.createElement("div");
+          breakfastContainer.appendChild(emptyBreakfastCell3).className = "grid-item";
+          var emptyBreakfastCell4 = document.createElement("div");
+          emptyBreakfastCell4.style = border;
+          breakfastContainer.appendChild(emptyBreakfastCell4).className = "grid-item";
+
+          var lunchContainer = document.getElementById("lunchShopGrid");
+          lunchContainer.innerHTML = "";
+
+          lunchContainer.style.setProperty('--grid-rows', 4);
+          lunchContainer.style.setProperty('--grid-cols', 6);
+
+          for(var i = 0; i < 10; i++) {
+              var food = Object.keys(result.shop.LUNCH)[i];
+              var count = result.shop.LUNCH[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "lunch/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+              if((i + 1) % 3 == 0 && i != 9)
+                  countCell.style = border;
+
+              lunchContainer.appendChild(foodCell).className = "grid-item";
+              lunchContainer.appendChild(countCell).className = "grid-item";
+          }
+
+          var emptyLunchCell1 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell1).className = "grid-item";
+          var emptyLunchCell2 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell2).className = "grid-item";
+          var emptyLunchCell3 = document.createElement("div");
+          lunchContainer.appendChild(emptyLunchCell3).className = "grid-item";
+          var emptyLunchCell4 = document.createElement("div");
+          emptyLunchCell4.style = border;
+          lunchContainer.appendChild(emptyLunchCell4).className = "grid-item";
+
+          var dinnerContainer = document.getElementById("dinnerShopGrid");
+          dinnerContainer.innerHTML = "";
+
+          dinnerContainer.style.setProperty('--grid-rows', 4);
+          dinnerContainer.style.setProperty('--grid-cols', 10);
+
+          for(var i = 0; i < 20; i++) {
+              var food = Object.keys(result.shop.DINNER)[i];
+              var count = result.shop.DINNER[food];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              img.src = "dinner/" + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var countCell = document.createElement("div");
+              countCell.innerText = count;
+
+              dinnerContainer.appendChild(foodCell).className = "grid-item";
+              dinnerContainer.appendChild(countCell).className = "grid-item";
+          }
+      }
+
+      function createLegend(result) {
+          var legendContainer = document.getElementById("legendGrid");
+          legendContainer.innerHTML = "";
+
+          legendContainer.style.setProperty('--grid-rows', 2);
+          legendContainer.style.setProperty('--grid-cols', 14);
+
+          for(var i = 0; i < 40; i++) {
+              var food = Object.keys(legendMap)[i];
+
+              var foodCell = document.createElement("div");
+              var img = document.createElement('img');
+              var directoryName = "";
+              if(i < 10)
+                  directoryName = "breakfast/";
+              else if(i < 20)
+                  directoryName = "lunch/";
+              else
+                  directoryName = "dinner/";
+              img.src = directoryName + legendMap[food];
+              img.width = 100;
+              img.height = 60;
+              foodCell.appendChild(img);
+
+              var nameCell = document.createElement("div");
+              nameCell.innerText = food;
+
+              legendContainer.appendChild(foodCell).className = "grid-item";
+              legendContainer.appendChild(nameCell).className = "grid-item";
+          }
       }
 
       function createWeeklyMealsGrid(result) {
-          console.log(result);
           var container = document.getElementById("weeklyMealsGrid");
           container.innerHTML = "";
 
@@ -331,8 +597,11 @@
                       }
                       else if(j == 9)
                           cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].satisfaction;
-                      else if(j == 10)
+                      else if(j == 10) {
                           cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].averageSatisfaction;
+                          if(parseFloat(cell.innerText) == result.leastAverageSatisfaction)
+                              cell.style.color = "yellow";
+                      }
                   }
                   else if(i % 3 == 1) {
                       if(j == 1)
@@ -391,12 +660,24 @@
           var currentWeek = result.currentWeek;
           var totalWeeks = result.totalWeeks;
 
-
           createWeeklyMealsGrid(result);
+          createPantry(result);
+          createShop(result);
+          createLegend(result);
 
-          
           var weekElement = document.getElementById('week');
           weekElement.innerHTML = `Week: ${currentWeek}/${totalWeeks}`;
+
+          var leastAverageSatisfaction = result.leastAverageSatisfaction;
+          var leastSatisfiedMember = result.leastSatisfiedMember;
+          leastSatisfiedMember = leastSatisfiedMember.charAt(0) + leastSatisfiedMember.slice(1).toLowerCase();
+
+          weekElement.innerHTML = `
+              Week: ${currentWeek}/${totalWeeks}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${leastAverageSatisfaction}</br>Least satisfied member: ${leastSatisfiedMember}
+          `;
+
+          if(currentWeek == totalWeeks)
+              alert(`The average satisfaction of the least satisfied member, ${leastSatisfiedMember}, is ${leastAverageSatisfaction}!`);
 
           return refresh;
       }
@@ -412,9 +693,10 @@
 
           discreteCurrentWeek = `week_${result.currentWeek}`;
 
-
           createWeeklyMealsGrid(result);
-
+          createPantry(result);
+          createShop(result);
+          createLegend(result);
 
           var weekElement = document.getElementById('week');
 
@@ -425,13 +707,16 @@
           if(currentWeek != totalWeeks)
               nextButton = "<a onClick='processDiscreteIncrement()' class='next'>Next Week &raquo;</a>";
 
+          var leastAverageSatisfaction = result.leastAverageSatisfaction;
+          var leastSatisfiedMember = result.leastSatisfiedMember;
+          leastSatisfiedMember = leastSatisfiedMember.charAt(0) + leastSatisfiedMember.slice(1).toLowerCase();
+
           weekElement.innerHTML = `
-              ${previousButton}&nbsp;&nbsp;&nbsp;&nbsp;Week: ${currentWeek}/${totalWeeks}&nbsp;&nbsp;&nbsp;&nbsp;${nextButton}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${result.leastAverageSatisfaction}
+              ${previousButton}&nbsp;&nbsp;&nbsp;&nbsp;Week: ${currentWeek}/${totalWeeks}&nbsp;&nbsp;&nbsp;&nbsp;${nextButton}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${leastAverageSatisfaction}</br>Least satisfied member: ${leastSatisfiedMember}
           `;
 
           if(currentWeek == totalWeeks)
-              alert(`The average satisfaction of the least satisfied member is ${result.leastAverageSatisfaction}!`);            
-
+              alert(`The average satisfaction of the least satisfied member, ${leastSatisfiedMember}, is ${leastAverageSatisfaction}!`);
 
           return 0;
       }
