@@ -286,8 +286,8 @@ public class Simulator {
 	    		finalPlanner = new Planner();
 		    }
 
-		    updateMealHistory(currentWeek, shoppingList, finalPlanner);
 		    updateAssignedMeals(finalPlanner);
+		    updateMealHistory(currentWeek, shoppingList, finalPlanner);
 		    updateSatisfactions(currentWeek, finalPlanner);
 		    updateAverageSatisfactions(currentWeek);
 		    
@@ -716,7 +716,22 @@ public class Simulator {
 				mealTypeJSONObj.put(foodType.name(), mealsMap.get(mealType).get(foodType));
 			pantryJSONObj.put(mealType.name(), mealTypeJSONObj);
 		}
-		jsonObj.put("pantry", pantryJSONObj);
+		jsonObj.put("newPantry", pantryJSONObj);
+		
+		Pantry oldPantry;
+		if(mealHistory.getAllPantries().containsKey(week - 1))
+			oldPantry = mealHistory.getAllPantries().get(week - 1);
+		else
+			oldPantry = new Pantry(capacity);
+		JSONObject oldPantryJSONObj = new JSONObject();
+		Map<MealType, Map<FoodType, Integer>> oldMealsMap = oldPantry.getMealsMap();
+		for(MealType mealType : oldMealsMap.keySet()) {
+			JSONObject mealTypeJSONObj = new JSONObject();
+			for(FoodType foodType : oldMealsMap.get(mealType).keySet())
+				mealTypeJSONObj.put(foodType.name(), oldMealsMap.get(mealType).get(foodType));
+			oldPantryJSONObj.put(mealType.name(), mealTypeJSONObj);
+		}
+		jsonObj.put("oldPantry", oldPantryJSONObj);		
 
 		JSONObject shopJSONObj = new JSONObject();
 		mealsMap = shop.getMealsMap();

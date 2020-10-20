@@ -30,46 +30,29 @@
         color: white;
       }
 
-      #pantryWrapper {
+      #oldPantryWrapper, #newPantryWrapper {
         overflow: hidden;
         width: 100%;
         height: 17%;
       }
 
-      #breakfastPantryWrapper {
+      #oldBreakfastPantryWrapper, #oldLunchPantryWrapper,
+      #newBreakfastPantryWrapper, #newLunchPantryWrapper {
         width: 25%;
         height: 100%;
         float: left;
       }
 
-      #breakfastPantryGrid, #lunchPantryGrid, #dinnerPantryGrid,
-      #breakfastShopGrid, #lunchShopGrid, #dinnerShopGrid,
-      #weeklyMealsGrid, #legendGrid {
-        display: grid;
-        margin: 10px;
-        padding-right: 20px;
-        float: center;
-        grid-gap: 0.1em;
-        grid-template-rows: repeat(var(--grid-rows), 1fr);
-        grid-template-columns: repeat(var(--grid-cols), 1fr);
-      }
-
-      #lunchPantryWrapper {
-        width: 25%;
-        height: 100%;
-        float: left;
-      }
-
-      #dinnerPantryWrapper {
+      #oldDinnerPantryWrapper, #newDinnerPantryWrapper {
         width: 50%;
         height: 100%;
         float: left;
       }
 
       #shopWrapper {
+        overflow: hidden;
         width: 100%;
-        height: 17%;
-        float: left;
+        height: 10%;
       }
 
       #breakfastShopWrapper {
@@ -100,6 +83,19 @@
         width: 100%;
         height: 10%;
         float: left;
+      }
+
+      #oldBreakfastPantryGrid, #oldLunchPantryGrid, #oldDinnerPantryGrid,
+      #newBreakfastPantryGrid, #newLunchPantryGrid, #newDinnerPantryGrid,
+      #breakfastShopGrid, #lunchShopGrid, #dinnerShopGrid,
+      #weeklyMealsGrid, #legendGrid {
+        display: grid;
+        margin: 10px;
+        padding-right: 20px;
+        float: center;
+        grid-gap: 0.1em;
+        grid-template-rows: repeat(var(--grid-rows), 1fr);
+        grid-template-columns: repeat(var(--grid-cols), 1fr);
       }
 
       :root {
@@ -162,8 +158,9 @@
   </head>
   <body>
   	<h1>PPS 2020 - Menu</h1>
+    <h2 style="color:cyan;"><a style="color:orange;">Michael Scott:</a>"The most sacred thing I do is care and provide for my workers, my <em>family</em>. I give them money. I give them <em>food</em>. Not directly, but through the money."</h2>
     <div>
-      <h2 style="color:limegreen">Shop</h2>
+      <h2 style="color:limegreen">Current Week's Shop</h2>
       <div id="shopWrapper">
         <div id="breakfastShopWrapper">
           <h3 style="color:yellow;">Breakfast</h3>
@@ -180,29 +177,43 @@
           </br>
           <div id="dinnerShopGrid"></div>
         </div>
-      </div>
-      </br>
-      </br>
-      <h2 style="color:limegreen">Pantry</h2>
-      <div id="pantryWrapper">      
-        <div id="breakfastPantryWrapper">
+      </div>  
+      <h2 style="color:limegreen">Last Week's Pantry</h2>
+      <div id="oldPantryWrapper">      
+        <div id="oldBreakfastPantryWrapper">
           <h3 style="color:yellow;">Breakfast</h3>
           </br>
-          <div id="breakfastPantryGrid"></div>
+          <div id="oldBreakfastPantryGrid"></div>
         </div>
-        <div id="lunchPantryWrapper">
+        <div id="oldLunchPantryWrapper">
           <h3 style="color:yellow;">Lunch</h3>
           </br>
-          <div id="lunchPantryGrid"></div>
+          <div id="oldLunchPantryGrid"></div>
         </div>
-        <div id="dinnerPantryWrapper">
+        <div id="oldDinnerPantryWrapper">
           <h3 style="color:yellow;">Dinner</h3>
           </br>
-          <div id="dinnerPantryGrid"></div>
+          <div id="oldDinnerPantryGrid"></div>
+        </div>
+      </div>    
+      <h2 style="color:limegreen">Current Week's Pantry</h2>
+      <div id="newPantryWrapper">      
+        <div id="newBreakfastPantryWrapper">
+          <h3 style="color:yellow;">Breakfast</h3>
+          </br>
+          <div id="newBreakfastPantryGrid"></div>
+        </div>
+        <div id="newLunchPantryWrapper">
+          <h3 style="color:yellow;">Lunch</h3>
+          </br>
+          <div id="newLunchPantryGrid"></div>
+        </div>
+        <div id="newDinnerPantryWrapper">
+          <h3 style="color:yellow;">Dinner</h3>
+          </br>
+          <div id="newDinnerPantryGrid"></div>
         </div>
       </div>
-      </br>
-      </br>
       <h2 style="color:limegreen">Weekly Meals</h2>
       <div id="weeklyMealsWrapper">
         <div id="weeklyMealsGrid"></div>
@@ -313,8 +324,8 @@
         return aAlpha > bAlpha ? 1 : -1;
       }
 
-      function createPantry(result) {
-          var breakfastContainer = document.getElementById("breakfastPantryGrid");
+      function createPantry(pantry, breakfastPantryGrid, lunchPantryGrid, dinnerPantryGrid) {
+          var breakfastContainer = document.getElementById(breakfastPantryGrid);
           breakfastContainer.innerHTML = "";
 
           breakfastContainer.style.setProperty('--grid-rows', 4);
@@ -323,14 +334,15 @@
           var border = "border-right: 4px solid red;"
 
           for(var i = 0; i < 10; i++) {
-              var food = Object.keys(result.pantry.BREAKFAST)[i];
-              var count = result.pantry.BREAKFAST[food];
+              var food = Object.keys(pantry.BREAKFAST)[i];
+              var count = pantry.BREAKFAST[food];
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "breakfast/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
               var countCell = document.createElement("div");
@@ -352,21 +364,22 @@
           emptyBreakfastCell4.style = border;
           breakfastContainer.appendChild(emptyBreakfastCell4).className = "grid-item";
 
-          var lunchContainer = document.getElementById("lunchPantryGrid");
+          var lunchContainer = document.getElementById(lunchPantryGrid);
           lunchContainer.innerHTML = "";
 
           lunchContainer.style.setProperty('--grid-rows', 4);
           lunchContainer.style.setProperty('--grid-cols', 6);
 
           for(var i = 0; i < 10; i++) {
-              var food = Object.keys(result.pantry.LUNCH)[i];
-              var count = result.pantry.LUNCH[food];
+              var food = Object.keys(pantry.LUNCH)[i];
+              var count = pantry.LUNCH[food];
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "lunch/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
               var countCell = document.createElement("div");
@@ -388,21 +401,22 @@
           emptyLunchCell4.style = border;
           lunchContainer.appendChild(emptyLunchCell4).className = "grid-item";
 
-          var dinnerContainer = document.getElementById("dinnerPantryGrid");
+          var dinnerContainer = document.getElementById(dinnerPantryGrid);
           dinnerContainer.innerHTML = "";
 
           dinnerContainer.style.setProperty('--grid-rows', 4);
           dinnerContainer.style.setProperty('--grid-cols', 10);
 
           for(var i = 0; i < 20; i++) {
-              var food = Object.keys(result.pantry.DINNER)[i];
-              var count = result.pantry.DINNER[food];
+              var food = Object.keys(pantry.DINNER)[i];
+              var count = pantry.DINNER[food];
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "dinner/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
               var countCell = document.createElement("div");
@@ -417,99 +431,84 @@
           var breakfastContainer = document.getElementById("breakfastShopGrid");
           breakfastContainer.innerHTML = "";
 
-          breakfastContainer.style.setProperty('--grid-rows', 4);
-          breakfastContainer.style.setProperty('--grid-cols', 6);
-
           var border = "border-right: 4px solid red;"
 
+          breakfastContainer.style.setProperty('--grid-rows', 1);
+          breakfastContainer.style.setProperty('--grid-cols', 5);
+
+          var indexOfFood = 0;
           for(var i = 0; i < 10; i++) {
               var food = Object.keys(result.shop.BREAKFAST)[i];
               var count = result.shop.BREAKFAST[food];
+              if(count == 0)
+                  continue;
+
+              indexOfFood++;
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "breakfast/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
-              var countCell = document.createElement("div");
-              countCell.innerText = count;
-              if((i + 1) % 3 == 0 && i != 9)
-                  countCell.style = border;
+              if(indexOfFood == 5)
+                  foodCell.style = border;
 
               breakfastContainer.appendChild(foodCell).className = "grid-item";
-              breakfastContainer.appendChild(countCell).className = "grid-item";
           }
-
-          var emptyBreakfastCell1 = document.createElement("div");
-          breakfastContainer.appendChild(emptyBreakfastCell1).className = "grid-item";
-          var emptyBreakfastCell2 = document.createElement("div");
-          breakfastContainer.appendChild(emptyBreakfastCell2).className = "grid-item";
-          var emptyBreakfastCell3 = document.createElement("div");
-          breakfastContainer.appendChild(emptyBreakfastCell3).className = "grid-item";
-          var emptyBreakfastCell4 = document.createElement("div");
-          emptyBreakfastCell4.style = border;
-          breakfastContainer.appendChild(emptyBreakfastCell4).className = "grid-item";
 
           var lunchContainer = document.getElementById("lunchShopGrid");
           lunchContainer.innerHTML = "";
 
-          lunchContainer.style.setProperty('--grid-rows', 4);
-          lunchContainer.style.setProperty('--grid-cols', 6);
+          lunchContainer.style.setProperty('--grid-rows', 1);
+          lunchContainer.style.setProperty('--grid-cols', 5);
 
+          indexOfFood = 0;
           for(var i = 0; i < 10; i++) {
               var food = Object.keys(result.shop.LUNCH)[i];
               var count = result.shop.LUNCH[food];
+              if(count == 0)
+                  continue;
+
+              indexOfFood++;
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "lunch/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
-              var countCell = document.createElement("div");
-              countCell.innerText = count;
-              if((i + 1) % 3 == 0 && i != 9)
-                  countCell.style = border;
+              if(indexOfFood == 5)
+                  foodCell.style = border;
 
               lunchContainer.appendChild(foodCell).className = "grid-item";
-              lunchContainer.appendChild(countCell).className = "grid-item";
           }
-
-          var emptyLunchCell1 = document.createElement("div");
-          lunchContainer.appendChild(emptyLunchCell1).className = "grid-item";
-          var emptyLunchCell2 = document.createElement("div");
-          lunchContainer.appendChild(emptyLunchCell2).className = "grid-item";
-          var emptyLunchCell3 = document.createElement("div");
-          lunchContainer.appendChild(emptyLunchCell3).className = "grid-item";
-          var emptyLunchCell4 = document.createElement("div");
-          emptyLunchCell4.style = border;
-          lunchContainer.appendChild(emptyLunchCell4).className = "grid-item";
 
           var dinnerContainer = document.getElementById("dinnerShopGrid");
           dinnerContainer.innerHTML = "";
 
-          dinnerContainer.style.setProperty('--grid-rows', 4);
+          dinnerContainer.style.setProperty('--grid-rows', 1);
           dinnerContainer.style.setProperty('--grid-cols', 10);
 
           for(var i = 0; i < 20; i++) {
               var food = Object.keys(result.shop.DINNER)[i];
               var count = result.shop.DINNER[food];
+              if(count == 0)
+                  continue;
 
               var foodCell = document.createElement("div");
               var img = document.createElement('img');
               img.src = "dinner/" + legendMap[food];
               img.width = 100;
               img.height = 60;
+              foodCell.title = food;
               foodCell.appendChild(img);
 
-              var countCell = document.createElement("div");
-              countCell.innerText = count;
-
               dinnerContainer.appendChild(foodCell).className = "grid-item";
-              dinnerContainer.appendChild(countCell).className = "grid-item";
           }
       }
 
@@ -560,6 +559,8 @@
           for(var i = 0; i < days.length; i++) {
               var dayCell = document.createElement("div");
               dayCell.innerText = days[i].charAt(0) + days[i].slice(1).toLowerCase();
+              if(i == 6)
+                  dayCell.style = "border-right: 4px solid red;";
               container.appendChild(dayCell).className = "grid-item";
           }
           var satisfactionCell = document.createElement("div");
@@ -579,6 +580,7 @@
                           img.src = "family/" + memberImageMap[Object.keys(memberImageMap)[memberID]];
                           img.width = 100;
                           img.height = 60;
+                          cell.title = Object.keys(memberImageMap)[memberID].charAt(0) + Object.keys(memberImageMap)[memberID].slice(1).toLowerCase();
                           cell.appendChild(img);
                       }
                       else if(j == 1)
@@ -594,13 +596,18 @@
                               img.height = 60;
                               cell.appendChild(img);
                           }
+
+                          if(j == 8)
+                              cell.style = "border-right: 4px solid red;";
                       }
                       else if(j == 9)
                           cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].satisfaction;
                       else if(j == 10) {
                           cell.innerText = result.family[Object.keys(memberImageMap)[memberID]].averageSatisfaction;
-                          if(parseFloat(cell.innerText) == result.leastAverageSatisfaction)
+                          if(parseFloat(cell.innerText) == result.leastAverageSatisfaction) {
                               cell.style.color = "yellow";
+                              cell.style.fontWeight = "bold";
+                          }
                       }
                   }
                   else if(i % 3 == 1) {
@@ -617,6 +624,9 @@
                               img.height = 60;
                               cell.appendChild(img);
                           }
+
+                          if(j == 8)
+                              cell.style = "border-right: 4px solid red;";
                       }
                       else
                           cell.innerText = "";
@@ -635,6 +645,9 @@
                               img.height = 60;
                               cell.appendChild(img);
                           }
+
+                          if(j == 8)
+                              cell.style = "border-right: 4px solid red;";
                       }
                       else
                           cell.innerText = "";
@@ -661,7 +674,8 @@
           var totalWeeks = result.totalWeeks;
 
           createWeeklyMealsGrid(result);
-          createPantry(result);
+          createPantry(result.newPantry, "newBreakfastPantryGrid", "newLunchPantryGrid", "newDinnerPantryGrid");
+          createPantry(result.oldPantry, "oldBreakfastPantryGrid", "oldLunchPantryGrid", "oldDinnerPantryGrid");
           createShop(result);
           createLegend(result);
 
@@ -694,7 +708,8 @@
           discreteCurrentWeek = `week_${result.currentWeek}`;
 
           createWeeklyMealsGrid(result);
-          createPantry(result);
+          createPantry(result.newPantry, "newBreakfastPantryGrid", "newLunchPantryGrid", "newDinnerPantryGrid");
+          createPantry(result.oldPantry, "oldBreakfastPantryGrid", "oldLunchPantryGrid", "oldDinnerPantryGrid");
           createShop(result);
           createLegend(result);
 
