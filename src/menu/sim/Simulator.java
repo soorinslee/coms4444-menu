@@ -40,7 +40,7 @@ public class Simulator {
 	private static Random random;
 	
 	// Simulator inputs
-	private static int seed = 10;
+	private static int seed = 42;
 	private static int weeks = 52;
 	private static int numFamilyMembers = 3;
 	private static int capacity = 100;
