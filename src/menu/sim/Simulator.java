@@ -41,19 +41,20 @@ public class Simulator {
 	
 	// Simulator inputs
 	private static int seed = 10;
-	private static int weeks = 10;
+	private static int weeks = 52;
 	private static int numFamilyMembers = 3;
 	private static int capacity = 100;
 	private static double fpm = 15;
 	private static boolean showGUI = false;
 	private static boolean continuousGUI = true;
-	
+	private static boolean exportCSV = false;
+
 	// Defaults
 	private static boolean enablePrints = false;
 	private static long timeout = 1000;
 	private static int currentWeek = 0;
 	private static String version = "1.0";
-	private static String projectPath, sourcePath, staticsPath;
+	private static String projectPath, sourcePath, staticsPath, mealsPath, plannersPath, pantriesPath, satisfactionPath;
     
 
 	private static void setup() {
@@ -130,6 +131,25 @@ public class Simulator {
                         if(i == args.length)
                             throw new IllegalArgumentException("The number of people is not specified!");
                         numFamilyMembers = Integer.parseInt(args[i]);
+                    }
+                    else if(args[i].equals("-e") || args[i].equals("--export")) {
+                    	exportCSV = true;
+                        i++;
+                    	if(i == args.length) 
+                            throw new IllegalArgumentException("The CSV filepath for assigned meals is missing!");
+                    	mealsPath = args[i];
+                        i++;
+                    	if(i == args.length)
+                            throw new IllegalArgumentException("The CSV filepath for planners is missing!");
+                    	plannersPath = args[i];
+                        i++;
+                    	if(i == args.length) 
+                            throw new IllegalArgumentException("The CSV filepath for pantries is missing!");
+                    	pantriesPath = args[i];
+                        i++;
+                    	if(i == args.length) 
+                            throw new IllegalArgumentException("The CSV filepath for satisfactions is missing!");
+                    	satisfactionPath = args[i];
                     }
                     else 
                         throw new IllegalArgumentException("Unknown argument \"" + args[i] + "\"!");
@@ -308,6 +328,100 @@ public class Simulator {
 		Log.writeToLogFile("Configuration: " + configName);
 		Log.writeToLogFile("Average satisfaction of least satisfied member: " + satisfactionFormat.format(leastAverageSatisfaction));
 		Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name().substring(0, 1).toUpperCase() + leastSatisfiedMember.name().substring(1).toLowerCase());
+		
+//		<!-- Need to export assigned meals, planners, pantries, and satisfactions to separate log files  -->
+		
+		if(exportCSV) {
+			List<List<String>> plannersRows = new ArrayList<>();
+			for(int week : mealHistory.getAllPlanners().keySet()) {
+				Planner planner = mealHistory.getAllPlanners().get(week);
+				for(Day day : planner.getPlan().keySet()) {
+					Map<MemberName, Map<MealType, FoodType>> memberMap = planner.getPlan().get(day);
+					for(MemberName memberName : memberMap.keySet()) {
+						Map<MealType, FoodType> mealMap = memberMap.get(memberName);
+						for(MealType mealType : mealMap.keySet()) {
+							List<String> row = Arrays.asList(Integer.toString(week),
+									 day.name(),
+									 memberName.name(),
+									 mealType.name(),
+									 mealMap.get(mealType).name());
+							plannersRows.add(row);
+						}
+					}
+				}
+			}
+			
+			FileWriter csvWriter = new FileWriter(plannersPath);
+			csvWriter.append("Week,Day,Member,Meal Type,Meal\n");
+			for(List<String> row : plannersRows)
+				csvWriter.append(String.join(",", row) + "\n");
+			csvWriter.flush();
+			csvWriter.close();
+		
+			List<List<String>> pantriesRows = new ArrayList<>();
+			for(int week : mealHistory.getAllPantries().keySet()) {
+				Pantry pantry = mealHistory.getAllPantries().get(week);
+				for(MealType mealType : pantry.getMealsMap().keySet()) {
+					Map<FoodType, Integer> countMap = pantry.getMealsMap().get(mealType);
+					for(FoodType foodType : countMap.keySet()) {
+						List<String> row = Arrays.asList(Integer.toString(week),
+								 mealType.name(),
+								 foodType.name(),
+								 Integer.toString(countMap.get(foodType)));
+						pantriesRows.add(row);
+					}
+				}
+			}
+		
+			csvWriter = new FileWriter(pantriesPath);
+			csvWriter.append("Week,Meal Type,Meal,Quantity\n");
+			for(List<String> row : pantriesRows)
+				csvWriter.append(String.join(",", row) + "\n");
+			csvWriter.flush();
+			csvWriter.close();
+
+			List<List<String>> satisfactionRows = new ArrayList<>();
+			for(int week : mealHistory.getAllSatisfactions().keySet()) {
+				Map<MemberName, Double> satisfactionMap = mealHistory.getAllSatisfactions().get(week);
+				Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week);
+				for(MemberName memberName : satisfactionMap.keySet()) {
+					List<String> row = Arrays.asList(Integer.toString(week),
+							 memberName.name(),
+							 Double.toString(satisfactionMap.get(memberName)),
+							 Double.toString(averageSatisfactionMap.get(memberName)));
+					satisfactionRows.add(row);
+				}
+			}
+		
+			csvWriter = new FileWriter(satisfactionPath);
+			csvWriter.append("Week,Member,Satisfaction,Average Satisfaction\n");
+			for(List<String> row : satisfactionRows)
+				csvWriter.append(String.join(",", row) + "\n");
+			csvWriter.flush();
+			csvWriter.close();
+
+			List<List<String>> mealsRows = new ArrayList<>();
+			for(int day : mealHistory.getDailyFamilyMeals().keySet()) {
+				Map<MemberName, Map<MealType, FoodType>> memberMap = mealHistory.getDailyFamilyMeals().get(day);				
+				for(MemberName memberName : memberMap.keySet()) {
+					Map<MealType, FoodType> mealMap = memberMap.get(memberName);
+					for(MealType mealType : mealMap.keySet()) {
+						List<String> row = Arrays.asList(Integer.toString(day),
+								 memberName.name(),
+								 mealType.name(),
+								 mealMap.get(mealType).name());
+						mealsRows.add(row);	
+					}
+				}
+			}
+			
+			csvWriter = new FileWriter(mealsPath);
+			csvWriter.append("Day,Member,Meal Type,Meal\n");
+			for(List<String> row : mealsRows)
+				csvWriter.append(String.join(",", row) + "\n");
+			csvWriter.flush();
+			csvWriter.close();
+		}
 		
 		if(!showGUI)
 			System.exit(1);

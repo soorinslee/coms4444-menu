@@ -29,7 +29,7 @@ public class PlayerWrapper {
             shoppingList = timer.callWait(timeout);
         }
         catch(Exception e) {
-            Log.writeToVerboseLogFile("Team " + this.playerName + " has possibly timed out while stocking pantry.");
+            Log.writeToVerboseLogFile("Team " + this.playerName + " generated an exception while stocking pantry.");
             Log.writeToVerboseLogFile("Exception for team " + this.playerName + ": " + e);
         }
 
@@ -49,7 +49,7 @@ public class PlayerWrapper {
             planner = timer.callWait(timeout);
         }
         catch(Exception e) {
-            Log.writeToVerboseLogFile("Team " + this.playerName + " has possibly timed out while planning meals.");
+            Log.writeToVerboseLogFile("Team " + this.playerName + " generated an exception while planning meals.");
             Log.writeToVerboseLogFile("Exception for team " + this.playerName + ": " + e);
         }
 
