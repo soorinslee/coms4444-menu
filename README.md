@@ -147,17 +147,67 @@ An example of a preferences configuration is as follows:
 ## API Description
 
 The following provides the API available for students to use:
-1. `Day`
-2. `FamilyMember`
-3. `Food`
-4. `Inventory`
-5. `MealHistory`
-6. `MemberName`
-7. `Pantry`
-8. `Planner`
-9. `Player`
-10. `Shop`
-11. `ShoppingList`
+1. `Day`: an enumerated type of all seven days.
+2. `FamilyMember: a wrapper class for a family member, containing food preferences and satisfactions/assigned meals for the current week.
+3. `Food`: a helper class for easy access to meals and meal types.
+	* `getAllMealTypes`
+	* `getAllFoodTypes`
+	* `getMealType`
+	* `getFoodTypes`
+	* `isBreakfastType`
+	* `isLunchType`
+	* `isDinnerType`
+4. `Inventory`: a superclass representing any inventory of meals.
+	* `getAvailableFoodTypes`
+	* `getNumAvailableFoodTypes`
+	* `getNumAvailableMeals`
+	* `containsMeal`
+	* `addMealToInventory`
+	* `removeMealFromInventory`
+	* `getMealsMap`
+	* `clearInventory`
+	* `clone`
+5. `MealHistory`: a running history of all assigned meals, planners, pantries, and satisfactions.
+	* `getAllPlanners`
+	* `getAllShoppingLists`
+	* `getAllPantries`
+	* `getDailyFamilyMeals`
+	* `getAlLSatisfactions`
+	* `getAllAverageSatisfactions`
+	* `getDailyFamilyMeal`
+	* `getPlanner`
+	* `getShoppingList`
+	* `getPantry`
+	* `getSatisfaction`
+	* `getAverageSatisfaction`
+	* `addDailyFamilyMeal`
+	* `addPlanner`
+	* `addShoppingList`
+	* `addPantry`
+	* `addSatisfaction`
+	* `addAverageSatisfaction`
+6. `MemberName`: an enumerated type of all possible family member names..
+7. `Pantry`: the pantry inventory containing all available meals to assign for the week (extends `Inventory`).
+	* `addMealToInventory`
+	* `getNumEmptySlots`
+	* `clone`
+8. `Planner`: a planner of assigned meals for the week, subject to pantry availability.
+	* `addMeal`
+	* `getMeal`
+	* `getPlan`
+9. `Player`: the player abstraction that should be extended by implemented players.
+	* `stockPantry`
+	* `planMeals`
+	* `hasValidShoppingList`
+	* `hasValidPlanner`
+10. `Shop`: the shop inventory of available meals to order for the week (extends `Inventory`).
+11. `ShoppingList`: a shopping list of meals to order for each meal type.
+	* `getFullOrderMap`
+	* `getAllLimitsMap`
+	* `getMealOrder`
+	* `getLimit`
+	* `addToOrder`
+	* `addLimit`
 12. `SimPrinter`: contains methods for toggled printing.
 	* `println`: prints with cursor at start of the next line.
 	* `print`: prints with cursor at the end of the current line.
