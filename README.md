@@ -110,7 +110,7 @@ In order to improve performance and readability of code during simulations, we w
 
 > **[-t | --team]**: team/player
 
-> **[-s | --seed]**: seed value for random player (default = 10)
+> **[-s | --seed]**: seed value for random player (default = 42)
 
 > **[-l PATH | --log PATH]**: enable logging and output log to both console and log file
 
