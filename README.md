@@ -186,6 +186,19 @@ The following provides the API available for students to use:
 	* `addPantry`
 	* `addSatisfaction`
 	* `addAverageSatisfaction`
+	
+	`Map<Integer, Planner> allPlanners` is a map of the week number to the planner for that week.
+	
+	`Map<Integer, ShoppingList> allShoppingLists` is a map of the week number to the shopping list for that week.
+	
+	`Map<Integer, Pantry> allPantries` is a map of the week number to the pantry for that week.
+	
+	`Map<Integer, Map<MemberName, Map<MealType, FoodType>>> dailyFamilyMeals` is a map of the day number (for 52 weeks, the map will contain keys 1 to 364) to a member map. The member map is a map of the member name to a meal map. Finally, the meal map is a map of meal type to the meal assigned.
+	
+	`Map<Integer, Map<MemberName, Double>> allSatisfactions` is a map of the week number to a member map. The member map is a map of the member name to the weekly satisfaction for that week.
+	
+	`Map<Integer, Map<MemberName, Double>> allAverageSatisfactions` is a map of the week number to a member map. The member map is a map of the member name to the average weekly satisfaction (cumulative) up to and including that week.
+
 6. `MemberName`: an enumerated type of all possible family member names..
 7. `Pantry`: the pantry inventory containing all available meals to assign for the week (extends `Inventory`).
 	* `addMealToInventory`
