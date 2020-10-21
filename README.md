@@ -147,7 +147,18 @@ An example of a preferences configuration is as follows:
 ## API Description
 
 The following provides the API available for students to use:
-1. `SimPrinter`: contains methods for toggled printing.
+1. `Day`
+2. `FamilyMember`
+3. `Food`
+4. `Inventory`
+5. `MealHistory`
+6. `MemberName`
+7. `Pantry`
+8. `Planner`
+9. `Player`
+10. `Shop`
+11. `ShoppingList`
+12. `SimPrinter`: contains methods for toggled printing.
 	* `println`: prints with cursor at start of the next line.
 	* `print`: prints with cursor at the end of the current line.
 
@@ -157,6 +168,7 @@ Classes that are used by the simulator include:
 3. `Log`: basic functionality to log results, with the option to enable verbose logging.
 4. `Simulator`: the simulator and entry point for the project; manages the player, wrapper, logging, server, and GUI state.
 5. `Timer`: basic functionality for imposing timeouts.
+
 
 ## Piazza
 If you have any questions about the project, please post them in the Piazza forum for the course, and an instructor will reply to them as soon as possible. Any updates to the project itself will be available in Piazza.
