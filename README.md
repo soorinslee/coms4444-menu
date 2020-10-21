@@ -10,37 +10,78 @@ TA: Aditya Sridhar
 
 ## Project Description
 
-
-## Required Installations
-Before you can start working with the simulator and implementing your code, you will first need to set up your environment. This requires both Java and Git.
-
-### Java
-The simulator is implemented in Java, and you will be required to submit Java code for your project. To check if you have Java already installed, run `javac -version` and `java -version` for the versions of the Java Development Kit (JDK) and Java Runtime Environment (JRE), respectively.
-
-If you do not have Java set up, you will first need to install a JDK, which provides everything that allows you to write and execute Java code inside of a runtime environment. Please download the latest release of Java JDK for your OS [here](https://www.oracle.com/java/technologies/javase-downloads.html) (currently 14.0.2).
-* Under Oracle Java SE 14 > Oracle JDK, click on *JDK Download*.
-* Click on the installer link corresponding to your OS.
-* Check the box to accept the license agreement, and click the download button.
-* Once the installer has been downloaded, start the installer and complete the steps.
-* Depending on your OS, you might need to set up some environment variables to run Java. This is especially true for Windows and Linux. As a recommendation, follow the instructions [here](https://www3.ntu.edu.sg/home/ehchua/programming/howto/JDK_Howto.html) to finish the Java environment setup for your OS (note that the website also has full step-by-step instructions that you can follow to install the JDK for your OS).
-* Verify now that you have your JDK and JRE set up by rerunning `javac -version` and `java -version`.
-
-You are now ready to start writing Java code!
-
-It is also preferable to develop your Java code in an integrated development environment (IDE) such as [Eclipse](https://www.eclipse.org/downloads/) or [IntelliJ IDEA](https://www.jetbrains.com/idea/download/).
-
-### Git
-Version control with Git will be a large aspect of team-oriented development in this course. You will be managing and submitting your projects using Git. Mac and Linux users can access Git from their terminal. For Windows users, it is preferable to use a common emulator like "Git Bash" to access Git.
-
-Please follow these instructions for installing Git and forking repositories:
-
-1.  Make sure you have Git installed. Instructions on installing Git for your OS can be found [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-2.  You will need to set up SSH keys for each machine using Git, if you haven't done so. To set up SSH keys, please refer to this [page](https://docs.github.com/en/enterprise/2.20/user/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent). Note that you only need to complete the subsection titled _Generating a new SSH key_ for your OS.
-3.  Add your newly-generated SSH keys to the GitHub account, as done [here](https://docs.github.com/en/enterprise/2.20/user/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account).
-4.  Fork any repository (to fork, click on "Fork" in the top-right of the page), and clone the forked repository in your local machine inside the parent directory that will house the repository (to copy the remote URL for cloning, click on the "Clone" button, make sure that "Clone with SSH" is visible - the remote URL should start with `git@github.com` - and copy the URL to the clipboard). You should now be able to stage, commit, push, and pull changes using Git.
+During this project, you will be ordering meals and assigning breakfasts, lunches, and dinners to family members throught the week. Each family member has a personal satisfaction for each of 10 breakfasts, 10 lunches, and 10 dinners, and your objective is to maximize the average satisfaction of the least-satisfied family member across all weeks.
 
 ## Implementation
 
+Along with designing some configurations for the project, you will be creating your own player that extends the simulator's player. Please follow these steps to begin your implementation:
+1.  Enter the `coms4444-menu/src/configs` directory, and create a folder called "g*x*" (where *x* is the number of your team). For example, if you are team "g5," please create a folder called "g5" in the `configs` directory.
+2.  Create your configurations inside your newly-created folder.
+3.  Enter the `coms4444-menu/src/menu` directory, and create a folder called "g*x*" (where *x* is the number of your team). For example, if you are team "g5," please create a folder called "g5" in the `menu` directory.
+4.  Create a Java file called `Player.java` inside your newly-created folder.
+5.  Copy the following code into `Player` (the TODOs indicate all changes you need to make):
+```
+package menu.gx; // TODO modify the package name to reflect your team
+
+import java.util.*;
+
+import menu.sim.*;
+import menu.sim.Food.FoodType;
+import menu.sim.Food.MealType;
+
+
+public class Player extends menu.sim.Player {
+
+    /**
+     * Player constructor
+     *
+     * @param weeks             number of weeks
+     * @param numFamilyMembers  number of family members
+     * @param capacity          pantry capacity
+     * @param seed              random seed
+     * @param simPrinter        simulation printer
+     *
+     */
+	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
+		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
+	}
+
+    /**
+     * Create shopping list of meals to stock pantry
+     *
+     * @param week           current week
+     * @param numEmptySlots  number of empty slots left in the pantry
+     * @param familyMembers  all family members
+     * @param pantry         pantry inventory of remaining foods
+     * @param mealHistory    history of previous meal allocations
+     * @return               shopping list of foods to order
+     *
+     */
+    public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+    	
+      // TODO add your code here to generate a shopping list
+
+      return null; // TODO modify the return statement to return your shopping list
+    }
+
+    /**
+     * Plan meals
+     *
+     * @param week           current week
+     * @param familyMembers  all family members
+     * @param pantry         pantry inventory of remaining foods
+     * @param mealHistory    history of previous meal allocations
+     * @return               planner of assigned meals for the week
+     *
+     */
+    public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+ 
+      // TODO add your code here to generate a planner
+
+      return null; // TODO modify the return statement to return your planner
+    }
+}
+```
 
 
 ## Submission
@@ -54,16 +95,20 @@ In order to improve performance and readability of code during simulations, we w
 
 #### Steps to run the simulator:
 1.  On your command line, *fork* the Git repository, and then clone the forked version. Do NOT clone the original repository.
-2.  Enter `cd coms4444-soccer/src` to enter the source folder of the repository.
+2.  Enter `cd coms4444-menu/src` to enter the source folder of the repository.
 3.  Run `make clean` and `make compile` to clean and compile the code.
 5.  Run one of the following:
-    * `make run`: view results/rankings from the command line
-    * `make gui`: view results/rankings from the GUI
+    * `make run`: view results from the command line
+    * `make gui`: view results from the GUI
 
 #### Simulator arguments:
-> **[-r | --rounds]**: number of rounds (default = 10)
+> **[-w | --weeks]**: number of weeks (default = 52)
 
-> **[-t | --teams]**: space-separated teams/players
+> **[-p | --people]**: number of family members (default = 3)
+
+> **[-m PATH | --config PATH]**: path to the simulation preferences configuration
+
+> **[-t | --team]**: team/player
 
 > **[-s | --seed]**: seed value for random player (default = 10)
 
@@ -75,15 +120,46 @@ In order to improve performance and readability of code during simulations, we w
 
 > **[-f | --fpm]**: speed (frames per minute) of GUI when GUI is enabled (default = 15)
 
-## GUI Features
+> **[-c | --continuous]**: enable continuous GUI for simulation when GUI is enabled (default = true)
 
+> **[-d | --discrete]**: enable discrete/frame-by-frame GUI for simulation when GUI is enabled (default = false)
+
+> **[-C | --capacity]**: capacity of the pantry inventory (default = 50)
+
+> **[-e PATH PATH PATH PATH | --export PATH PATH PATH PATH]**: export all detailed information about meals, planners, pantries, and satisfactions to CSV files
+
+
+
+## Preferences Configuration
+
+A preferences configuration file (*.dat* extension) contains a list of space-separated preferences (decimal values between 0 and 1) for each food. Each family member has a separate list of preferences. Because there are 40 food items in total (10 breakfast items, 10 lunch items, and 20 dinner items), the number of entries in the configuration file is 40*p*, where *p* is the number of family members. The *j*th entry of the *i*th line of the file corresponds to the *i*th family member's preference of the *j*th food item in the list {BREAKFAST1, BREAKFAST2, ..., BREAKFAST10, LUNCH1, LUNCH2, ..., LUNCH10, DINNER1, DINNER2, ..., DINNER20}.
+
+An example of a preferences configuration is as follows:
+
+```
+0.4 0.2 0.3 0.8 0.6 0.3 ... 0.6 0.3 0.1 0.4 0.6 0.9
+0.2 0.3 0.8 0.6 0.3 0.1 ... 0.3 0.1 0.4 0.6 0.9 0.4
+0.3 0.8 0.6 0.3 0.1 0.4 ... 0.1 0.4 0.6 0.9 0.4 0.2
+...
+```
 
 
 ## API Description
 
+The following provides the API available for students to use:
+1. `SimPrinter`: contains methods for toggled printing.
+	* `println`: prints with cursor at start of the next line.
+	* `print`: prints with cursor at the end of the current line.
+
+Classes that are used by the simulator include:
+1. `PlayerWrapper`: a player wrapper that enforces appropriate timeouts on shopping list and planner generation.
+2. `HTTPServer`: a lightweight web server for the simulator.
+3. `Log`: basic functionality to log results, with the option to enable verbose logging.
+4. `Simulator`: the simulator and entry point for the project; manages the player, wrapper, logging, server, and GUI state.
+5. `Timer`: basic functionality for imposing timeouts.
 
 ## Piazza
-If you have any questions about the project, please post them in the [Piazza forum](https://piazza.com/class/kdjd7v2b8925zz?cid=6) for the course, and an instructor will reply to them as soon as possible. Any updates to the project itself will be available in Piazza.
+If you have any questions about the project, please post them in the Piazza forum for the course, and an instructor will reply to them as soon as possible. Any updates to the project itself will be available in Piazza.
 
 
 ## Disclaimer
