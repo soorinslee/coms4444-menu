@@ -328,9 +328,7 @@ public class Simulator {
 		Log.writeToLogFile("Configuration: " + configName);
 		Log.writeToLogFile("Average satisfaction of least satisfied member: " + satisfactionFormat.format(leastAverageSatisfaction));
 		Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name().substring(0, 1).toUpperCase() + leastSatisfiedMember.name().substring(1).toLowerCase());
-		
-//		<!-- Need to export assigned meals, planners, pantries, and satisfactions to separate log files  -->
-		
+				
 		if(exportCSV) {
 			List<List<String>> plannersRows = new ArrayList<>();
 			for(int week : mealHistory.getAllPlanners().keySet()) {
