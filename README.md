@@ -148,7 +148,7 @@ An example of a preferences configuration is as follows:
 
 The following provides the API available for students to use:
 1. `Day`: an enumerated type of all seven days.
-2. `FamilyMember: a wrapper class for a family member, containing food preferences and satisfactions/assigned meals for the current week.
+2. `FamilyMember`: a wrapper class for a family member, containing food preferences and satisfactions/assigned meals for the current week.
 3. `Food`: a helper class for easy access to meals and meal types.
 	* `getAllMealTypes`
 	* `getAllFoodTypes`
