@@ -54,11 +54,11 @@ public class Player extends menu.sim.Player {
     	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
     	
     	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(MealType.BREAKFAST, breakfastFoods.get(random.nextInt(breakfastFoods.size())));
+    		shoppingList.addToOrder(breakfastFoods.get(random.nextInt(breakfastFoods.size())));
     	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(MealType.LUNCH, lunchFoods.get(random.nextInt(lunchFoods.size())));
+    		shoppingList.addToOrder(lunchFoods.get(random.nextInt(lunchFoods.size())));
     	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(MealType.DINNER, dinnerFoods.get(random.nextInt(dinnerFoods.size())));
+    		shoppingList.addToOrder(dinnerFoods.get(random.nextInt(dinnerFoods.size())));
     	
     	if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
     		return shoppingList;

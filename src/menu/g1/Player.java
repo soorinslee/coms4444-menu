@@ -1,4 +1,4 @@
-package menu.random;
+package menu.g1;
 
 import java.util.*;
 
