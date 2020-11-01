@@ -154,8 +154,4 @@ public class Player extends menu.sim.Player {
         return null; // TODO modify the return statement to return your planner
     }
 
-    public Planner planBreakfast(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
-
-        return null;
-    }
 }
