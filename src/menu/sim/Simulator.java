@@ -204,7 +204,7 @@ public class Simulator {
 					
 					FamilyMember familyMember = new FamilyMember(memberNames.get(i % numFamilyMembers));
 					
-					String[] linePreferences = scanner.nextLine().strip().split(" ");
+					String[] linePreferences = scanner.nextLine().trim().split(" ");
 					if(linePreferences.length != foodTypes.length)
 		                throw new IOException("Not all food preferences are listed for all family members!");
 					
