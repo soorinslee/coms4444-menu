@@ -43,42 +43,27 @@ public class Player extends menu.sim.Player {
         for (FamilyMember member : familyMembers) {
             TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
             TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
+            // TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
             Map<FoodType, Double> foods = member.getFoodPreferenceMap();
-            System.out.println(foods);
+
+            // System.out.println(foods);
+
             for (Map.Entry<FoodType,Double> f : foods.entrySet()) {
                 FoodType foodType = f.getKey();
                 Double reward = f.getValue();
                 if (food.isBreakfastType(foodType)) {
-                    if (orderedBreakfastFoods.containsKey(-reward)) {
-                        List<FoodType> temp = orderedBreakfastFoods.get(-reward);
-                        temp.add(foodType);
-                        orderedBreakfastFoods.put(-reward, temp);
-                    }
-                    else {
-                        List<FoodType> temp = new ArrayList<>();
-                        temp.add(foodType);
-                        orderedBreakfastFoods.put(-reward, temp);
-                    }
+                    addFoods(orderedBreakfastFoods, reward, foodType);
                 }
                 else if (food.isLunchType(foodType)) {
-                    if (orderedLunchFoods.containsKey(-reward)) {
-                        List<FoodType> temp = orderedLunchFoods.get(-reward);
-                        temp.add(foodType);
-                        orderedLunchFoods.put(-reward, temp);
-                    }
-                    else{
-                        List<FoodType> temp = new ArrayList<>();
-                        temp.add(foodType);
-                        orderedLunchFoods.put(-reward, temp);
-                    }
+                    addFoods(orderedLunchFoods, reward, foodType);
                 }
                 else {
-                    // insert dinner here
+                    // addFoods(orderedDinnerFoods, reward, foodType);
                 }
             }
-            System.out.println(orderedBreakfastFoods);
-            System.out.println(orderedLunchFoods);
-            System.out.println("~~~");
+            // System.out.println(orderedBreakfastFoods);
+            // System.out.println(orderedLunchFoods);
+            // System.out.println("~~~");
             System.out.println(getTopNFoods(orderedBreakfastFoods, 3));
             System.out.println(getOptimalCycle(orderedLunchFoods));
             System.out.println("~~~~~~~~~~~~~~~~~~~~~");
@@ -87,7 +72,36 @@ public class Player extends menu.sim.Player {
         return null; // TODO modify the return statement to return your shopping list
     }
 
-    public List<FoodType> getTopNFoods(TreeMap<Double, List<FoodType>> foods, Integer n) {
+    /**
+     * Add foods to corresponding TreeMaps
+     *
+     * @param map            ordered map of -value : FoodTypes for a family member
+     * @param reward         reward of food
+     * @param foodType       type of food
+     *
+     */
+    private void addFoods(TreeMap<Double, List<FoodType>> map, Double reward, FoodType foodType) {
+        if (map.containsKey(-reward)) {
+            List<FoodType> temp = map.get(-reward);
+            temp.add(foodType);
+            map.put(-reward, temp);   // using -reward since Treemap orders smallest->largest
+        }
+        else {
+            List<FoodType> temp = new ArrayList<>();
+            temp.add(foodType);
+            map.put(-reward, temp);
+        }
+    }
+
+    /**
+     * Get top foods given ordered TreeMap of family member
+     *
+     * @param foods          ordered map of -value : FoodTypes for a family member
+     * @param n              number of foods to return
+     * @return               list of top n rewarding FoodTypes for a family member
+     *
+     */
+    private List<FoodType> getTopNFoods(TreeMap<Double, List<FoodType>> foods, Integer n) {
         List<FoodType> topNFoods = new ArrayList<>();
         int i = 0;
         outerloop:
@@ -102,14 +116,19 @@ public class Player extends menu.sim.Player {
         return topNFoods;
     }
 
-    public List<FoodType> getOptimalCycle(TreeMap<Double, List<FoodType>> foods) {
+    /**
+     * Get optimal cycle of foods to repeat given ordered TreeMap of family member
+     *
+     * @param foods          ordered map of -value : FoodTypes for a family member
+     * @return               list of foods to repeat in a cycle
+     *
+     */
+    private List<FoodType> getOptimalCycle(TreeMap<Double, List<FoodType>> foods) {
         List<FoodType> cycle = new ArrayList<>();
         int d = 0;
-        double greatestValue = 0;
+        double greatestValue = -foods.firstKey();
         outerloop:
         for (Map.Entry<Double, List<FoodType>> entry : foods.entrySet()) {
-            if (d == 0)
-                greatestValue = -entry.getKey();
             for (FoodType food : entry.getValue()) {
                 if (d > 0 && -entry.getKey()<(d*greatestValue/(d+1)))
                     break outerloop;
