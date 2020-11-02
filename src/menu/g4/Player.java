@@ -40,10 +40,23 @@ public class Player extends menu.sim.Player {
         for (FamilyMember member : familyMembers)
             System.out.println(member);
 
+        // A bit tight; might want to adjust in the future (espcially for lunch food)
+        // Assumption: You use all breakfast and lunch foods in the pantry each week
+        // There are extras for dinner
+        int numBreakfastFoods = 7 * numFamilyMembers;
+    	int numLunchFoods = 7 * numFamilyMembers;
+    	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+
+        ShoppingList shoppingList = new ShoppingList();
+    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
+    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
+        shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
+
+        // Get top N breakfast/lunch foods
         for (FamilyMember member : familyMembers) {
             TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
             TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
-            // TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
+            TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
             Map<FoodType, Double> foods = member.getFoodPreferenceMap();
 
             // System.out.println(foods);
@@ -58,7 +71,7 @@ public class Player extends menu.sim.Player {
                     addFoods(orderedLunchFoods, reward, foodType);
                 }
                 else {
-                    // addFoods(orderedDinnerFoods, reward, foodType);
+                    addFoods(orderedDinnerFoods, reward, foodType);
                 }
             }
             // System.out.println(orderedBreakfastFoods);
@@ -67,9 +80,55 @@ public class Player extends menu.sim.Player {
             System.out.println(getTopNFoods(orderedBreakfastFoods, 3));
             System.out.println(getOptimalCycle(orderedLunchFoods));
             System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+
+            List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
+
+            // Add 7 breakfast foods per family member
+            // Add four of first choices, two of second choice, one of third choice
+            for(int i = 0; i < 4; i++) {
+                shoppingList.addToOrder(topBreakfastFoods.get(0));
+            }
+            for(int i = 0; i < 2; i++) {
+                shoppingList.addToOrder(topBreakfastFoods.get(1));
+            }
+            for(int i = 0; i < 1; i++) {
+                shoppingList.addToOrder(topBreakfastFoods.get(2));
+            }
+
+            List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
+
+            // Add 7 lunch foods per family member according to optimal cycle
+            // Three of one type, two of another, two of another
+            for(int i = 0; i < 3; i++) {
+                shoppingList.addToOrder(optimalLunchCycle.get(0));
+            }
+            for(int i = 0; i < 2; i++) {
+                shoppingList.addToOrder(optimalLunchCycle.get(1));
+            }
+            for(int i = 0; i < 2; i++) {
+                shoppingList.addToOrder(optimalLunchCycle.get(2));
+            }
+    
+            // TODO: Figure out dinner
+            List<FoodType> topDinnerFoods = getTopNFoods(orderedDinnerFoods, 3);
+            for(int i = 0; i < 4; i++) {
+                shoppingList.addToOrder(topDinnerFoods.get(0));
+            }
+            for(int i = 0; i < 2; i++) {
+                shoppingList.addToOrder(topDinnerFoods.get(1));
+            }
+            for(int i = 0; i < 1; i++) {
+                shoppingList.addToOrder(topDinnerFoods.get(2));
+            }
         }
 
-        return null; // TODO modify the return statement to return your shopping list
+        // Check constraints
+        if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
+            return shoppingList;
+        }
+        else {
+            return new ShoppingList();
+        }
     }
 
     /**
@@ -84,7 +143,7 @@ public class Player extends menu.sim.Player {
         if (map.containsKey(-reward)) {
             List<FoodType> temp = map.get(-reward);
             temp.add(foodType);
-            map.put(-reward, temp);   // using -reward since Treemap orders smallest->largest
+            map.put(-reward, temp);   // using -reward since TreeMap orders smallest->largest
         }
         else {
             List<FoodType> temp = new ArrayList<>();
