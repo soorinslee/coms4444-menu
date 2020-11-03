@@ -1,4 +1,4 @@
-package menu.random;
+package menu.g1; // TODO modify the package name to reflect your team
 
 import java.util.*;
 
@@ -8,123 +8,127 @@ import menu.sim.Food.MealType;
 
 
 public class Player extends menu.sim.Player {
+	/**
+	 * Player constructor
+	 *
+	 * @param weeks             number of weeks
+	 * @param numFamilyMembers  number of family members
+	 * @param capacity          pantry capacity
+	 * @param seed              random seed
+	 * @param simPrinter        simulation printer
+	 *
+	 */
 
-    /**
-     * Player constructor
-     *
-     * @param weeks             number of weeks
-     * @param numFamilyMembers  number of family members
-     * @param capacity			pantry capacity
-     * @param seed        		random seed
-     * @param simPrinter   		simulation printer
-     *
-     */
+	private final Integer DAYS_PER_WEEK = 7;
+	private Weighter weighter;
+
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
 	}
 
-    /**
-     * Create shopping list of meals to stock pantry
-     *
-     * @param week           current week
-     * @param numEmptySlots  number of empty slots left in the pantry
-     * @param familyMembers  all family members
-     * @param pantry         pantry inventory of remaining foods
-     * @param mealHistory    history of previous meal allocations
-     * @return               shopping list of foods to order
-     *
-     */
-    public ShoppingList stockPantry(Integer week,
-    								Integer numEmptySlots,
-    								List<FamilyMember> familyMembers,
-    								Pantry pantry,
-    								MealHistory mealHistory) {
-    	
-    	int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
-    	int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
-    	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
-    	
-    	ShoppingList shoppingList = new ShoppingList();
-    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
-    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
-    	shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
-    	
-    	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-    	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-    	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
-    	
-    	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(breakfastFoods.get(random.nextInt(breakfastFoods.size())));
-    	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(lunchFoods.get(random.nextInt(lunchFoods.size())));
-    	for(int i = 0; i < 2 * capacity; i++)
-    		shoppingList.addToOrder(dinnerFoods.get(random.nextInt(dinnerFoods.size())));
-    	
-    	if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
-    		return shoppingList;
-    	return new ShoppingList();
-    }
+	/**
+	 * Create shopping list of meals to stock pantry
+	 *
+	 * @param week           current week
+	 * @param numEmptySlots  number of empty slots left in the pantry
+	 * @param familyMembers  all family members
+	 * @param pantry         pantry inventory of remaining foods
+	 * @param mealHistory    history of previous meal allocations
+	 * @return               shopping list of foods to order
+	 *
+	 */
+	public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
-    /**
-     * Plan meals
-     *
-     * @param week           current week
-     * @param familyMembers  all family members
-     * @param pantry         pantry inventory of remaining foods
-     * @param mealHistory    history of previous meal allocations
-     * @return               planner of assigned meals for the week
-     *
-     */
-    public Planner planMeals(Integer week,
-    						 List<FamilyMember> familyMembers,
-    						 Pantry pantry,
-    						 MealHistory mealHistory) {
-    	List<MemberName> memberNames = new ArrayList<>();
-    	for(FamilyMember familyMember : familyMembers)
-    		memberNames.add(familyMember.getName());
+		if (week == 1) {
+			this.weighter = new Weighter(familyMembers);
+		}
+		weighter.update(week, mealHistory, familyMembers);
 
-    	Pantry originalPantry = pantry.clone();
-    	
-    	Planner planner = new Planner(memberNames);
-    	for(MemberName memberName : memberNames) {
-    		for(Day day : Day.values()) {
-    			FoodType maxAvailableBreakfastMeal = getMaximumAvailableMeal(pantry, MealType.BREAKFAST);
-    			if(pantry.getNumAvailableMeals(maxAvailableBreakfastMeal) > 0) {
-        	    	planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
-        	    	pantry.removeMealFromInventory(maxAvailableBreakfastMeal);    				
-    			}
-    			FoodType maxAvailableLunchMeal = getMaximumAvailableMeal(pantry, MealType.LUNCH);
-    			if(pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
-        	    	planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
-        	    	pantry.removeMealFromInventory(maxAvailableLunchMeal);    				
-    			}
-    		}
-    	}
-    	for(Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = getMaximumAvailableMeal(pantry, MealType.DINNER);
-			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
-			for(int i = 0; i < numDinners; i++) {
-				MemberName memberName = memberNames.get(i);
-    	    	planner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
-		    	pantry.removeMealFromInventory(maxAvailableDinnerMeal);
+		ShoppingList shoppingList = new ShoppingList();
+		addBreakfast(familyMembers, shoppingList);
+		addLunch(familyMembers, shoppingList);
+		addDinner(shoppingList);
+
+		return shoppingList;
+	}
+
+	private void addBreakfast(List<FamilyMember> familyMembers, ShoppingList shoppingList) {
+		shoppingList.addLimit(MealType.BREAKFAST, DAYS_PER_WEEK * numFamilyMembers * 3);
+
+		for (FamilyMember member: familyMembers) {
+			for (int j = 0; j < 3; j++) {
+				FoodType food = weighter.memberScores.get(MealType.BREAKFAST).get(member).poll().getFoodType();
+				for (int i = 0; i < DAYS_PER_WEEK; i++) {
+					shoppingList.addToOrder(food);
+				}
 			}
-    	}
+		}
+	}
 
-    	if(Player.hasValidPlanner(planner, originalPantry))
-    		return planner;
-    	return new Planner();
-    }
-    
-    private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
-    	FoodType maximumAvailableMeal = null;
-    	int maxAvailableMeals = -1;
-    	for(FoodType foodType : Food.getFoodTypes(mealType)) {
-    		int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
-    		if(numAvailableMeals > maxAvailableMeals) {
-    			maxAvailableMeals = numAvailableMeals;
-    			maximumAvailableMeal = foodType;
-    		}
-    	}
-    	return maximumAvailableMeal;
-    }
+	private void addLunch(List<FamilyMember> familyMembers, ShoppingList shoppingList) {
+		shoppingList.addLimit(MealType.LUNCH, DAYS_PER_WEEK * numFamilyMembers * 3);
+
+		for (FamilyMember member: familyMembers) {
+			for (int j = 0; j < 3; j++) {
+				FoodType food = weighter.memberScores.get(MealType.LUNCH).get(member).poll().getFoodType();
+				for (int i = 0; i < DAYS_PER_WEEK; i++) {
+					shoppingList.addToOrder(food);
+				}
+			}
+		}
+	}
+
+	private void addDinner(ShoppingList shoppingList) {
+		shoppingList.addLimit(MealType.DINNER,DAYS_PER_WEEK * numFamilyMembers * 3);
+		for (int k = 0; k < 3; k++) {
+			for (int i = 0; i < DAYS_PER_WEEK; i++) {
+				FoodType food = weighter.avgScores.get(MealType.DINNER).poll().getFoodType();
+				for (int j = 0; j < numFamilyMembers; j++) {
+					shoppingList.addToOrder(food);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Plan meals
+	 *
+	 * @param week           current week
+	 * @param familyMembers  all family members
+	 * @param pantry         pantry inventory of remaining foods
+	 * @param mealHistory    history of previous meal allocations
+	 * @return               planner of assigned meals for the week
+	 *
+	 */
+	public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+		printPantry(pantry);
+
+		return null; // TODO modify the return statement to return your planner
+	}
+
+	private void printPantry(Pantry pantry) {
+		for (FoodType foodType: FoodType.values()) {
+			simPrinter.println(foodType.toString() + ": " + pantry.getNumAvailableMeals(foodType));
+		}
+	}
+
+	private void printAvgFoodScores() {
+		simPrinter.println("AVG: ");
+		while (!weighter.avgBreakfastScores.isEmpty()) {
+			FoodScore avgScore = weighter.avgBreakfastScores.poll();
+			simPrinter.println(avgScore.toString());
+		}
+	}
+
+	private void printMemberFoodScores(List<FamilyMember> familyMembers) {
+		simPrinter.println("MEM SCORES: ");
+		for (FamilyMember member: familyMembers) {
+			PriorityQueue<FoodScore> foodScores = weighter.memberBreakfastScores.get(member);
+			simPrinter.println(member.getName().toString());
+			while (!foodScores.isEmpty()) {
+				FoodScore foodScore = foodScores.poll();
+				simPrinter.println(foodScore.toString());
+			}
+		}
+	}
 }
