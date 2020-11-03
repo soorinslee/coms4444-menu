@@ -277,7 +277,7 @@ public class Player extends menu.sim.Player {
 					planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
 					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);
 				}
-				FoodType maxAvailableLunchMeal = getMaximumAvailableMeal(pantry, MealType.LUNCH);
+				FoodType maxAvailableLunchMeal = getRandomAvailableMeal(pantry, MealType.LUNCH);
 				if (pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
 					planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
 					pantry.removeMealFromInventory(maxAvailableLunchMeal);
@@ -285,7 +285,7 @@ public class Player extends menu.sim.Player {
 			}
 		}
 		for (Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = getMaximumAvailableMeal(pantry, MealType.DINNER);
+			FoodType maxAvailableDinnerMeal = getRandomAvailableMeal(pantry, MealType.DINNER);
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
@@ -299,13 +299,20 @@ public class Player extends menu.sim.Player {
 		return new Planner();
 	}
 
+	private FoodType getRandomAvailableMeal(Pantry pantry, MealType mealType){
+		Random rand = new Random();
+		int randomNum = rand.nextInt(pantry.getNumAvailableFoodTypes(mealType))+1;
+		FoodType randomAvailableMeal = pantry.getAvailableFoodTypes(mealType).get(randomNum);
+		return randomAvailableMeal;
+	}
+
 	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
 		FoodType maximumAvailableMeal = null;
-		int maxAvailableMeals = -1;
+		int maxAvailableMeals = 21;
 		for (FoodType foodType : Food.getFoodTypes(mealType)) {
-			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
-			if (numAvailableMeals > maxAvailableMeals) {
-				maxAvailableMeals = numAvailableMeals;
+			int ranking = this.breakfastRanks.indexOf(foodType);
+			if (maxAvailableMeals > ranking) {
+				maxAvailableMeals = ranking;
 				maximumAvailableMeal = foodType;
 			}
 		}
