@@ -9,6 +9,16 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
+
+	int size = 0;
+	List<FoodType> breakfastRanks; //weekly
+	List<FoodType> lunchRanks;
+	List<FoodType> dinnerRanks;
+
+	int numBreakfasts = 0;
+	int numLunches = 0;
+	int numDinners = 0;
+
     /**
      * Player constructor
      *
@@ -21,7 +31,33 @@ public class Player extends menu.sim.Player {
      */
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
+
+    }
+    
+
+    //option 1:
+    //to calculate static ideal pantry:
+    //1.determine spread of how many dinners/lunches/breakfasts we should have based on preferences
+    //2.rank breakfast, lunch, and dinner foods based on how much they are generally liked
+    //3.calculate ideal shopping list based on this
+
+    //how we're gonna order in the future
+    //4.order difference between current pantry and ideal list
+
+
+    //option 2:
+    //expected value
+    //simulate pantry being used
+    //simulate an expected value
+	//search space, choose the ideal pantry
+	
+
+	//rankings based on history
+	//longterm: tree of rankings, tree static
+	//daily rankings for lunch, dinner
+
 	}
+
 
     /**
      * Create shopping list of meals to stock pantry
@@ -39,16 +75,48 @@ public class Player extends menu.sim.Player {
     								List<FamilyMember> familyMembers,
     								Pantry pantry,
     								MealHistory mealHistory) {
-    	
+
+
+
+		//calculate ideal pantry
+		if(week == 1) {
+			size = pantry.getNumEmptySlots();
+
+			//1.) calculate how many breakfast, lunch, and dinner items we want based on preferences
+			List<Integer> cutoffs = calcFreqMeals(size, familyMembers);
+			numBreakfasts = cutoffs.get(0);
+			numLunches = cutoffs.get(1);
+			numDinners = cutoffs.get(2);
+
+
+
+			//2.) rank breakfast, lunch, and dinner items
+			breakfastRanks = calcOrderRanksBreakfast(familyMembers);
+			lunchRanks = calcOrderRanksLunch(familyMembers);
+			dinnerRanks = calcOrderRanksDinner(familyMembers);
+		}
+
+		return calcShoppingList(pantry, mealHistory);
+
+
+
+        
+        //TODO: Make these smart allocations
+    	/*int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
+    	int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
+        int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+        
+
     	int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
     	int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
     	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+
     	
     	ShoppingList shoppingList = new ShoppingList();
     	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
     	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
     	shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
-    	
+
     	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
     	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
     	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
@@ -62,6 +130,91 @@ public class Player extends menu.sim.Player {
     	
     	if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
     		return shoppingList;
+
+    	return new ShoppingList();*/
+	}
+
+	private ShoppingList calcShoppingList(Pantry pantry, MealHistory mealHistory) {
+		//how many breakfast items
+		ShoppingList breakfast = calcBreakfast(pantry, mealHistory);
+		//how many lunch items
+		ShoppingList lunch = calcLunch(pantry, mealHistory);
+		//how many dinner items
+		ShoppingList dinner = calcDinner(pantry, mealHistory);
+
+		//combine lists?
+		return combineShoppingLists(breakfast, lunch, dinner);
+	}
+
+
+	//Aum
+	//TODO
+	//1.) calculate how many breakfast, lunch, and dinner items we want based on preferences
+	List<Integer> calcFreqMeals(int size, List<FamilyMember> familyMembers) {
+
+	}
+
+	//Ahad
+	//TODO
+	//2.) rank breakfast items
+	//cereal, milk, oatmeal....
+	//highest minimum
+	//for each meal find lowest satisfaction
+	//use that value to rank all the foods
+	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) [
+
+	]
+
+	//Ahad
+	//TODO
+	//2.) rank lunch items
+	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+
+	}
+
+	//Ahad
+	//TODO
+	//2.) rank dinner items
+	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
+
+	}
+
+
+	//SCOTT
+	//TODO
+	//determine frequency for breakfast items
+	//based on cutoffs, rankings
+	//stick with highest ranking
+	ShoppingList calcBreakfast(Pantry pantry, MealHistory mealHistory) {
+
+	}
+
+	//SCOTT
+	//TODO
+	//determine frequency for lunch items
+	//balance between top couple
+	ShoppingList calcLunch(Pantry pantry, MealHistory mealHistory) {
+		
+	}
+
+	//SCOTT
+	//TODO
+	//determine frequency for dinner items
+	//multiples of the number of family members
+	ShoppingList calcDinner(Pantry pantry, MealHistory mealHistory) {
+		
+	}
+
+	//SCOTT
+	//TODO
+	//combine breakfast, lunch, and dinner shopping lists into one
+	//take into account cutoffs -> generate shopping list
+	//backup ones total to 7*2 or 7*3 of everything (pantry size/n)
+	ShoppingList combineShoppingLists(ShoppingList breakfast, ShoppingList lunch, ShoppingList dinner) {
+
+	}
+
+
     	return new ShoppingList();
     }
 
@@ -75,10 +228,22 @@ public class Player extends menu.sim.Player {
      * @return               planner of assigned meals for the week
      *
      */
+
+
+	 //TODOs
+	 //AUM
+
     public Planner planMeals(Integer week,
     						 List<FamilyMember> familyMembers,
     						 Pantry pantry,
     						 MealHistory mealHistory) {
+
+
+								
+
+		//1. randomly choose between top three meals only in lunch and dinner
+		//get max available or second max available, remove from inventory, add to planner
+
     	List<MemberName> memberNames = new ArrayList<>();
     	for(FamilyMember familyMember : familyMembers)
     		memberNames.add(familyMember.getName());
