@@ -56,7 +56,7 @@ public class Player extends menu.sim.Player {
 	//longterm: tree of rankings, tree static
 	//daily rankings for lunch, dinner
 
-	}
+	
 
 
     /**
@@ -151,6 +151,7 @@ public class Player extends menu.sim.Player {
 	//TODO
 	//1.) calculate how many breakfast, lunch, and dinner items we want based on preferences
 	List<Integer> calcFreqMeals(int size, List<FamilyMember> familyMembers) {
+		return new ArrayList<Integer>();
 
 	}
 
@@ -161,14 +162,16 @@ public class Player extends menu.sim.Player {
 	//highest minimum
 	//for each meal find lowest satisfaction
 	//use that value to rank all the foods
-	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) [
+	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+		return new ArrayList<FoodType>();
 
-	]
+	}
 
 	//Ahad
 	//TODO
 	//2.) rank lunch items
 	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+		return new ArrayList<FoodType>();
 
 	}
 
@@ -176,7 +179,7 @@ public class Player extends menu.sim.Player {
 	//TODO
 	//2.) rank dinner items
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
-
+		return new ArrayList<FoodType>();
 	}
 
 
@@ -186,6 +189,7 @@ public class Player extends menu.sim.Player {
 	//based on cutoffs, rankings
 	//stick with highest ranking
 	ShoppingList calcBreakfast(Pantry pantry, MealHistory mealHistory) {
+		return new ShoppingList();
 
 	}
 
@@ -194,7 +198,8 @@ public class Player extends menu.sim.Player {
 	//determine frequency for lunch items
 	//balance between top couple
 	ShoppingList calcLunch(Pantry pantry, MealHistory mealHistory) {
-		
+		return new ShoppingList();
+
 	}
 
 	//SCOTT
@@ -202,6 +207,7 @@ public class Player extends menu.sim.Player {
 	//determine frequency for dinner items
 	//multiples of the number of family members
 	ShoppingList calcDinner(Pantry pantry, MealHistory mealHistory) {
+		return new ShoppingList();
 		
 	}
 
@@ -211,8 +217,6 @@ public class Player extends menu.sim.Player {
 	//take into account cutoffs -> generate shopping list
 	//backup ones total to 7*2 or 7*3 of everything (pantry size/n)
 	ShoppingList combineShoppingLists(ShoppingList breakfast, ShoppingList lunch, ShoppingList dinner) {
-
-	}
 
 
     	return new ShoppingList();
