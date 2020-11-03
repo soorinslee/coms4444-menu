@@ -1,4 +1,4 @@
-package menu.random;
+package menu.g2;
 
 import java.util.*;
 
@@ -9,6 +9,7 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
+
 	int size = 0;
 	List<FoodType> breakfastRanks; //weekly
 	List<FoodType> lunchRanks;
@@ -17,6 +18,7 @@ public class Player extends menu.sim.Player {
 	int numBreakfasts = 0;
 	int numLunches = 0;
 	int numDinners = 0;
+
     /**
      * Player constructor
      *
@@ -29,6 +31,7 @@ public class Player extends menu.sim.Player {
      */
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
+
     }
     
 
@@ -53,6 +56,9 @@ public class Player extends menu.sim.Player {
 	//longterm: tree of rankings, tree static
 	//daily rankings for lunch, dinner
 
+	}
+
+
     /**
      * Create shopping list of meals to stock pantry
      *
@@ -69,6 +75,7 @@ public class Player extends menu.sim.Player {
     								List<FamilyMember> familyMembers,
     								Pantry pantry,
     								MealHistory mealHistory) {
+
 
 
 		//calculate ideal pantry
@@ -100,13 +107,16 @@ public class Player extends menu.sim.Player {
         int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
         
 
+    	int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
+    	int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
+    	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+
     	
     	ShoppingList shoppingList = new ShoppingList();
     	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
     	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
     	shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
-        
-        
+
     	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
     	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
     	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
@@ -120,6 +130,7 @@ public class Player extends menu.sim.Player {
     	
     	if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
     		return shoppingList;
+
     	return new ShoppingList();*/
 	}
 
@@ -204,6 +215,8 @@ public class Player extends menu.sim.Player {
 	}
 
 
+    	return new ShoppingList();
+    }
 
     /**
      * Plan meals
@@ -216,17 +229,21 @@ public class Player extends menu.sim.Player {
      *
      */
 
+
 	 //TODOs
 	 //AUM
+
     public Planner planMeals(Integer week,
     						 List<FamilyMember> familyMembers,
     						 Pantry pantry,
     						 MealHistory mealHistory) {
 
+
 								
 
 		//1. randomly choose between top three meals only in lunch and dinner
 		//get max available or second max available, remove from inventory, add to planner
+
     	List<MemberName> memberNames = new ArrayList<>();
     	for(FamilyMember familyMember : familyMembers)
     		memberNames.add(familyMember.getName());
