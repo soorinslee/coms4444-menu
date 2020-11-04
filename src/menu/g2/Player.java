@@ -386,17 +386,17 @@ public class Player extends menu.sim.Player {
 		
 		//add all breakfast foods
 		for(FoodType breakfast : breakfasts) {
-			shoppingList.addToOrder(MealType.BREAKFAST, breakfast);
+			shoppingList.addToOrder(breakfast);
 		}
 
 		//add all lunch foods
 		for(FoodType lunch : lunches) {
-			shoppingList.addToOrder(MealType.LUNCH, lunch);
+			shoppingList.addToOrder(lunch);
 		}
 
 		//add all dinner foods
 		for(FoodType dinner : dinners) {
-			shoppingList.addToOrder(MealType.DINNER, dinner);
+			shoppingList.addToOrder(dinner);
 		}
 
 		return shoppingList;
