@@ -291,7 +291,6 @@ public class Player extends menu.sim.Player {
      *
      */
     public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
-        System.out.println("AHHHHH WHY");
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
         for (FamilyMember member : familyMembers) {
@@ -312,7 +311,7 @@ public class Player extends menu.sim.Player {
                 }
 
                 // Lunch
-                while (l < this.allMemberLunch.size()) {
+                while (l < this.allMemberLunch.get(name).size()) {
                     FoodType lunch = this.allMemberLunch.get(name).get(l);
                     if (pantryCopy.containsMeal(lunch)) {
                         planner.addMeal(day, name, MealType.LUNCH, lunch);
@@ -330,8 +329,6 @@ public class Player extends menu.sim.Player {
                 // TODO: Dinner
             }
         }
-        System.out.println("~~~~~~~~");
-        System.out.println(planner);
         return planner;
     }
 
