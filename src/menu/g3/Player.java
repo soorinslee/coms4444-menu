@@ -63,35 +63,36 @@ public class Player extends menu.sim.Player {
         
         // family satisfaction, all 0 to start off 
         // frequency array, all 0 to start off 
+        if (week == 1) {
+            FoodType[] breakfastList = new FoodType[]{ FoodType.BREAKFAST1, FoodType.BREAKFAST2, FoodType.BREAKFAST3, FoodType.BREAKFAST4, FoodType.BREAKFAST5, FoodType.BREAKFAST6, FoodType.BREAKFAST7, FoodType.BREAKFAST8, FoodType.BREAKFAST9, FoodType.BREAKFAST10 };
+            FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
+            FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
 
-        FoodType[] breakfastList = new FoodType[]{ FoodType.BREAKFAST1, FoodType.BREAKFAST2, FoodType.BREAKFAST3, FoodType.BREAKFAST4, FoodType.BREAKFAST5, FoodType.BREAKFAST6, FoodType.BREAKFAST7, FoodType.BREAKFAST8, FoodType.BREAKFAST9, FoodType.BREAKFAST10 };
-        FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
-        FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
+            for (FamilyMember fm : familyMembers) {
+                MemberName fName = fm.getName();
+                Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
 
-        for (FamilyMember fm : familyMembers) {
-            MemberName fName = fm.getName();
-            Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
+                List<Double> mapBList = new ArrayList<>();
+                List<Double> mapLList = new ArrayList<>();
+                List<Double> mapDList = new ArrayList<>();
+                List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
 
-            List<Double> mapBList = new ArrayList<>();
-            List<Double> mapLList = new ArrayList<>();
-            List<Double> mapDList = new ArrayList<>();
-            List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
+                for (FoodType ft : breakfastList) {
+                    mapBList.add((double) foodMap.get(ft));
+                }
+                for (FoodType ft : lunchList) {
+                    mapLList.add((double) foodMap.get(ft));
+                }
+                for (FoodType ft : dinnerList) {
+                    mapDList.add((double) foodMap.get(ft));
+                }
 
-            for (FoodType ft : breakfastList) {
-                mapBList.add((double) foodMap.get(ft));
+                familySatisfaction.put(fName, 0.0);
+                breakfastArray.put(fName, mapBList);
+                lunchArray.put(fName, mapLList);
+                dinnerArray.put(fName, mapDList);
+                frequencyArray.put(fName, repList);
             }
-            for (FoodType ft : lunchList) {
-                mapLList.add((double) foodMap.get(ft));
-            }
-            for (FoodType ft : dinnerList) {
-                mapDList.add((double) foodMap.get(ft));
-            }
-
-            familySatisfaction.put(fName, 0.0);
-            breakfastArray.put(fName, mapBList);
-            lunchArray.put(fName, mapLList);
-            dinnerArray.put(fName, mapDList);
-            frequencyArray.put(fName, repList);
         }
 
         // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
@@ -169,7 +170,7 @@ public class Player extends menu.sim.Player {
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(breakfastIndices, new Comparator<Integer>() {
                     @Override public int compare(final Integer o1, final Integer o2) {
-                        return Double.compare(breakfastArray.get(fam).get(o1), breakfastArray.get(fam).get(o2));
+                        return Double.compare(breakfastArray.get(fam).get(o2), breakfastArray.get(fam).get(o1));
                     }
                 }); 
 
@@ -196,7 +197,7 @@ public class Player extends menu.sim.Player {
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(lunchIndices, new Comparator<Integer>() {
                     @Override public int compare(final Integer o1, final Integer o2) {
-                        return Double.compare(lunchArray.get(fam).get(o1), lunchArray.get(fam).get(o2));
+                        return Double.compare(lunchArray.get(fam).get(o2), lunchArray.get(fam).get(o1));
                     }
                 }); 
 
@@ -226,7 +227,7 @@ public class Player extends menu.sim.Player {
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(dinnerIndices, new Comparator<Integer>() {
                     @Override public int compare(final Integer o1, final Integer o2) {
-                        return Double.compare(dinnerArray.get(fam).get(o1), dinnerArray.get(fam).get(o2));
+                        return Double.compare(dinnerArray.get(fam).get(o2), dinnerArray.get(fam).get(o1));
                     }
                 }); 
             for (MemberName fam2 : familyMemberOrder) {
