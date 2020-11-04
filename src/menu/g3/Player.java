@@ -5,15 +5,17 @@ import java.util.*;
 import menu.sim.*;
 import menu.sim.Food.FoodType;
 import menu.sim.Food.MealType;
+import java.util.HashMap;
+import java.util.Map;
 // import sun.util.locale.provider.AvailableLanguageTags;
 
 public class Player extends menu.sim.Player {
 
-    private HashMap<MemberName, List<Double>> breakfastArray; // never gets updated 
-    private HashMap<MemberName, List<Double>> lunchArray; // updated with each day according to frequency 
-    private HashMap<MemberName, List<Double>> dinnerArray; // updated with each day according to frequency 
+    private HashMap<MemberName, List<Double>> breakfastArray = new HashMap<>(MemberName, List<Double>); // never gets updated 
+    private HashMap<MemberName, List<Double>> lunchArray = new HashMap<>(MemberName, List<Double>); // updated with each day according to frequency 
+    private HashMap<MemberName, List<Double>> dinnerArray = new HashMap<>(MemberName, List<Double>); // updated with each day according to frequency 
 
-    private HashMap<MemberName, List<Integer>> frequencyArray; // keeps track of how many times this meal was eaten in the past X days 
+    private HashMap<MemberName, List<Integer>> frequencyArray = new HashMap<>(MemberName, List<Integer>); // keeps track of how many times this meal was eaten in the past X days 
     /* these take the form of:
         B1, L1, D1 ... are satisfactions for each meal
         fm 1: [ B1, B2, B3 ... L1, L2, L3 ..., D1, D2, D3 ... ]
@@ -102,19 +104,28 @@ public class Player extends menu.sim.Player {
         // recalculate family satisfaction with new satisfaction for this week
 
         // make hashmaps for planned meals
+        HashMap<MemberName, FoodType> lunchList = new HashMap<MemberName, FoodType>;
+        HashMap<MemberName, FoodType> lunchList = new HashMap<MemberName, FoodType>;
+
+        // the order of family members, sorted by their satisfaction 
+        List<FamilyMember> familyMemberOrder = null;
         
         // Spencer: 
         // for every day:
+        for (int day = 1; day <= 7, day++) {
             // breakfast
             // never modify breakfast satisfactions after it's created
 
             // get order of family members (Nuneke's function)
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
-            // for every family member:
+            familyMemberOrder = getFamilyMembers() // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
+            for (FamilyMember fam : familyMemberOrder) {
                 // for each of that family member's breakfast array (sorted):
+                for (FoodType breakfast : breakfastArray.get(fam)) {
+
+                }
                     // assign the meal if it's available & break 
                         // assign = hashmap: family member --> assigned breakfast      
-
+            }
             // recalculate satisfcation
             // recalcSatisfaction(hashmap of assigned breakfasts, 0) // --> update lunch + dinner satisfaction matrices
 
@@ -122,7 +133,7 @@ public class Player extends menu.sim.Player {
 
 
             // lunch
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
+            familyMemberOrder = getFamilyMembers() // --> returns orderded list of family members by satisfaction
             // for every family member:
                 // for each of that family member's lunch array (sorted):
                     // assign the meal if it's available & break     
@@ -134,7 +145,7 @@ public class Player extends menu.sim.Player {
 
 
             // dinner
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
+            familyMemberOrder = getFamilyMembers() // --> returns orderded list of family members by satisfaction
             // for every family member:
                 // for each of that family member's meals:
                     // assign the meal if it's available & break     
@@ -146,7 +157,7 @@ public class Player extends menu.sim.Player {
             //udpateFrequency()
             // updatePreferneces()
 
-
+        }
         // create Planner object 
 
         return null; // TODO modify the return statement to return your planner
