@@ -6,9 +6,6 @@ import menu.sim.*;
 import menu.sim.Food.FoodType;
 import menu.sim.Food.MealType;
 // import sun.util.locale.provider.AvailableLanguageTags;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Player extends menu.sim.Player {
     Integer[] breakfastIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -180,6 +177,7 @@ public class Player extends menu.sim.Player {
                     // assign the meal if it's available & break 
                     int bre = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(breakfastIndx));
                     if (bre >= 1) {
+                        simPrinter.println("Added breakfast for " + fam + ": " + Food.getAllFoodTypes().get(breakfastIndx));
                         planner.addMeal(day, fam, MealType.BREAKFAST, Food.getAllFoodTypes().get(breakfastIndx));
                         pantry.removeMealFromInventory(Food.getAllFoodTypes().get(breakfastIndx));
                         breakfastList.put(fam,Food.getAllFoodTypes().get(breakfastIndx));
@@ -206,6 +204,7 @@ public class Player extends menu.sim.Player {
                     // assign the meal if it's available & break 
                     int lun = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(lunchcIndx + 10));
                     if (lun >= 1) {
+                        simPrinter.println("Added lunch for " + fam + ": " + Food.getAllFoodTypes().get(lunchcIndx + 10));
                         planner.addMeal(day, fam, MealType.LUNCH, Food.getAllFoodTypes().get(lunchcIndx + 10));
                         pantry.removeMealFromInventory(Food.getAllFoodTypes().get(lunchcIndx + 10));
                         lunchList.put(fam,Food.getAllFoodTypes().get(lunchcIndx + 10));
@@ -220,7 +219,9 @@ public class Player extends menu.sim.Player {
             // dinner
             familyMemberOrder = getFamilyMembers(); // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
             // simPrinter.println("family member order: " + familyMemberOrder);
-            for (MemberName fam : familyMemberOrder) {
+            MemberName fam = familyMemberOrder.get(0);
+            // for (MemberName fam : familyMemberOrder) {
+
                 // simPrinter.println("family member: " + fam);
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(dinnerIndices, new Comparator<Integer>() {
@@ -228,16 +229,17 @@ public class Player extends menu.sim.Player {
                         return Double.compare(dinnerArray.get(fam).get(o1), dinnerArray.get(fam).get(o2));
                     }
                 }); 
-
+            for (MemberName fam2 : familyMemberOrder) {
                 for (Integer dinnerIndx : dinnerIndices) {
                     // simPrinter.println("Dinner index: " + dinnerIndx);
                     // assign the meal if it's available & break 
                     // simPrinter.println("Dinner: " + Food.getAllFoodTypes().get(dinnerIndx + 20));
                     int din = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(dinnerIndx + 20));
                     if (din >= 1) {
-                        planner.addMeal(day, fam, MealType.DINNER, Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        simPrinter.println("Added dinner for " + fam2 + ": " + Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        planner.addMeal(day, fam2, MealType.DINNER, Food.getAllFoodTypes().get(dinnerIndx + 20));
                         pantry.removeMealFromInventory(Food.getAllFoodTypes().get(dinnerIndx + 20));
-                        dinnerList.put(fam,Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        dinnerList.put(fam2,Food.getAllFoodTypes().get(dinnerIndx + 20));
                         break;
                     }
                 }
@@ -245,16 +247,23 @@ public class Player extends menu.sim.Player {
             // recalculate satisfcation
             recalcSatisfaction(dinnerList, 2);
             simPrinter.println("Dinners: " + dinnerList);
-            
 
             // update frequency + preference arrays after every day
             updateFrequency(lunchList, dinnerList);
             updatePreference(familyMembers);
         }
 
+        simPrinter.println("Planner: ");
+        for (Day key : planner.getPlan().keySet()) {
+            simPrinter.println(key + ":");
+            for (MemberName name : planner.getPlan().get(key).keySet()) {
+                simPrinter.println("\t\t" + name + " = " + planner.getPlan().get(key).get(name));
+            }
+        }
+
         if(Player.hasValidPlanner(planner, originalPantry))
             return planner;
-        simPrinter.println("\n\nPlanner was invalid\n\n");
+        simPrinter.println("\nPlanner was invalid");
     	return new Planner();
     }
 
