@@ -1,7 +1,6 @@
 package menu.g4; // TODO modify the package name to reflect your team
 
 import java.util.*;
-import javafx.util.Pair;
 
 import menu.sim.*;
 import menu.sim.Food.FoodType;
@@ -14,7 +13,7 @@ public class Player extends menu.sim.Player {
     Food food;
     Map<MemberName, List<FoodType>> allMemberBreakfast;
     Map<MemberName, List<FoodType>> allMemberLunch;
-    Map<MemberName, List<FoodType>> allMemberDinner;
+    List<FoodType> allMemberDinner;
 
     /**
      * Player constructor
@@ -31,7 +30,7 @@ public class Player extends menu.sim.Player {
         this.food = new Food();
         this.allMemberBreakfast = new HashMap<>();
         this.allMemberLunch = new HashMap<>();
-        this.allMemberDinner = new HashMap<>();
+        this.allMemberDinner = new ArrayList<>();
     }
 
     /**
@@ -59,36 +58,9 @@ public class Player extends menu.sim.Player {
     	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
         shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
 
-        HashMap<FoodType, Double> foodToRewards = new HashMap<>();
-        // handle dinner separately 
-        for (FamilyMember member : familyMembers) {
-            Map<FoodType, Double> foods = member.getFoodPreferenceMap();
-            for (Map.Entry<FoodType, Double> f: foods.entrySet()) {
-                FoodType fType = f.getKey();
-                Double r = f.getValue(); 
-                if (food.isDinnerType(fType)) {
-                    if (foodToRewards.containsKey(fType)) {
-                        foodToRewards.put(fType, foodToRewards.get(fType) + r);
-                    }
-                    else {
-                        foodToRewards.put(fType, r);
-                    }
-                }
-            }
-        }
-
-        TreeMap<Double, FoodType> rewardToFood = new TreeMap<>();
-        for (Map.Entry<FoodType, Double> f: foodToRewards.entrySet()) {
-            FoodType fType = f.getKey();
-            Double r = -1*f.getValue(); 
-            rewardToFood.put(r, fType);
-        }
-
-        List<FoodType> optimalDinnerCycle = getOptimalDinnerCycle(rewardToFood);
-
-        System.out.println();
-        System.out.println("~~~~~~~~~~~~~~~~~~ WEEK " + week + " ~~~~~~~~~~~~~~~~~~");
-        // Get top breakfast/lunch foods
+        simPrinter.println();
+        simPrinter.println("~~~~~~~~~~~~~~~~~~ WEEK " + week + " ~~~~~~~~~~~~~~~~~~");
+        // Get top breakfast/lunch/dinner foods if first week
         if (week == 1) {
             for (FamilyMember member : familyMembers) {
                 TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
@@ -114,9 +86,37 @@ public class Player extends menu.sim.Player {
                 List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
                 this.allMemberLunch.put(member.getName(), optimalLunchCycle);
             }
-            System.out.println("Top 3 breakfast and optimal lunch cycle determined.");
+
+            HashMap<FoodType, Double> foodToRewards = new HashMap<>();
+            // handle dinner separately
+            for (FamilyMember member : familyMembers) {
+                Map<FoodType, Double> foods = member.getFoodPreferenceMap();
+                for (Map.Entry<FoodType, Double> f: foods.entrySet()) {
+                    FoodType fType = f.getKey();
+                    Double r = f.getValue();
+                    if (food.isDinnerType(fType)) {
+                        if (foodToRewards.containsKey(fType)) {
+                            foodToRewards.put(fType, foodToRewards.get(fType) + r);
+                        }
+                        else {
+                            foodToRewards.put(fType, r);
+                        }
+                    }
+                }
+            }
+
+            TreeMap<Double, FoodType> rewardToFood = new TreeMap<>();
+            for (Map.Entry<FoodType, Double> f: foodToRewards.entrySet()) {
+                FoodType fType = f.getKey();
+                Double r = -1*f.getValue();
+                rewardToFood.put(r, fType);
+            }
+
+            this.allMemberDinner = getOptimalDinnerCycle(rewardToFood);
+
+            simPrinter.println("Top 3 breakfast items, optimal lunch cycle, and dinner determined.");
         }
-        System.out.println("Moving ahead to adding to pantry.");
+        simPrinter.println("Moving ahead to adding to pantry.");
 
         // Adding to pantry
         for (FamilyMember member : familyMembers) {
@@ -134,57 +134,68 @@ public class Player extends menu.sim.Player {
             }
 
             // Add 7 lunch foods per family member according to optimal cycle
-            // Three of one type, two of another, two of another
-            for(int i = 0; i < 3; i++) {
-                shoppingList.addToOrder(this.allMemberLunch.get(name).get(0));
-            }
-            for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(this.allMemberLunch.get(name).get(1));
-            }
-            for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(this.allMemberLunch.get(name).get(2));
+            int ind = 0;
+            for (int count = 0; count < 7; count++) {
+                if (ind == this.allMemberLunch.get(name).size())
+                    ind = 0;
+                shoppingList.addToOrder(this.allMemberLunch.get(name).get(ind));
+                ind++;
             }
 
-            this.allMemberDinner.put(name, optimalDinnerCycle);
-
-            for(int i = 0; i < 4; i++) {
-                shoppingList.addToOrder(optimalDinnerCycle.get(0));
-            }
-            for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(optimalDinnerCycle.get(1));
-            }
-            for(int i = 0; i < 1; i++) {
-                shoppingList.addToOrder(optimalDinnerCycle.get(2));
-            }
-            System.out.println("Iterating through " + name + "'s order and adding to pantry.");
-            System.out.println(shoppingList.getFullOrderMap());
+            simPrinter.println("Iterating through " + name + "'s order and adding to pantry.");
+            // simPrinter.println(shoppingList.getFullOrderMap());
         }
-        System.out.println("Why isn't this printing?");
 
+        int count = 0;
         int cycleIndex = 0;
         for (int i=0; i<7; i++) {
-            if (cycleIndex == optimalDinnerCycle.size()) {
+            if (cycleIndex == this.allMemberDinner.size()) {
                 cycleIndex = 0;
             }
-            FoodType food = optimalDinnerCycle.get(cycleIndex);
+            FoodType food = this.allMemberDinner.get(cycleIndex);
             cycleIndex += 1;
             for (FamilyMember member : familyMembers) {
                 shoppingList.addToOrder(food);
+                count += 1;
             }
         }
 
-        // System.out.println(optimalDinnerCycle);
+        // simPrinter.println(optimalDinnerCycle);
         // TODO: Add 7 dinner cycle
 
         // Check constraints
         if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
-            System.out.println("VALID!");
+            simPrinter.println("VALID!");
+            simPrinter.println(this.allMemberDinner);
+            simPrinter.println(count);
+            simPrinter.println(shoppingList.getLimit(MealType.DINNER));
+            simPrinter.println(numEmptySlots);
+            simPrinter.println(numDinnerFoods);
+            // Add 7
+        }
+
+        // Check constraints
+        if(hasShoppingList(shoppingList, numEmptySlots)) {
+            simPrinter.println("Valid");
             return shoppingList;
         }
         else {
             return new ShoppingList();
         }
     }
+
+    private boolean hasShoppingList(ShoppingList shoppingList, Integer numEmptySlots) {
+    	Map<MealType, Integer> allLimitsMap = shoppingList.getAllLimitsMap();
+
+    	int totalLimits = 0;
+    	for(MealType mealType : allLimitsMap.keySet())
+            totalLimits += allLimitsMap.get(mealType);
+        simPrinter.println("totalLimits");
+        simPrinter.println(totalLimits);
+        simPrinter.println(numEmptySlots);
+    	return totalLimits <= numEmptySlots;
+    }
+    
 
     /**
      * Add foods to corresponding TreeMaps
@@ -280,6 +291,7 @@ public class Player extends menu.sim.Player {
      *
      */
     public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+        System.out.println("AHHHHH WHY");
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
         for (FamilyMember member : familyMembers) {
@@ -293,6 +305,7 @@ public class Player extends menu.sim.Player {
                     FoodType breakfast = this.allMemberBreakfast.get(name).get(b);
                     if (pantryCopy.containsMeal(breakfast)) {
                         planner.addMeal(day, name, MealType.BREAKFAST, breakfast);
+                        pantryCopy.removeMealFromInventory(breakfast);
                         break;
                     }
                     b++;
@@ -303,6 +316,7 @@ public class Player extends menu.sim.Player {
                     FoodType lunch = this.allMemberLunch.get(name).get(l);
                     if (pantryCopy.containsMeal(lunch)) {
                         planner.addMeal(day, name, MealType.LUNCH, lunch);
+                        pantryCopy.removeMealFromInventory(lunch);
                         l++;
                         if (l == this.allMemberLunch.size())
                             l = 0;
@@ -316,6 +330,8 @@ public class Player extends menu.sim.Player {
                 // TODO: Dinner
             }
         }
+        System.out.println("~~~~~~~~");
+        System.out.println(planner);
         return planner;
     }
 
