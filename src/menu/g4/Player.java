@@ -195,7 +195,7 @@ public class Player extends menu.sim.Player {
         simPrinter.println(numEmptySlots);
     	return totalLimits <= numEmptySlots;
     }
-    
+
 
     /**
      * Add foods to corresponding TreeMaps
@@ -265,11 +265,11 @@ public class Player extends menu.sim.Player {
     }
 
     private List<FoodType> getOptimalDinnerCycle(TreeMap<Double, FoodType> rewardToFood) {
-        List<FoodType> cycle = new ArrayList<>(); 
+        List<FoodType> cycle = new ArrayList<>();
         int d = 0;
-        double greatestValue = -rewardToFood.firstKey(); 
+        double greatestValue = -rewardToFood.firstKey();
         for (Map.Entry<Double, FoodType> entry : rewardToFood.entrySet()) {
-            FoodType food = entry.getValue(); 
+            FoodType food = entry.getValue();
             if (d > 0 && -entry.getKey() < (d*greatestValue/(d+1))) {
                 break;
             }
@@ -295,7 +295,6 @@ public class Player extends menu.sim.Player {
         Pantry pantryCopy = pantry.clone();
         for (FamilyMember member : familyMembers) {
             MemberName name = member.getName();
-            int l = 0;
             for (Day day : Day.values()) {
 
                 // Breakfast
@@ -311,6 +310,7 @@ public class Player extends menu.sim.Player {
                 }
 
                 // Lunch
+                int l = 0;
                 while (l < this.allMemberLunch.get(name).size()) {
                     FoodType lunch = this.allMemberLunch.get(name).get(l);
                     if (pantryCopy.containsMeal(lunch)) {
@@ -326,7 +326,20 @@ public class Player extends menu.sim.Player {
                 if (l == this.allMemberLunch.size())
                     l = 0;
 
-                // TODO: Dinner
+                // Dinner
+                int d = 0;
+                while (d > this.allMemberDinner.size()) {
+                    FoodType dinner = this.allMemberDinner.get(d);
+                    if (pantryCopy.containsMeal(dinner)) {
+                        planner.addMeal(day, name, MealType.DINNER, dinner);
+                        pantryCopy.removeMealFromInventory(dinner);
+                        d++;
+                        if (d == this.allMemberDinner.size())
+                            d = 0;
+                        break;
+                    }
+                    d++;
+                }
             }
         }
         return planner;
