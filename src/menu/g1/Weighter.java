@@ -13,27 +13,15 @@ public class Weighter {
 
     private Map<FamilyMember, Double> memberWeights;
 
-    public Map<Food.MealType, Map<FamilyMember, PriorityQueue<FoodScore>>> memberScores;
-    public Map<Food.MealType, PriorityQueue<FoodScore>> avgScores;
-
-    public Map<FamilyMember, PriorityQueue<FoodScore>> memberBreakfastScores;
-    public Map<FamilyMember, PriorityQueue<FoodScore>> memberLunchScores;
-    public Map<FamilyMember, PriorityQueue<FoodScore>> memberDinnerScores;
-
-    public PriorityQueue<FoodScore> avgBreakfastScores;
-    public PriorityQueue<FoodScore> avgLunchScores;
-    public PriorityQueue<FoodScore> avgDinnerScores;
+    private Map<Food.MealType, Map<FamilyMember, PriorityQueue<FoodScore>>> memberScores;
+    private Map<Food.MealType, PriorityQueue<FoodScore>> avgScores;
 
 
-    public Weighter(List<FamilyMember> familyMembers) {
-        familySize = familyMembers.size();
-        memberWeights = new HashMap<>();
-        memberScores = new HashMap<Food.MealType, Map<FamilyMember, PriorityQueue<FoodScore>>>();
-        avgScores = new HashMap<Food.MealType, PriorityQueue<FoodScore>>();
-
-        for (FamilyMember member: familyMembers) {
-            memberWeights.put(member, 1.0);
-        }
+    public Weighter(Integer familySize) {
+        this.familySize = familySize;
+        this.memberWeights = new HashMap<>();
+        this.memberScores = new HashMap<>();
+        this.avgScores = new HashMap<>();
 
         for (Food.MealType mealType: Food.MealType.values()) {
             memberScores.put(mealType, new HashMap<FamilyMember, PriorityQueue<FoodScore>>());
@@ -42,9 +30,7 @@ public class Weighter {
     }
 
     public void update(Integer week, MealHistory mealHistory, List<FamilyMember> familyMembers) {
-        if (week > 1) {
-            this.updateMemberWeights(week, mealHistory, familyMembers);
-        }
+        this.updateMemberWeights(week, mealHistory, familyMembers);
 
         for (Food.MealType mealType: Food.MealType.values()) {
             this.updateMealData(mealType);
@@ -54,13 +40,20 @@ public class Weighter {
     private void updateMemberWeights(Integer week, MealHistory mealHistory, List<FamilyMember> familyMembers) {
         memberWeights = new HashMap<>();
 
-        for (FamilyMember member: familyMembers) {
-            Double weight = DEFAULT_SCALE/mealHistory.getAverageSatisfaction(week, member.getName());
-            memberWeights.put(member, weight);
+        if (week == 1) {
+            for (FamilyMember member : familyMembers) {
+                memberWeights.put(member, 1.0);
+            }
+        }
+        else {
+            for (FamilyMember member : familyMembers) {
+                Double weight = DEFAULT_SCALE / mealHistory.getAverageSatisfaction(week - 1, member.getName());
+                memberWeights.put(member, weight);
+            }
         }
     }
 
-    public void updateMealData(Food.MealType mealType) {
+    private void updateMealData(Food.MealType mealType) {
         Map<Food.FoodType, ArrayList<Double>> foodScoresMap = new HashMap<>();
         List<Food.FoodType> foods = Food.getFoodTypes(mealType);
         Map<FamilyMember, PriorityQueue<FoodScore>> mealScores = memberScores.get(mealType);
@@ -106,5 +99,17 @@ public class Weighter {
 
     private Double calculateMemberScore(FamilyMember member, Food.FoodType foodType) {
         return  member.getFoodPreference(foodType) * memberWeights.get(member);
+    }
+
+    public Map<FamilyMember, Double> getMemberWeights() {
+        return memberWeights;
+    }
+
+    public Map<FamilyMember, PriorityQueue<FoodScore>> getMemberScoresFor(Food.MealType mealType) {
+        return new HashMap<>(memberScores.get(mealType));
+    }
+
+    public PriorityQueue<FoodScore> getAvgScoresFor(Food.MealType mealType) {
+        return new PriorityQueue<>(avgScores.get(mealType));
     }
 }
