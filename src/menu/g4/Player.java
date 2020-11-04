@@ -46,8 +46,6 @@ public class Player extends menu.sim.Player {
      *
      */
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
-        for (FamilyMember member : familyMembers)
-            System.out.println(member);
 
         // A bit tight; might want to adjust in the future (espcially for lunch food)
         // Assumption: You use all breakfast and lunch foods in the pantry each week
@@ -110,9 +108,9 @@ public class Player extends menu.sim.Player {
                     addFoods(orderedDinnerFoods, reward, foodType);
                 }
             }
-            System.out.println(getTopNFoods(orderedBreakfastFoods, 3));
-            System.out.println(getOptimalCycle(orderedLunchFoods));
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+            // System.out.println(getTopNFoods(orderedBreakfastFoods, 3));
+            // System.out.println(getOptimalCycle(orderedLunchFoods));
+            // System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 
             List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
             this.allMemberBreakfast.put(member.getName(), topBreakfastFoods);
@@ -176,6 +174,9 @@ public class Player extends menu.sim.Player {
 
         // Check constraints
         if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
+            System.out.println("VALID");
+            System.out.println(numEmptySlots);
+            System.out.println("~~~~~~~~~~~~~~~");
             return shoppingList;
         }
         else {
