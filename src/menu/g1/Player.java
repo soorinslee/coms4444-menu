@@ -1,4 +1,4 @@
-package menu.g1; // TODO modify the package name to reflect your team
+package menu.g1;
 
 import java.util.*;
 
