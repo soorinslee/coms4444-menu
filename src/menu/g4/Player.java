@@ -326,7 +326,7 @@ public class Player extends menu.sim.Player {
                     l = 0;
 
                 // Dinner
-                while (d < this.allMemberDinner.size()) {
+                /**while (d < this.allMemberDinner.size()) {
                     FoodType dinner = this.allMemberDinner.get(d);
                     if (pantryCopy.containsMeal(dinner)) {
                         planner.addMeal(day, name, MealType.DINNER, dinner);
@@ -337,7 +337,7 @@ public class Player extends menu.sim.Player {
                     d++;
                 }
                 if (d == this.allMemberDinner.size())
-                    d = 0;
+                    d = 0;**/
             }
         }
         return planner;
