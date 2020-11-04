@@ -317,8 +317,6 @@ public class Player extends menu.sim.Player {
                         planner.addMeal(day, name, MealType.LUNCH, lunch);
                         pantryCopy.removeMealFromInventory(lunch);
                         l++;
-                        if (l == this.allMemberLunch.size())
-                            l = 0;
                         break;
                     }
                     l++;
@@ -328,14 +326,12 @@ public class Player extends menu.sim.Player {
 
                 // Dinner
                 int d = 0;
-                while (d > this.allMemberDinner.size()) {
+                while (d < this.allMemberDinner.size()) {
                     FoodType dinner = this.allMemberDinner.get(d);
                     if (pantryCopy.containsMeal(dinner)) {
                         planner.addMeal(day, name, MealType.DINNER, dinner);
                         pantryCopy.removeMealFromInventory(dinner);
                         d++;
-                        if (d == this.allMemberDinner.size())
-                            d = 0;
                         break;
                     }
                     d++;
