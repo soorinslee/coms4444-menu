@@ -125,6 +125,7 @@ public class Player extends menu.sim.Player {
 	private ShoppingList calcShoppingList(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
 		//how many breakfast items
 		List<FoodType> breakfasts = calcBreakfast(pantry, mealHistory);
+		System.out.println(breakfasts.toString());
 		//how many lunch items
 		List<FoodType> lunches = calcLunch(pantry, mealHistory);
 		//how many dinner items
@@ -183,7 +184,7 @@ public class Player extends menu.sim.Player {
 		return cutoffs;
 	}
 
-	// Ahad
+	// Ahad - Done by Aum
 	// TODO
 	// 2.) rank breakfast items
 	// cereal, milk, oatmeal....
@@ -204,7 +205,7 @@ public class Player extends menu.sim.Player {
 		return sortByValue(lowestPerson);
 	}
 
-	// Ahad
+	// Ahad - Done by Aum
 	// TODO
 	// 2.) rank lunch items
 	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
@@ -221,7 +222,7 @@ public class Player extends menu.sim.Player {
 		return sortByValue(lowestPerson);
 	}
 
-	// Ahad
+	// Ahad - Done by Aum
 	// TODO
 	// 2.) rank dinner items
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
@@ -428,14 +429,14 @@ public class Player extends menu.sim.Player {
 		Planner planner = new Planner(memberNames);
 		for (MemberName memberName : memberNames) {
 			for (Day day : Day.values()) {
-				FoodType maxAvailableBreakfastMeal = getMaximumAvailableMeal(pantry, MealType.BREAKFAST);
+				FoodType maxAvailableBreakfastMeal = getMaximumAvailableMeal(pantry, MealType.BREAKFAST, familyMembers);
 				if (pantry.getNumAvailableMeals(maxAvailableBreakfastMeal) > 0) {
 					planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
 					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);
 				}
 				FoodType maxAvailableLunchMeal = FoodType.LUNCH1;
 				try {
-				 maxAvailableLunchMeal= this.dinnerRanks.get(getRandomAvailableMeal());
+				 maxAvailableLunchMeal= getRandomAvailableMeal(pantry, MealType.DINNER);//this.dinnerRanks.get(getRandomAvailableMeal());
 				} catch (Exception e){
 				System.out.println("HERE4");
 				}
@@ -447,7 +448,7 @@ public class Player extends menu.sim.Player {
 		}
 
 		for (Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = this.dinnerRanks.get(getRandomAvailableMeal());
+			FoodType maxAvailableDinnerMeal =  getRandomAvailableMeal(pantry, MealType.DINNER); //this.dinnerRanks.get(getRandomAvailableMeal());
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
@@ -461,14 +462,34 @@ public class Player extends menu.sim.Player {
 		return new Planner();
 	}
 
-	private int getRandomAvailableMeal(){
-		Random rand = new Random();
+	private FoodType getRandomAvailableMeal(Pantry pantry, MealType mealType){
+		FoodType maximumAvailableMeal = null;
+    	int maxAvailableMeals = -1;
+    	for(FoodType foodType : Food.getFoodTypes(mealType)) {
+    		int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
+    		if(numAvailableMeals > maxAvailableMeals) {
+    			maxAvailableMeals = numAvailableMeals;
+    			maximumAvailableMeal = foodType;
+    		}
+    	}
+    	return maximumAvailableMeal;
+/*		Random rand = new Random();
 		int randomNum = rand.nextInt(3);
-		return randomNum;
+		return randomNum; */
 	}
 
-	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
-		FoodType maximumAvailableMeal = null;
+	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType, List<FamilyMember> members){
+		FoodType maximumAvailableMeal = FoodType.BREAKFAST1;
+		int maxAvailableMeals = -1;
+		int i =  0;
+		while(maxAvailableMeals < members.size() && i < this.breakfastRanks.size()){
+			if(pantry.getNumAvailableMeals(this.breakfastRanks.get(i))>= members.size()){
+				return this.breakfastRanks.get(i);
+			}
+			i++;
+		}
+    	return maximumAvailableMeal;
+/*		FoodType maximumAvailableMeal = null;
 		int maxAvailableMeals = 21;
 		for (FoodType foodType : Food.getFoodTypes(mealType)) {
 			int ranking = this.breakfastRanks.indexOf(foodType);
@@ -477,6 +498,6 @@ public class Player extends menu.sim.Player {
 				maximumAvailableMeal = foodType;
 			}
 		}
-		return maximumAvailableMeal;
+		return maximumAvailableMeal; */
 	}
 }
