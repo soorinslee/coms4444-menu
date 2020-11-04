@@ -31,8 +31,9 @@ public class Player extends menu.sim.Player {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
 
 		ShoppingList finalSL = calcShoppingList(pantry, mealHistory, familyMembers);
-		if(Player.hasValidShoppingList(finalSL, numEmptySlots))
-    		return finalSL;
+		if(Player.hasValidShoppingList(finalSL, numEmptySlots)){
+			return finalSL;
+		}
     	return new ShoppingList();
 
 	}
@@ -84,7 +85,7 @@ public class Player extends menu.sim.Player {
 		lunchRanks = calcOrderRanksLunch(familyMembers);
 		dinnerRanks = calcOrderRanksDinner(familyMembers);
 
-		return calcShoppingList(pantry, mealHistory);
+		return calcShoppingList(pantry, mealHistory, familyMembers);
 
 		// TODO: Make these smart allocations
 		/*
