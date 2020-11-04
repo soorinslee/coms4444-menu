@@ -1,12 +1,11 @@
-package menu.g3; // TODO modify the package name to reflect your team
+package menu.g3;
 
 import java.util.*;
 
 import menu.sim.*;
 import menu.sim.Food.FoodType;
 import menu.sim.Food.MealType;
-import sun.util.locale.provider.AvailableLanguageTags;
-
+// import sun.util.locale.provider.AvailableLanguageTags;
 
 public class Player extends menu.sim.Player {
 
@@ -23,7 +22,7 @@ public class Player extends menu.sim.Player {
         . . .
     */
 
-    private familySatisfaction // array that keeps track of the family member's satisfaction for each day
+    // private familySatisfaction // array that keeps track of the family member's satisfaction for each day
     /* takes the form:
         fm1 --> satisfaction 
         fm2 --> satisfaction 
@@ -59,12 +58,33 @@ public class Player extends menu.sim.Player {
     *
     */
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
-
-        // TODO add your code here to generate a shopping list
-        // (Spencer)
-        // just add 21 of each meal for each member (enough to last 3 weeks if we cannot buy again)
-
-        return null; // TODO modify the return statement to return your shopping list
+        
+        // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
+        int numMeals = familyMembers.size() * 28;
+    	
+    	ShoppingList shoppingList = new ShoppingList();
+    	shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
+    	shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
+    	shoppingList.addLimit(MealType.DINNER, numMeals * 20);
+    	
+    	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
+    	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
+    	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+        
+        for (int repeat = 0; repeat < numMeals; repeat++) {
+            for (int i = 0; i < 10; i++) {
+                shoppingList.addToOrder(breakfastFoods.get(i));
+                shoppingList.addToOrder(lunchFoods.get(i));
+                shoppingList.addToOrder(dinnerFoods.get(i));
+            }
+            for (int i = 10; i < 20; i++) {
+                shoppingList.addToOrder(dinnerFoods.get(i));
+            }
+        }
+        simPrinter.println(shoppingList.getFullOrderMap());
+        if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
+    		return shoppingList;
+    	return new ShoppingList();
     }
 
     /**
@@ -84,47 +104,47 @@ public class Player extends menu.sim.Player {
         // make hashmaps for planned meals
         
         // Spencer: 
-        for every day:
+        // for every day:
             // breakfast
             // never modify breakfast satisfactions after it's created
 
             // get order of family members (Nuneke's function)
-            familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
+            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
             // for every family member:
                 // for each of that family member's breakfast array (sorted):
                     // assign the meal if it's available & break 
                         // assign = hashmap: family member --> assigned breakfast      
 
             // recalculate satisfcation
-            recalcSatisfaction(hashmap of assigned breakfasts, 0) // --> update lunch + dinner satisfaction matrices
+            // recalcSatisfaction(hashmap of assigned breakfasts, 0) // --> update lunch + dinner satisfaction matrices
 
 
 
 
             // lunch
-            familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
+            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
             // for every family member:
                 // for each of that family member's lunch array (sorted):
                     // assign the meal if it's available & break     
 
             // recalculate satisfcation
-            recalcSatisfaction(hashmap of assigned lunches, 1) // --> update lunch + dinner satisfaction matrices
+            // recalcSatisfaction(hashmap of assigned lunches, 1) // --> update lunch + dinner satisfaction matrices
 
 
 
 
             // dinner
-            familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
+            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
             // for every family member:
                 // for each of that family member's meals:
                     // assign the meal if it's available & break     
 
             // recalculate satisfcation
-            recalcSatisfaction([list of dinners assigned in that day], familyMemberList, 2) // --> update lunch + dinner satisfaction matrices
+            // recalcSatisfaction([list of dinners assigned in that day], familyMemberList, 2) // --> update lunch + dinner satisfaction matrices
 
             // update frequency array
-            updateFrequency(hashmap of lunches, hashmap of dinners)
-            updatePreferneces(hashmap of lunches, hashmap of dinners)
+            // updateFrequency(hashmap of lunches, hashmap of dinners)
+            // updatePreferneces(hashmap of lunches, hashmap of dinners)
 
 
         // create Planner object 
@@ -134,22 +154,22 @@ public class Player extends menu.sim.Player {
 
 
     // Qi
-    void updatePreference()
+    // void updatePreference()
         // updates the preferences for each meal according to the meals that were assigned today 
 
     // Qi   
-    void updateFrequency()
+    // void updateFrequency()
         // remember to change the frequency of meals that weren't eaten too! 
             // 1 meal in the past two days --> 1 meal in the past 3 days if not eaten
             // 1 meal in the past two days --> 2 meals in the past 3 days if eaten
         // updates the frequency array for each meal according to the meals that were assigned today 
 
     // Nuneke
-    void recalcSatisfaction(hashmap of assigned meals, flag digit = 0B, 1L, 2D )
+    // void recalcSatisfaction(hashmap of assigned meals, flag digit = 0B, 1L, 2D )
         // updates each individual family member's satisfaction 
 
     // Nuneke: 
-    list getFamilyMembers()
+    // list getFamilyMembers()
         // looks at family member satsifaction hashmap
         // update each individual satisfaction
         // return ordered list of hashmap keys 
