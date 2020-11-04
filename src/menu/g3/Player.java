@@ -264,15 +264,14 @@ public class Player extends menu.sim.Player {
             double satis = familySatisfaction.get(theName);
             double pref;
             FoodType theFoodType = am.getValue(); 
-            int theFoodIndex = getFoodInteger(theFoodType);
             if (flagDigit == 0){
-                pref = breakfastArray.get(theName).get(theFoodIndex);
+                pref = breakfastArray.get(theName).get(theFoodType.ordinal());
             } 
             else if (flagDigit == 1){
-                pref = lunchArray.get(theName).get(theFoodIndex);
+                pref = lunchArray.get(theName).get(theFoodType.ordinal()-10);
             } 
             else {
-                pref = dinnerArray.get(theName).get(theFoodIndex);
+                pref = dinnerArray.get(theName).get(theFoodType.ordinal()-20);
             }
 
             satis += pref;
@@ -280,73 +279,6 @@ public class Player extends menu.sim.Player {
 
         } 
     }
-
-    private int getFoodInteger(FoodType theFoodType){
-        switch(theFoodType){
-            case BREAKFAST1:
-            case LUNCH1:
-            case DINNER1:
-                return 0;
-            case BREAKFAST2:
-            case LUNCH2:
-            case DINNER2:
-                return 1;
-            case BREAKFAST3:
-            case LUNCH3:
-            case DINNER3:
-                return 2;
-            case BREAKFAST4:
-            case LUNCH4:
-            case DINNER4:
-                return 3;
-            case BREAKFAST5:
-            case LUNCH5:
-            case DINNER5:
-                return 4;
-            case BREAKFAST6:
-            case LUNCH6:
-            case DINNER6:
-                return 5;
-            case BREAKFAST7:
-            case LUNCH7:
-            case DINNER7:
-                return 6;
-            case BREAKFAST8:
-            case LUNCH8:
-            case DINNER8:
-                return 7;
-            case BREAKFAST9:
-            case LUNCH9:
-            case DINNER9:
-                return 8;
-            case BREAKFAST10:
-            case LUNCH10:
-            case DINNER10:
-                return 9;
-            case DINNER11:
-                return 10;
-            case DINNER12:
-                return 11;
-            case DINNER13:
-                return 12;
-            case DINNER14:
-                return 13;
-            case DINNER15:
-                return 14;
-            case DINNER16:
-                return 15;
-            case DINNER17:
-                return 16;
-            case DINNER18:
-                return 17;
-            case DINNER19:
-                return 18;
-            case DINNER20:
-                return 19;
-            default: return -1;
-        }
-    }
-        
 
     // Nuneke: 
     private List getFamilyMembers() {
