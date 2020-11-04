@@ -143,11 +143,7 @@ public class Player extends menu.sim.Player {
 	//TODO
 	//1.) calculate how many breakfast, lunch, and dinner items we want based on preferences
 	List<Integer> calcFreqMeals(int size, List<FamilyMember> familyMembers) {
-		List<Integer> li = new ArrayList<>();
-		li.add(size/3);
-		li.add(size/3);
-		li.add(size/3);
-		return li;
+
 	}
 
 	//Ahad
@@ -158,21 +154,21 @@ public class Player extends menu.sim.Player {
 	//for each meal find lowest satisfaction
 	//use that value to rank all the foods
 	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
-		return Food.getFoodTypes(MealType.BREAKFAST);
+
 	}
 
 	//Ahad
 	//TODO
 	//2.) rank lunch items
 	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
-		return Food.getFoodTypes(MealType.LUNCH);
+
 	}
 
 	//Ahad
 	//TODO
 	//2.) rank dinner items
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
-		return Food.getFoodTypes(MealType.DINNER);
+
 	}
 
 
