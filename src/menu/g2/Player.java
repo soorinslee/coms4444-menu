@@ -30,12 +30,6 @@ public class Player extends menu.sim.Player {
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
 
-		ShoppingList finalSL = calcShoppingList(pantry, mealHistory, familyMembers);
-		if(Player.hasValidShoppingList(finalSL, numEmptySlots)){
-			return finalSL;
-		}
-    	return new ShoppingList();
-
 	}
 
 	// option 1:
@@ -75,15 +69,19 @@ public class Player extends menu.sim.Player {
 
 		// 1.) calculate how many breakfast, lunch, and dinner items we want based on
 		// preferences
+		System.out.println("HERE1");
+
 		List<Integer> cutoffs = calcFreqMeals(pantry, size, familyMembers);
 		numBreakfasts = cutoffs.get(0);
 		numLunches = cutoffs.get(1);
 		numDinners = cutoffs.get(2);
+		System.out.println("HERE2");
 
 		// 2.) rank breakfast, lunch, and dinner items
 		breakfastRanks = calcOrderRanksBreakfast(familyMembers);
 		lunchRanks = calcOrderRanksLunch(familyMembers);
 		dinnerRanks = calcOrderRanksDinner(familyMembers);
+		System.out.println("HERE3");
 
 		return calcShoppingList(pantry, mealHistory, familyMembers);
 
@@ -193,26 +191,75 @@ public class Player extends menu.sim.Player {
 	// for each meal find lowest satisfaction
 	// use that value to rank all the foods
 	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
-
+		Food f = new Food();
+		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.BREAKFAST);
+		Map<FoodType, Double> lowestPerson = new HashMap<>();
+		for(FoodType food: allBreakfasts){
+			double lowest = 1.1;
+			for(FamilyMember member: familyMembers){
+				lowest = Math.min (member.getFoodPreference(food), lowest);
+			}
+			lowestPerson.put(food, lowest);
+		}
+		return sortByValue(lowestPerson);
 	}
 
 	// Ahad
 	// TODO
 	// 2.) rank lunch items
 	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
-
+		Food f = new Food();
+		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.LUNCH);
+		Map<FoodType, Double> lowestPerson = new HashMap<>();
+		for(FoodType food: allBreakfasts){
+			double lowest = 1.1;
+			for(FamilyMember member: familyMembers){
+				lowest = Math.min (member.getFoodPreference(food), lowest);
+			}
+			lowestPerson.put(food, lowest);
+		}
+		return sortByValue(lowestPerson);
 	}
 
 	// Ahad
 	// TODO
 	// 2.) rank dinner items
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
+		Food f = new Food();
+		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.DINNER);
+		Map<FoodType, Double> lowestPerson = new HashMap<>();
+		for(FoodType food: allBreakfasts){
+			double lowest = 1.1;
+			for(FamilyMember member: familyMembers){
+				lowest = Math.min (member.getFoodPreference(food), lowest);
+			}
+			lowestPerson.put(food, lowest);
+		}
+		return sortByValue(lowestPerson);
 	}
 
-
+	public static List<FoodType> sortByValue(Map<FoodType, Double> hm) 
+    { 
+        // Create a list from elements of HashMap 
+        List<Map.Entry<FoodType, Double> > list = 
+               new LinkedList<Map.Entry<FoodType, Double> >(hm.entrySet()); 
+  
+        // Sort the list 
+        Collections.sort(list, new Comparator<Map.Entry<FoodType, Double> >() { 
+            public int compare(Map.Entry<FoodType, Double> o1,  
+                               Map.Entry<FoodType, Double> o2) 
+            { 
+                return (o1.getValue()).compareTo(o2.getValue()); 
+            } 
+        }); 
+          
+        // put data from sorted list to hashmap  
+        HashMap<FoodType, Double> temp = new LinkedHashMap<FoodType, Double>(); 
+        for (Map.Entry<FoodType, Double> aa : list) { 
+            temp.put(aa.getKey(), aa.getValue()); 
+        } 
+        return new ArrayList(temp.keySet()); 
+    } 
 
 	//SCOTT
 	//TODO
@@ -386,15 +433,21 @@ public class Player extends menu.sim.Player {
 					planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
 					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);
 				}
-				FoodType maxAvailableLunchMeal = getRandomAvailableMeal(pantry, MealType.LUNCH);
+				FoodType maxAvailableLunchMeal = FoodType.LUNCH1;
+				try {
+				 maxAvailableLunchMeal= this.dinnerRanks.get(getRandomAvailableMeal());
+				} catch (Exception e){
+				System.out.println("HERE4");
+				}
 				if (pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
 					planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
 					pantry.removeMealFromInventory(maxAvailableLunchMeal);
 				}
 			}
 		}
+
 		for (Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = getRandomAvailableMeal(pantry, MealType.DINNER);
+			FoodType maxAvailableDinnerMeal = this.dinnerRanks.get(getRandomAvailableMeal());
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
@@ -408,11 +461,10 @@ public class Player extends menu.sim.Player {
 		return new Planner();
 	}
 
-	private FoodType getRandomAvailableMeal(Pantry pantry, MealType mealType){
+	private int getRandomAvailableMeal(){
 		Random rand = new Random();
-		int randomNum = rand.nextInt(pantry.getNumAvailableFoodTypes(mealType))+1;
-		FoodType randomAvailableMeal = pantry.getAvailableFoodTypes(mealType).get(randomNum);
-		return randomAvailableMeal;
+		int randomNum = rand.nextInt(3);
+		return randomNum;
 	}
 
 	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
