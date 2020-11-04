@@ -5,11 +5,14 @@ import java.util.*;
 import menu.sim.*;
 import menu.sim.Food.FoodType;
 import menu.sim.Food.MealType;
+import menu.sim.MemberName;
 
 
 public class Player extends menu.sim.Player {
 
     Food food;
+    Map<MemberName, Map<String, List<FoodType>>> allMemberFoods;
+
     /**
      * Player constructor
      *
@@ -23,6 +26,7 @@ public class Player extends menu.sim.Player {
     public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
         super(weeks, numFamilyMembers, capacity, seed, simPrinter);
         this.food = new Food();
+        this.allMemberFoods = new HashMap<>();
     }
 
     /**
@@ -58,6 +62,7 @@ public class Player extends menu.sim.Player {
             TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
             TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
             Map<FoodType, Double> foods = member.getFoodPreferenceMap();
+            Map<String, List<FoodType>> memberFoods = new HashMap<>();
 
             // System.out.println(foods);
 
@@ -82,6 +87,7 @@ public class Player extends menu.sim.Player {
             System.out.println("~~~~~~~~~~~~~~~~~~~~~");
 
             List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
+            memberFoods.put("breakfast", topBreakfastFoods);
 
             // Add 7 breakfast foods per family member
             // Add four of first choices, two of second choice, one of third choice
@@ -96,6 +102,7 @@ public class Player extends menu.sim.Player {
             }
 
             List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
+            memberFoods.put("lunch", optimalLunchCycle);
 
             // Add 7 lunch foods per family member according to optimal cycle
             // Three of one type, two of another, two of another
