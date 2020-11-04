@@ -317,8 +317,6 @@ public class Player extends menu.sim.Player {
                         planner.addMeal(day, name, MealType.LUNCH, lunch);
                         pantryCopy.removeMealFromInventory(lunch);
                         l++;
-                        if (l == this.allMemberLunch.size())
-                            l = 0;
                         break;
                     }
                     l++;
