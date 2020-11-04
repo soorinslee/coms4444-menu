@@ -63,49 +63,29 @@ public class Player extends menu.sim.Player {
         
         // family satisfaction, all 0 to start off 
         // frequency array, all 0 to start off 
+
+        FoodType[] breakfastList = new FoodType[]{ FoodType.BREAKFAST1, FoodType.BREAKFAST2, FoodType.BREAKFAST3, FoodType.BREAKFAST4, FoodType.BREAKFAST5, FoodType.BREAKFAST6, FoodType.BREAKFAST7, FoodType.BREAKFAST8, FoodType.BREAKFAST9, FoodType.BREAKFAST10 };
+        FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
+        FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
+
+        this.simPrinter.println("week: " + week);
         if (week == 1) {
-            FoodType[] breakfastList = new FoodType[]{ FoodType.BREAKFAST1, FoodType.BREAKFAST2, FoodType.BREAKFAST3, FoodType.BREAKFAST4, FoodType.BREAKFAST5, FoodType.BREAKFAST6, FoodType.BREAKFAST7, FoodType.BREAKFAST8, FoodType.BREAKFAST9, FoodType.BREAKFAST10 };
-            FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
-            FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
-
-            for (FamilyMember fm : familyMembers) {
-                MemberName fName = fm.getName();
-                Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
-
-                List<Double> mapBList = new ArrayList<>();
-                List<Double> mapLList = new ArrayList<>();
-                List<Double> mapDList = new ArrayList<>();
-                List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
-
-                for (FoodType ft : breakfastList) {
-                    mapBList.add((double) foodMap.get(ft));
-                }
-                for (FoodType ft : lunchList) {
-                    mapLList.add((double) foodMap.get(ft));
-                }
-                for (FoodType ft : dinnerList) {
-                    mapDList.add((double) foodMap.get(ft));
-                }
-
-                familySatisfaction.put(fName, 0.0);
-                breakfastArray.put(fName, mapBList);
-                lunchArray.put(fName, mapLList);
-                dinnerArray.put(fName, mapDList);
-                frequencyArray.put(fName, repList);
-            }
+            initializePreference(familyMembers);
+            
         }
+        printPreference();
 
         // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
         int numMeals = familyMembers.size() * 28;
-    	
-    	ShoppingList shoppingList = new ShoppingList();
-    	shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
-    	shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
-    	shoppingList.addLimit(MealType.DINNER, numMeals * 20);
-    	
-    	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-    	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-    	List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+        
+        ShoppingList shoppingList = new ShoppingList();
+        shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
+        shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
+        shoppingList.addLimit(MealType.DINNER, numMeals * 20);
+        
+        List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
+        List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
+        List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
         
         for (int repeat = 0; repeat < numMeals; repeat++) {
             for (int i = 0; i < 10; i++) {
@@ -121,7 +101,7 @@ public class Player extends menu.sim.Player {
         if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
             return shoppingList;
         simPrinter.println("\n\nShopping list was invalid\n\n");
-    	return new ShoppingList();
+        return new ShoppingList();
     }
 
     /**
@@ -172,7 +152,8 @@ public class Player extends menu.sim.Player {
                     @Override public int compare(final Integer o1, final Integer o2) {
                         return Double.compare(breakfastArray.get(fam).get(o2), breakfastArray.get(fam).get(o1));
                     }
-                }); 
+                });
+                //simPrinter.println("Sorted Breakfasts: " + Arrays.toString(breakfastIndices));
 
                 for (Integer breakfastIndx : breakfastIndices) {
                     // assign the meal if it's available & break 
@@ -265,7 +246,69 @@ public class Player extends menu.sim.Player {
         if(Player.hasValidPlanner(planner, originalPantry))
             return planner;
         simPrinter.println("\nPlanner was invalid");
-    	return new Planner();
+        return new Planner();
+    }
+
+
+    /**
+    * Initializes the preference arrays and the frequency array at the beginning of week 1
+    * Set all frequency to zero
+    * Set all preference value to match the configuration file
+    * @param familyMembers    list of family memebers
+    **/
+    void initializePreference(List<FamilyMember> familyMembers){
+         
+        for (FamilyMember m : familyMembers) {
+            MemberName p = m.getName();
+            
+            //initialize breakfastArray
+            List<Double> breakfast = new ArrayList<>();
+            for (FoodType food : Food.getFoodTypes(MealType.BREAKFAST)) {
+                breakfast.add(m.getFoodPreference(food));
+            }
+            breakfastArray.put(p, breakfast);
+
+            //initialize lunchArray
+            List<Double> lunch = new ArrayList<>();
+            for (FoodType food : Food.getFoodTypes(MealType.LUNCH)) {
+                lunch.add(m.getFoodPreference(food));
+            }
+            lunchArray.put(p, lunch);
+
+            //initialize dinnerArray
+            List<Double> dinner = new ArrayList<>();
+            for (FoodType food : Food.getFoodTypes(MealType.DINNER)) {
+                dinner.add(m.getFoodPreference(food));
+            }
+            dinnerArray.put(p, dinner);
+
+            //initialize frequency
+            List<Integer> frequency = new ArrayList<Integer>(Collections.nCopies(40, 0));
+            frequencyArray.put(p, frequency);
+
+            //initialize satisfaction
+            familySatisfaction.put(p, 0.0);
+        }
+    }
+
+    //print food preference arrays and frequency array
+    void printPreference(){
+        simPrinter.println("Breakfast preference: "); 
+        breakfastArray.entrySet().forEach(entry->{
+            simPrinter.println(entry.getKey() + " " + entry.getValue());  
+        });
+        simPrinter.println("Lunch preference: "); 
+        lunchArray.entrySet().forEach(entry->{
+            simPrinter.println(entry.getKey() + " " + entry.getValue());  
+        });
+        simPrinter.println("Dinner preference: "); 
+        dinnerArray.entrySet().forEach(entry->{
+            simPrinter.println(entry.getKey() + " " + entry.getValue());  
+        });
+        simPrinter.println("Frequency: "); 
+        frequencyArray.entrySet().forEach(entry->{
+            simPrinter.println(entry.getKey() + " " + entry.getValue());  
+        });
     }
 
 
@@ -301,7 +344,8 @@ public class Player extends menu.sim.Player {
         }
     }
 
-    
+
+
     /**
     * Updates frequency for each meal according to the meals that were assigned today
     * if a food has never been eaten, set frequency to 0 if still not eaten today, otherwise set to 1
