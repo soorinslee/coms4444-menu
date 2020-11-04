@@ -326,20 +326,18 @@ public class Player extends menu.sim.Player {
                     l = 0;
 
                 // Dinner
-                /**while (d < this.allMemberDinner.size()) {
-                    FoodType dinner = this.allMemberDinner.get(d);
-                    if (pantryCopy.containsMeal(dinner)) {
-                        planner.addMeal(day, name, MealType.DINNER, dinner);
-                        pantryCopy.removeMealFromInventory(dinner);
-                        d++;
-                        break;
-                    }
-                    d++;
+                FoodType dinner = this.allMemberDinner.get(d);
+                if (pantryCopy.containsMeal(dinner)) {
+                    planner.addMeal(day, name, MealType.DINNER, dinner);
+                    pantryCopy.removeMealFromInventory(dinner);
+                    break;
                 }
-                if (d == this.allMemberDinner.size())
-                    d = 0;**/
+                d++;
             }
         }
+        System.out.println(week);
+        System.out.println(planner.getPlan());
+        System.out.println("~~~~~~~~~~~~~");
         return planner;
     }
 
