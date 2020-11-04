@@ -336,6 +336,8 @@ public class Player extends menu.sim.Player {
                     }
                     d++;
                 }
+                if (d == this.allMemberDinner.size())
+                    d = 0;
             }
         }
         return planner;
