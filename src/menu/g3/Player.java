@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Player extends menu.sim.Player {
-    Integer[] breakfastIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    Integer[] lunchIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    Integer[] dinnerIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+    Integer[] breakfastIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    Integer[] lunchIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    Integer[] dinnerIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
 
     private HashMap<MemberName, List<Double>> breakfastArray = new HashMap<>(); // never gets updated 
     private HashMap<MemberName, List<Double>> lunchArray = new HashMap<>(); // updated with each day according to frequency 
@@ -71,38 +71,30 @@ public class Player extends menu.sim.Player {
         FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
         FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
 
-        if (breakfastArray == null){
-            breakfastArray = new HashMap<>();
-            lunchArray = new HashMap<>();
-            dinnerArray = new HashMap<>();
-            frequencyArray = new HashMap<>();
-            familySatisfaction = new HashMap<>();
+        for (FamilyMember fm : familyMembers) {
+            MemberName fName = fm.getName();
+            Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
 
-            for (FamilyMember fm : familyMembers) {
-                MemberName fName = fm.getName();
-                Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
+            List<Double> mapBList = new ArrayList<>();
+            List<Double> mapLList = new ArrayList<>();
+            List<Double> mapDList = new ArrayList<>();
+            List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
 
-                List<Double> mapBList = new ArrayList<>();
-                List<Double> mapLList = new ArrayList<>();
-                List<Double> mapDList = new ArrayList<>();
-                List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
-
-                for (FoodType ft : breakfastList) {
-                    mapBList.add((double) foodMap.get(ft));
-                }
-                for (FoodType ft : lunchList) {
-                    mapLList.add((double) foodMap.get(ft));
-                }
-                for (FoodType ft : dinnerList) {
-                    mapDList.add((double) foodMap.get(ft));
-                }
-
-                familySatisfaction.put(fName, 0.0);
-                breakfastArray.put(fName, mapBList);
-                lunchArray.put(fName, mapLList);
-                dinnerArray.put(fName, mapDList);
-                frequencyArray.put(fName, repList);
+            for (FoodType ft : breakfastList) {
+                mapBList.add((double) foodMap.get(ft));
             }
+            for (FoodType ft : lunchList) {
+                mapLList.add((double) foodMap.get(ft));
+            }
+            for (FoodType ft : dinnerList) {
+                mapDList.add((double) foodMap.get(ft));
+            }
+
+            familySatisfaction.put(fName, 0.0);
+            breakfastArray.put(fName, mapBList);
+            lunchArray.put(fName, mapLList);
+            dinnerArray.put(fName, mapDList);
+            frequencyArray.put(fName, repList);
         }
 
         // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
@@ -163,13 +155,19 @@ public class Player extends menu.sim.Player {
         // the order of family members, sorted by their satisfaction 
         List<MemberName> familyMemberOrder = null;
         
+        // simPrinter.println("breakfast array:" + breakfastArray);
+        // simPrinter.println("lunch array:" + lunchArray);
+        // simPrinter.println("dinner array:" + dinnerArray);
+
         // Spencer: 
         for(Day day : Day.values()) {
+            simPrinter.println("\nDay: " + day);
             // breakfast
             // never modify breakfast satisfactions after it's created
 
             // get order of family members (Nuneke's function)
             familyMemberOrder = getFamilyMembers(); // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
+            // simPrinter.println("family member order: " + familyMemberOrder);
             for (MemberName fam : familyMemberOrder) {
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(breakfastIndices, new Comparator<Integer>() {
@@ -191,6 +189,7 @@ public class Player extends menu.sim.Player {
             }
             // recalculate satisfcation
             recalcSatisfaction(breakfastList, 0);
+            simPrinter.println("Breakfasts: " + breakfastList);
 
             
             // lunch
@@ -216,10 +215,13 @@ public class Player extends menu.sim.Player {
             }
             // recalculate satisfcation
             recalcSatisfaction(lunchList, 1);
+            simPrinter.println("Lunches: " + lunchList);
 
             // dinner
             familyMemberOrder = getFamilyMembers(); // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
+            // simPrinter.println("family member order: " + familyMemberOrder);
             for (MemberName fam : familyMemberOrder) {
+                // simPrinter.println("family member: " + fam);
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(dinnerIndices, new Comparator<Integer>() {
                     @Override public int compare(final Integer o1, final Integer o2) {
@@ -228,7 +230,9 @@ public class Player extends menu.sim.Player {
                 }); 
 
                 for (Integer dinnerIndx : dinnerIndices) {
+                    // simPrinter.println("Dinner index: " + dinnerIndx);
                     // assign the meal if it's available & break 
+                    // simPrinter.println("Dinner: " + Food.getAllFoodTypes().get(dinnerIndx + 20));
                     int din = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(dinnerIndx + 20));
                     if (din >= 1) {
                         planner.addMeal(day, fam, MealType.DINNER, Food.getAllFoodTypes().get(dinnerIndx + 20));
@@ -240,6 +244,7 @@ public class Player extends menu.sim.Player {
             }
             // recalculate satisfcation
             recalcSatisfaction(dinnerList, 2);
+            simPrinter.println("Dinners: " + dinnerList);
             
 
             // update frequency + preference arrays after every day
@@ -269,7 +274,7 @@ public class Player extends menu.sim.Player {
             double newP;
 
             //update lunch preferences
-            for (int l=0; l<20; l++){
+            for (int l=0; l<10; l++){
                 days = frequencyArray.get(p).get(l+10); //food eaten d days ago
                 oldP = m.getFoodPreference(FoodType.values()[l+10]);
                 newP= (days > 0) ? ((double)days/(days+1)*oldP) : oldP;
@@ -277,9 +282,9 @@ public class Player extends menu.sim.Player {
             }
 
             //update dinner preferences
-            for (int d=0; d<10; d++){
-                days = frequencyArray.get(p).get(d+30);
-                oldP = m.getFoodPreference(FoodType.values()[d+30]);
+            for (int d=0; d<20; d++){
+                days = frequencyArray.get(p).get(d+20);
+                oldP = m.getFoodPreference(FoodType.values()[d+20]);
                 newP = (days > 0) ? ((double)days/(days+1)*oldP) : oldP;
                 dinnerArray.get(p).set(d, newP);
             }
