@@ -149,7 +149,7 @@ public class Player extends menu.sim.Player {
             }
         }
 
-
+        int count = 0;
         int cycleIndex = 0;
         for (int i=0; i<7; i++) {
             if (cycleIndex == optimalDinnerCycle.size()) {
@@ -159,20 +159,40 @@ public class Player extends menu.sim.Player {
             cycleIndex += 1;
             for (FamilyMember member : familyMembers) {
                 shoppingList.addToOrder(food);
+                count += 1;
             }
         }
 
         System.out.println(optimalDinnerCycle);
+        System.out.println(count);
+        System.out.println(shoppingList.getLimit(MealType.DINNER));
+        System.out.println(numEmptySlots);
+        System.out.println(numDinnerFoods);
         // Add 7 
 
         // Check constraints
-        if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
+        if(hasShoppingList(shoppingList, numEmptySlots)) {
+            simPrinter.println("Valid");
             return shoppingList;
         }
         else {
             return new ShoppingList();
         }
     }
+
+    public boolean hasShoppingList(ShoppingList shoppingList, Integer numEmptySlots) {
+    	Map<MealType, Integer> allLimitsMap = shoppingList.getAllLimitsMap();
+
+    	int totalLimits = 0;
+    	for(MealType mealType : allLimitsMap.keySet())
+            totalLimits += allLimitsMap.get(mealType);
+        simPrinter.println("totalLimits");
+
+        simPrinter.println(totalLimits);
+        simPrinter.println(numEmptySlots);
+    	return totalLimits <= numEmptySlots;
+    }
+    
 
     /**
      * Add foods to corresponding TreeMaps
