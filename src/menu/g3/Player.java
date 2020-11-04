@@ -9,11 +9,11 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
-    private breakfastArray // never gets updated 
-    private lunchArray // updated with each day according to frequency 
-    private dinnerArray // updated with each day according to frequency 
+    private HashMap<MemberName, List<Double>> breakfastArray; // never gets updated 
+    private HashMap<MemberName, List<Double>> lunchArray; // updated with each day according to frequency 
+    private HashMap<MemberName, List<Double>> dinnerArray; // updated with each day according to frequency 
 
-    private frequencyArray // keeps track of how many times this meal was eaten in the past X days 
+    private HashMap<MemberName, List<Integer>> frequencyArray; // keeps track of how many times this meal was eaten in the past X days 
     /* these take the form of:
         B1, L1, D1 ... are satisfactions for each meal
         fm 1: [ B1, B2, B3 ... L1, L2, L3 ..., D1, D2, D3 ... ]
@@ -143,8 +143,8 @@ public class Player extends menu.sim.Player {
             // recalcSatisfaction([list of dinners assigned in that day], familyMemberList, 2) // --> update lunch + dinner satisfaction matrices
 
             // update frequency array
-            // updateFrequency(hashmap of lunches, hashmap of dinners)
-            // updatePreferneces(hashmap of lunches, hashmap of dinners)
+            //udpateFrequency()
+            // updatePreferneces()
 
 
         // create Planner object 
@@ -153,16 +153,66 @@ public class Player extends menu.sim.Player {
     }
 
 
-    // Qi
-    // void updatePreference()
-        // updates the preferences for each meal according to the meals that were assigned today 
+    /**
+    * Updates the preferences for each meal at the end of each day
+    * If a food has never been eaten, i.e. frequency is 0, perference remains same as original preference
+    * If a food was eaten d days ago, set preference to (d/d+1) original perference
+    * @param familyMembers    list of family memebers
+    **/
+    void updatePreference(List<FamilyMember> familyMembers) {
+        //update preferences for eah family member
+        for (FamilyMember m : familyMembers) {
+            MemberName p = m.getName();
+            int days;
+            double oldP; //original preference value from the configuration file
+            double newP;
 
-    // Qi   
-    // void updateFrequency()
-        // remember to change the frequency of meals that weren't eaten too! 
-            // 1 meal in the past two days --> 1 meal in the past 3 days if not eaten
-            // 1 meal in the past two days --> 2 meals in the past 3 days if eaten
-        // updates the frequency array for each meal according to the meals that were assigned today 
+            //update lunch preferences
+            for (int l=0; l<20; l++){
+                days = frequencyArray.get(p).get(l+10); //food eaten d days ago
+                oldP = m.getFoodPreference(FoodType.values()[l+10]);
+                newP= (days > 0) ? ((double)days/(days+1)*oldP) : oldP;
+                lunchArray.get(p).set(l, newP);
+            }
+
+            //update dinner preferences
+            for (int d=0; d<10; d++){
+                days = frequencyArray.get(p).get(d+30);
+                oldP = m.getFoodPreference(FoodType.values()[d+30]);
+                newP = (days > 0) ? ((double)days/(days+1)*oldP) : oldP;
+                dinnerArray.get(p).set(d, newP);
+            }
+        }
+    }
+
+    
+    /**
+    * Updates frequency for each meal according to the meals that were assigned today
+    * if a food has never been eaten, set frequency to 0 if still not eaten today, otherwise set to 1
+    * if a food was eaten d days ago, set frequency to d+1 if not eaten today, otherwise set to 1
+    * @param lunchList      lunch assigned to each family memeber
+    * @param dinnerList     dinner assigned to each family member
+    **/
+    void updateFrequency(HashMap<MemberName, FoodType> lunchList, HashMap<MemberName, FoodType> dinnerList){
+        //verify that lunchList contains lunch for every family member
+        assert lunchList.size() == this.numFamilyMembers;
+
+        //update frequency list for each family member
+        for (MemberName p : lunchList.keySet()) {
+            int lunch = lunchList.get(p).ordinal();
+            int dinner = dinnerList.get(p).ordinal();
+            int daysAgo;
+            for (int i=0; i<40; i++){
+                if (frequencyArray.get(p).get(i) == 0) { //this food type has never been eaten
+                    daysAgo = (i == lunch || i == dinner) ? 1:0;
+                } else { //this food type was eaten x days ago > x+1 if not eaten today
+                    daysAgo = (i == lunch || i == dinner) ? 1:frequencyArray.get(p).get(i)+1;
+                }
+                //update
+                frequencyArray.get(p).set(i, daysAgo);
+            }
+        }
+    }
 
     // Nuneke
     // void recalcSatisfaction(hashmap of assigned meals, flag digit = 0B, 1L, 2D )
