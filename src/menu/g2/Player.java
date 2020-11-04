@@ -1,4 +1,4 @@
-package menu.random;
+package menu.g2;
 
 import java.util.*;
 
@@ -89,7 +89,10 @@ public class Player extends menu.sim.Player {
 			dinnerRanks = calcOrderRanksDinner(familyMembers);
 		}
 
-		return calcShoppingList(pantry, mealHistory);
+		ShoppingList finalSL = calcShoppingList(pantry, mealHistory, familyMembers);
+		if(Player.hasValidShoppingList(finalSL, numEmptySlots))
+    		return finalSL;
+    	return new ShoppingList();
 
 
 
@@ -123,16 +126,16 @@ public class Player extends menu.sim.Player {
     	return new ShoppingList();*/
 	}
 
-	private ShoppingList calcShoppingList(Pantry pantry, MealHistory mealHistory) {
+	private ShoppingList calcShoppingList(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
 		//how many breakfast items
-		ShoppingList breakfast = calcBreakfast(pantry, mealHistory);
+		List<FoodType> breakfasts = calcBreakfast(pantry, mealHistory);
 		//how many lunch items
-		ShoppingList lunch = calcLunch(pantry, mealHistory);
+		List<FoodType> lunches = calcLunch(pantry, mealHistory);
 		//how many dinner items
-		ShoppingList dinner = calcDinner(pantry, mealHistory);
+		List<FoodType> dinners = calcDinner(pantry, mealHistory, familyMembers);
 
 		//combine lists?
-		return combineShoppingLists(breakfast, lunch, dinner);
+		return combineShoppingLists(breakfasts, lunches, dinners, pantry);
 	}
 
 
@@ -140,7 +143,11 @@ public class Player extends menu.sim.Player {
 	//TODO
 	//1.) calculate how many breakfast, lunch, and dinner items we want based on preferences
 	List<Integer> calcFreqMeals(int size, List<FamilyMember> familyMembers) {
-
+		List<Integer> li = new ArrayList<>();
+		li.add(size/3);
+		li.add(size/3);
+		li.add(size/3);
+		return li;
 	}
 
 	//Ahad
@@ -150,22 +157,22 @@ public class Player extends menu.sim.Player {
 	//highest minimum
 	//for each meal find lowest satisfaction
 	//use that value to rank all the foods
-	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) [
-
-	]
+	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+		return Food.getFoodTypes(MealType.BREAKFAST);
+	}
 
 	//Ahad
 	//TODO
 	//2.) rank lunch items
 	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
-
+		return Food.getFoodTypes(MealType.LUNCH);
 	}
 
 	//Ahad
 	//TODO
 	//2.) rank dinner items
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
-
+		return Food.getFoodTypes(MealType.DINNER);
 	}
 
 
@@ -174,15 +181,61 @@ public class Player extends menu.sim.Player {
 	//determine frequency for breakfast items
 	//based on cutoffs, rankings
 	//stick with highest ranking
-	ShoppingList calcBreakfast(Pantry pantry, MealHistory mealHistory) {
+	List<FoodType> calcBreakfast(Pantry pantry, MealHistory mealHistory) {
+		//numBreakfasts
+		int difference = numBreakfasts -  pantry.getNumAvailableMeals(MealType.BREAKFAST);
 
+		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
+
+		List<FoodType> breakfasts = new ArrayList<>();
+
+		//target top 3 breakfasts
+		for(int i = 0; i < 3; i++) {
+			FoodType topFood = breakfastRanks.get(i);
+			int freqTop = map.get(MealType.BREAKFAST).get(topFood);
+
+			breakfasts = addFoods(breakfasts, topFood, (int) (difference/3*1.5));
+		}
+
+		for(int i = 4; i < breakfastRanks.size(); i++) {
+			FoodType badFood = breakfastRanks.get(i);
+			int freqBad = map.get(MealType.BREAKFAST).get(badFood);
+
+			breakfasts = addFoods(breakfasts, badFood, (int) (difference/5*1.5));
+		}
+
+		//System.out.println(breakfasts);
+		return breakfasts;
 	}
 
 	//SCOTT
 	//TODO
 	//determine frequency for lunch items
 	//balance between top couple
-	ShoppingList calcLunch(Pantry pantry, MealHistory mealHistory) {
+	List<FoodType> calcLunch(Pantry pantry, MealHistory mealHistory) {
+		int difference = numLunches -  pantry.getNumAvailableMeals(MealType.LUNCH);
+
+		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
+
+		List<FoodType> lunches = new ArrayList<>();
+
+		//target top 5 top lunches
+		for(int i = 0; i < 5; i++) {
+			FoodType topFood = lunchRanks.get(i);
+			int freqTop = map.get(MealType.LUNCH).get(topFood);
+
+			lunches = addFoods(lunches, topFood, (int) (difference/5*1.3));
+		}
+
+		for(int i = 6; i < lunchRanks.size(); i++) {
+			FoodType badFood = lunchRanks.get(i);
+			int freqBad = map.get(MealType.LUNCH).get(badFood);
+
+			lunches = addFoods(lunches, badFood, (int) (difference/7*1.2));
+		}
+
+		//System.out.println(lunches);
+		return lunches;
 		
 	}
 
@@ -190,8 +243,44 @@ public class Player extends menu.sim.Player {
 	//TODO
 	//determine frequency for dinner items
 	//multiples of the number of family members
-	ShoppingList calcDinner(Pantry pantry, MealHistory mealHistory) {
+	List<FoodType> calcDinner(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
+		int numFamMembers = familyMembers.size();
+		int difference = numDinners -  pantry.getNumAvailableMeals(MealType.DINNER);
+		//System.out.println("difference is " + difference);
+		//System.out.println("size is " + size);
+
+		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
+
+		List<FoodType> dinners = new ArrayList<>();
+
+		//target top 5 top dinners
+		for(int i = 0; i < 5; i++) {
+			FoodType topFood = dinnerRanks.get(i);
+			int freqTop = map.get(MealType.DINNER).get(topFood);
+
+
+
+			dinners = addFoods(dinners, topFood, (int) (difference/5*1.3));
+		}
+
+		for(int i = 6; i < dinnerRanks.size(); i++) {
+			FoodType badFood = dinnerRanks.get(i);
+			int freqBad = map.get(MealType.DINNER).get(badFood);
+
+			dinners = addFoods(dinners, badFood, (int) (difference/7*1.2));
+		}
+
+		//System.out.println(dinners);
+		return dinners;
 		
+	}
+
+	List<FoodType> addFoods(List<FoodType> li, FoodType food, int num) {
+		List<FoodType> foods = new ArrayList<>(li);
+		for(int i = 0; i < num; i++) {
+			foods.add(food);
+		}
+		return foods;
 	}
 
 	//SCOTT
@@ -199,8 +288,30 @@ public class Player extends menu.sim.Player {
 	//combine breakfast, lunch, and dinner shopping lists into one
 	//take into account cutoffs -> generate shopping list
 	//backup ones total to 7*2 or 7*3 of everything (pantry size/n)
-	ShoppingList combineShoppingLists(ShoppingList breakfast, ShoppingList lunch, ShoppingList dinner) {
+	ShoppingList combineShoppingLists(List<FoodType> breakfasts, List<FoodType> lunches, List<FoodType> dinners, Pantry pantry) {
+		ShoppingList shoppingList = new ShoppingList();
 
+		//add cutoffs for how many of each meal type
+    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfasts -  pantry.getNumAvailableMeals(MealType.BREAKFAST));
+    	shoppingList.addLimit(MealType.LUNCH, numLunches - pantry.getNumAvailableMeals(MealType.LUNCH));
+		shoppingList.addLimit(MealType.DINNER, numDinners - pantry.getNumAvailableMeals(MealType.DINNER));
+		
+		//add all breakfast foods
+		for(FoodType breakfast : breakfasts) {
+			shoppingList.addToOrder(MealType.BREAKFAST, breakfast);
+		}
+
+		//add all lunch foods
+		for(FoodType lunch : lunches) {
+			shoppingList.addToOrder(MealType.LUNCH, lunch);
+		}
+
+		//add all dinner foods
+		for(FoodType dinner : dinners) {
+			shoppingList.addToOrder(MealType.DINNER, dinner);
+		}
+
+		return shoppingList;
 	}
 
 
