@@ -86,76 +86,80 @@ public class Player extends menu.sim.Player {
 
         List<FoodType> optimalDinnerCycle = getOptimalDinnerCycle(rewardToFood);
 
-        // Get top N breakfast/lunch foods
-        for (FamilyMember member : familyMembers) {
-            TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
-            TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
-            TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
-            Map<FoodType, Double> foods = member.getFoodPreferenceMap();
+        System.out.println();
+        System.out.println("~~~~~~~~~~~~~~~~~~ WEEK " + week + " ~~~~~~~~~~~~~~~~~~");
+        // Get top breakfast/lunch foods
+        if (week == 1) {
+            for (FamilyMember member : familyMembers) {
+                TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
+                TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
+                TreeMap<Double, List<FoodType>> orderedDinnerFoods = new TreeMap<>();
+                Map<FoodType, Double> foods = member.getFoodPreferenceMap();
 
-            // System.out.println(foods);
+                for (Map.Entry<FoodType, Double> f : foods.entrySet()) {
+                    FoodType foodType = f.getKey();
+                    Double reward = f.getValue();
+                    if (food.isBreakfastType(foodType)) {
+                        addFoods(orderedBreakfastFoods, reward, foodType);
+                    } else if (food.isLunchType(foodType)) {
+                        addFoods(orderedLunchFoods, reward, foodType);
+                    } else {
+                        addFoods(orderedDinnerFoods, reward, foodType);
+                    }
+                }
 
-            for (Map.Entry<FoodType,Double> f : foods.entrySet()) {
-                FoodType foodType = f.getKey();
-                Double reward = f.getValue();
-                if (food.isBreakfastType(foodType)) {
-                    addFoods(orderedBreakfastFoods, reward, foodType);
-                }
-                else if (food.isLunchType(foodType)) {
-                    addFoods(orderedLunchFoods, reward, foodType);
-                }
-                else {
-                    addFoods(orderedDinnerFoods, reward, foodType);
-                }
+                List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
+                this.allMemberBreakfast.put(member.getName(), topBreakfastFoods);
+
+                List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
+                this.allMemberLunch.put(member.getName(), optimalLunchCycle);
             }
-            // System.out.println(getTopNFoods(orderedBreakfastFoods, 3));
-            // System.out.println(getOptimalCycle(orderedLunchFoods));
-            // System.out.println("~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("Top 3 breakfast and optimal lunch cycle determined.");
+        }
+        System.out.println("Moving ahead to adding to pantry.");
 
-            List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
-            this.allMemberBreakfast.put(member.getName(), topBreakfastFoods);
-
+        // Adding to pantry
+        for (FamilyMember member : familyMembers) {
+            MemberName name = member.getName();
             // Add 7 breakfast foods per family member
             // Add four of first choices, two of second choice, one of third choice
             for(int i = 0; i < 4; i++) {
-                shoppingList.addToOrder(topBreakfastFoods.get(0));
+                shoppingList.addToOrder(this.allMemberBreakfast.get(name).get(0));
             }
             for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(topBreakfastFoods.get(1));
+                shoppingList.addToOrder(this.allMemberBreakfast.get(name).get(1));
             }
             for(int i = 0; i < 1; i++) {
-                shoppingList.addToOrder(topBreakfastFoods.get(2));
+                shoppingList.addToOrder(this.allMemberBreakfast.get(name).get(2));
             }
-
-            List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
-            this.allMemberLunch.put(member.getName(), optimalLunchCycle);
 
             // Add 7 lunch foods per family member according to optimal cycle
             // Three of one type, two of another, two of another
             for(int i = 0; i < 3; i++) {
-                shoppingList.addToOrder(optimalLunchCycle.get(0));
+                shoppingList.addToOrder(this.allMemberLunch.get(name).get(0));
             }
             for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(optimalLunchCycle.get(1));
+                shoppingList.addToOrder(this.allMemberLunch.get(name).get(1));
             }
             for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(optimalLunchCycle.get(2));
+                shoppingList.addToOrder(this.allMemberLunch.get(name).get(2));
             }
 
-            this.allMemberDinner.put(member.getName(), optimalDinnerCycle);
+            this.allMemberDinner.put(name, optimalDinnerCycle);
 
-            List<FoodType> topDinnerFoods = getTopNFoods(orderedDinnerFoods, 3);
             for(int i = 0; i < 4; i++) {
-                shoppingList.addToOrder(topDinnerFoods.get(0));
+                shoppingList.addToOrder(optimalDinnerCycle.get(0));
             }
             for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(topDinnerFoods.get(1));
+                shoppingList.addToOrder(optimalDinnerCycle.get(1));
             }
             for(int i = 0; i < 1; i++) {
-                shoppingList.addToOrder(topDinnerFoods.get(2));
+                shoppingList.addToOrder(optimalDinnerCycle.get(2));
             }
+            System.out.println("Iterating through " + name + "'s order and adding to pantry.");
+            System.out.println(shoppingList.getFullOrderMap());
         }
-
+        System.out.println("Why isn't this printing?");
 
         int cycleIndex = 0;
         for (int i=0; i<7; i++) {
@@ -169,14 +173,12 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        System.out.println(optimalDinnerCycle);
-        // Add 7 
+        // System.out.println(optimalDinnerCycle);
+        // TODO: Add 7 dinner cycle
 
         // Check constraints
         if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
-            System.out.println("VALID");
-            System.out.println(numEmptySlots);
-            System.out.println("~~~~~~~~~~~~~~~");
+            System.out.println("VALID!");
             return shoppingList;
         }
         else {
