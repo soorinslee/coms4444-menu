@@ -287,7 +287,8 @@ public class Player extends menu.sim.Player {
             List<FoodType> temp = new ArrayList<>();
             innerloop:
             for (Map.Entry<Double, List<FoodType>> entry : foods.entrySet()) {
-                for (FoodType food : entry.getValue()) {
+                List<FoodType> foodList = sort(entry.getValue(), availableFoodsCopy);
+                for (FoodType food : foodList) {
                     // check if there is this FoodType available in the pantry
                     if (availableFoodsCopy.containsKey(food) && availableFoodsCopy.get(food) > 0) {
                         // check if all 7 days are already filled; if yes, break out of all loops and return
@@ -321,8 +322,8 @@ public class Player extends menu.sim.Player {
                     stayInLoop = true;                          // with zero value, stay in loop
                     break;
                 }
-                else if (notZeroValuedFood && count > 0) {     // if there are foods with zero value but the current
-                    stayInLoop = true;                         // food has value > 0 and count > 0, stay in loop
+                else if (notZeroValuedFood && count > 0) {     // if there are foods with zero value but there exist
+                    stayInLoop = true;                         // foods with value > 0 and count > 0, stay in loop
                     break;
                 }
             }
@@ -330,6 +331,22 @@ public class Player extends menu.sim.Player {
         }
 
         return cycle;
+    }
+
+    private List<FoodType> sort(List<FoodType> list, Map<FoodType, Integer> map) {
+        List<FoodType> result = new ArrayList<>();
+        TreeMap<Integer, FoodType> filterMap = new TreeMap<>();
+        for (Map.Entry<FoodType,Integer> entry : map.entrySet())
+            filterMap.put(-entry.getValue(), entry.getKey());
+        for (FoodType value : filterMap.values()) {
+            if (list.contains(value))
+                result.add(value);
+        }
+        for (FoodType food : list) {
+            if (!result.contains(food))
+                result.add(food);
+        }
+        return result;
     }
 
     private List<FoodType> getOptimalDinnerCycle(TreeMap<Double, FoodType> rewardToFood) {
@@ -409,7 +426,7 @@ public class Player extends menu.sim.Player {
 
         // TEST ONE - should print "[LUNCH1, LUNCH2, LUNCH3, LUNCH5, LUNCH1, LUNCH5, LUNCH6]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST ONE - should print [LUNCH1, LUNCH2, LUNCH3, LUNCH5, LUNCH1, LUNCH5, LUNCH6]");
+        System.out.println("TEST ONE - should print [LUNCH2, LUNCH1, LUNCH3, LUNCH5, LUNCH2, LUNCH5, LUNCH6]");
         List<FoodType> favorite = new ArrayList<>();
         favorite.add(FoodType.LUNCH1);
         favorite.add(FoodType.LUNCH2);
@@ -434,8 +451,8 @@ public class Player extends menu.sim.Player {
         foods.put(-0.3, favorite5);
 
         Map<FoodType, Integer> availableFoods = new HashMap<>();
-        availableFoods.put(FoodType.LUNCH1, 2); // in pantry, there are two LUNCH1
-        availableFoods.put(FoodType.LUNCH2, 1); // in pantry, there is one LUNCH2
+        availableFoods.put(FoodType.LUNCH1, 1); // in pantry, there are one LUNCH1
+        availableFoods.put(FoodType.LUNCH2, 2); // in pantry, there is two LUNCH2
         availableFoods.put(FoodType.LUNCH3, 1); // in pantry, there is one LUNCH3
         availableFoods.put(FoodType.LUNCH5, 2); // in pantry, there are two LUNCH5
         availableFoods.put(FoodType.LUNCH6, 3); // in pantry, there are three LUNCH6
@@ -445,7 +462,7 @@ public class Player extends menu.sim.Player {
 
         // TEST TWO - should print "[LUNCH1, LUNCH2, LUNCH2, LUNCH5, LUNCH1, LUNCH5, LUNCH6]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST TWO - should print [LUNCH1, LUNCH1, LUNCH1, LUNCH2, LUNCH5, LUNCH6, LUNCH5]");
+        System.out.println("TEST TWO - should print [LUNCH1, LUNCH1, LUNCH1, LUNCH2, LUNCH6, LUNCH5, LUNCH6]");
         favorite = new ArrayList<>();
         favorite.add(FoodType.LUNCH1);
         favorite2 = new ArrayList<>();
