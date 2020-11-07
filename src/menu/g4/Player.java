@@ -134,6 +134,7 @@ public class Player extends menu.sim.Player {
             }
 
             // Add 7 lunch foods per family member according to optimal cycle
+
             int ind = 0;
             for (int count = 0; count < 7; count++) {
                 if (ind == this.allMemberLunchSorted.get(name).size())
@@ -299,6 +300,10 @@ public class Player extends menu.sim.Player {
                             stayInLoop = true;
                             break innerloop;
                         }
+                        // check if current food value is 0; if yes, restart loop without adding food
+                        if (entry.getKey() == 0.0) {
+                            break innerloop;
+                        }
                         // update pantry copy with one less food
                         availableFoodsCopy.put(food, availableFoodsCopy.get(food) - 1);
                         // get greatest value of available food for NEXT loop
@@ -309,9 +314,15 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-            for (int value : availableFoodsCopy.values()) {
-                if (value > 0) {        // if there is still food left in pantry, stay in loop because not all seven
-                    stayInLoop = true;  // days are filled yet, or else the outer loop would be broken out of
+            for (FoodType food : availableFoodsCopy.keySet()) {
+                int count = availableFoodsCopy.get(food);
+                boolean notZeroValuedFood = foods.containsKey(0.0) && !foods.get(0.0).contains(food);
+                if (!foods.containsKey(0.0) && count > 0) {     // if there is still food left in pantry and no foods,
+                    stayInLoop = true;                          // with zero value, stay in loop
+                    break;
+                }
+                else if (notZeroValuedFood && count > 0) {     // if there are foods with zero value but the current
+                    stayInLoop = true;                         // food has value > 0 and count > 0, stay in loop
                     break;
                 }
             }
@@ -479,6 +490,24 @@ public class Player extends menu.sim.Player {
         System.out.println("TEST FOUR - should print [LUNCH1, LUNCH1, LUNCH1]");
         availableFoods = new HashMap<>();
         availableFoods.put(FoodType.LUNCH1, 3); // in pantry, there are three LUNCH1
+        cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.println(cycle);
+
+        // TEST FIVE - should print "[LUNCH1, LUNCH2, LUNCH3]"
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("TEST FIVE - should print [LUNCH1, LUNCH2, LUNCH3]");
+        foods = new TreeMap<>();
+        foods.put(-1.0, favorite);
+        foods.put(-0.9, favorite2);
+        foods.put(-0.8, favorite3);
+        foods.put(-0.7, favorite4);
+        foods.put(0.0, favorite5);
+        availableFoods = new HashMap<>();
+        availableFoods.put(FoodType.LUNCH1, 1);
+        availableFoods.put(FoodType.LUNCH2, 1);
+        availableFoods.put(FoodType.LUNCH3, 1);
+        availableFoods.put(FoodType.LUNCH5, 1);
+        availableFoods.put(FoodType.LUNCH6, 2);
         cycle = player.getOptimalCycle(foods, availableFoods);
         System.out.println(cycle);
     }
