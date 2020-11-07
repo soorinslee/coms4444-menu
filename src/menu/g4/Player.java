@@ -1,6 +1,8 @@
 package menu.g4; // TODO modify the package name to reflect your team
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 import menu.sim.*;
 import menu.sim.Food.FoodType;
@@ -287,8 +289,7 @@ public class Player extends menu.sim.Player {
             List<FoodType> temp = new ArrayList<>();
             innerloop:
             for (Map.Entry<Double, List<FoodType>> entry : foods.entrySet()) {
-                List<FoodType> foodList = sort(entry.getValue(), availableFoodsCopy);
-                for (FoodType food : foodList) {
+                for (FoodType food : entry.getValue()) {
                     // check if there is this FoodType available in the pantry
                     if (availableFoodsCopy.containsKey(food) && availableFoodsCopy.get(food) > 0) {
                         // check if all 7 days are already filled; if yes, break out of all loops and return
@@ -330,24 +331,69 @@ public class Player extends menu.sim.Player {
             cycle.addAll(temp);         // add the food to the overall cycle
         }
 
-        return cycle;
+        return redistribute(cycle);
     }
 
-    private List<FoodType> sort(List<FoodType> list, Map<FoodType, Integer> map) {
+    /**
+     * Redistribute list of foods to make repeated foods more spaced out
+     * For planMeals
+     *
+     * @param foods          list of foods to be spaced out
+     * @return               list of foods eat in order
+     *
+     */
+    private List<FoodType> redistribute(List<FoodType> foods) {
         List<FoodType> result = new ArrayList<>();
-        TreeMap<Integer, FoodType> filterMap = new TreeMap<>();
-        for (Map.Entry<FoodType,Integer> entry : map.entrySet())
-            filterMap.put(-entry.getValue(), entry.getKey());
-        for (FoodType value : filterMap.values()) {
-            if (list.contains(value))
-                result.add(value);
+        Map<FoodType, Integer> foodMap = new HashMap<>();
+        for (FoodType food : foods) {
+            if (!foodMap.containsKey(food))
+                foodMap.put(food, 1);
+            else
+                foodMap.put(food, foodMap.get(food)+1);
         }
-        for (FoodType food : list) {
-            if (!result.contains(food))
-                result.add(food);
+        Map<FoodType, Integer> foodMapSorted = sortByValue(foodMap, false);
+        boolean hasFoodLeft = true;
+        while (hasFoodLeft) {
+            hasFoodLeft = false;
+            for (Map.Entry<FoodType, Integer> entry : foodMapSorted.entrySet()) {
+                if (entry.getValue() > 0) {
+                    result.add(entry.getKey());
+                    foodMapSorted.put(entry.getKey(), foodMapSorted.get(entry.getKey())-1);
+                }
+            }
+            for (int i : foodMapSorted.values()) {
+                if (i > 0) {
+                    hasFoodLeft = true;
+                    break;
+                }
+            }
         }
         return result;
     }
+
+    /**
+     * Sort map by value
+     * For planMeals
+     *
+     * @param unsortedMap    map of unsorted foods : count of food
+     * @param order          true -> ascending, false -> descending
+     * @return               map of sorted foods : count of food
+     *
+     */
+    private static Map<FoodType, Integer> sortByValue(Map<FoodType, Integer> unsortedMap, final boolean order)
+    {
+        List<Entry<FoodType, Integer>> list = new LinkedList<>(unsortedMap.entrySet());
+
+        // Sorting the list based on values
+        list.sort((o1, o2) -> order ? o1.getValue().compareTo(o2.getValue()) == 0
+                ? o1.getKey().compareTo(o2.getKey())
+                : o1.getValue().compareTo(o2.getValue()) : o2.getValue().compareTo(o1.getValue()) == 0
+                ? o2.getKey().compareTo(o1.getKey())
+                : o2.getValue().compareTo(o1.getValue()));
+        return list.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+
+    }
+
 
     private List<FoodType> getOptimalDinnerCycle(TreeMap<Double, FoodType> rewardToFood) {
         List<FoodType> cycle = new ArrayList<>();
@@ -424,9 +470,9 @@ public class Player extends menu.sim.Player {
         SimPrinter printer = new SimPrinter(true);
         Player player = new Player(1, 1, 1, 1, printer);
 
-        // TEST ONE - should print "[LUNCH1, LUNCH2, LUNCH3, LUNCH5, LUNCH1, LUNCH5, LUNCH6]"
+        // TEST ONE - should print "[LUNCH5, LUNCH2, LUNCH6, LUNCH3, LUNCH1, LUNCH5, LUNCH2]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST ONE - should print [LUNCH2, LUNCH1, LUNCH3, LUNCH5, LUNCH2, LUNCH5, LUNCH6]");
+        System.out.println("TEST ONE - should print [LUNCH5, LUNCH2, LUNCH6, LUNCH3, LUNCH1, LUNCH5, LUNCH2]");
         List<FoodType> favorite = new ArrayList<>();
         favorite.add(FoodType.LUNCH1);
         favorite.add(FoodType.LUNCH2);
@@ -460,9 +506,9 @@ public class Player extends menu.sim.Player {
         List<FoodType> cycle = player.getOptimalCycle(foods, availableFoods);
         System.out.println(cycle);
 
-        // TEST TWO - should print "[LUNCH1, LUNCH2, LUNCH2, LUNCH5, LUNCH1, LUNCH5, LUNCH6]"
+        // TEST TWO - should print "[LUNCH1, LUNCH5, LUNCH6, LUNCH2, LUNCH1, LUNCH5, LUNCH1]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST TWO - should print [LUNCH1, LUNCH1, LUNCH1, LUNCH2, LUNCH6, LUNCH5, LUNCH6]");
+        System.out.println("TEST TWO - should print [LUNCH1, LUNCH5, LUNCH6, LUNCH2, LUNCH1, LUNCH5, LUNCH1]");
         favorite = new ArrayList<>();
         favorite.add(FoodType.LUNCH1);
         favorite2 = new ArrayList<>();
@@ -510,9 +556,9 @@ public class Player extends menu.sim.Player {
         cycle = player.getOptimalCycle(foods, availableFoods);
         System.out.println(cycle);
 
-        // TEST FIVE - should print "[LUNCH1, LUNCH2, LUNCH3]"
+        // TEST FIVE - should print "[LUNCH3, LUNCH2, LUNCH1]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST FIVE - should print [LUNCH1, LUNCH2, LUNCH3]");
+        System.out.println("TEST FIVE - should print [LUNCH3, LUNCH2, LUNCH1]");
         foods = new TreeMap<>();
         foods.put(-1.0, favorite);
         foods.put(-0.9, favorite2);
