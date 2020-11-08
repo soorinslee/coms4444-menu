@@ -80,8 +80,84 @@ public class Player extends menu.sim.Player {
 							 Pantry pantry,
 							 MealHistory mealHistory) {
 
+		Pantry originalPantry = pantry.clone();
+
 		List<MemberName> memberNames = new ArrayList<>();
+
+		Map<MealType, List<MemberName>> memberPriorityList = new HashMap<>();
+
 		Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences = new HashMap<>();
+
+		for(FamilyMember familyMember : familyMembers)
+			memberNames.add(familyMember.getName());
+
+		Planner planner = new Planner(memberNames);
+
+		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
+		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
+
+		for (MemberName member : orderedFamilyPreferences.keySet()){
+			simPrinter.println("\n" + member);
+			for (MealType meal : Food.getAllMealTypes()){
+				simPrinter.println("   " + meal);
+				simPrinter.println(orderedFamilyPreferences.get(member).get(meal));
+				simPrinter.println(memberPriorityList.get(meal));
+			}
+		}
+		
+		for(MealType meal : Food.getAllMealTypes()){
+			for(Day day : Day.values()){
+				for(MemberName memberName : memberPriorityList.get(meal)){
+					switch(meal){
+
+						case BREAKFAST:
+							FoodType food = getBestFood(meal, memberName, orderedFamilyPreferences);
+							planner.addMeal(day, memberName, meal, food);
+							pantry.removeMealFromInventory(food);
+							updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
+							break;
+
+						case LUNCH:
+							FoodType maxAvailableLunchMeal = getMaximumAvailableMeal(pantry, MealType.LUNCH);
+    						if(pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
+        	    				planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
+        	    				pantry.removeMealFromInventory(maxAvailableLunchMeal); 
+        	    			}
+							break;
+
+						case DINNER:
+							FoodType maxAvailableDinnerMeal = getMaximumAvailableMeal(pantry, MealType.DINNER);
+							Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
+							for(int i = 0; i < numDinners; i++) {
+								MemberName thisMember = memberNames.get(i);
+				    	    	planner.addMeal(day, thisMember, MealType.DINNER, maxAvailableDinnerMeal);
+						    	pantry.removeMealFromInventory(maxAvailableDinnerMeal);
+							}
+							break;
+					}
+				}
+				updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
+			}
+		}
+		simPrinter.println("\n\n\n********* PLANNER ********\n");
+		for(MealType meal : Food.getAllMealTypes()){
+			simPrinter.println("MEAL: " + meal);
+			for(Day day : Day.values()){
+				simPrinter.println("\tDAY: " + day); 
+				for(MemberName memberName : memberNames){
+					simPrinter.println("\t\t"+ memberName + ": " + planner.getPlan().get(day).get(memberName).get(meal));
+				}
+			}
+		}
+
+		if(Player.hasValidPlanner(planner, originalPantry))
+			return planner;
+		return new Planner();
+	}
+
+	private void updateFamilyPreferenceMap(Pantry pantry, List<FamilyMember> familyMembers, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
+
+		orderedFamilyPreferences.clear();
 
 		for(FamilyMember familyMember : familyMembers){
 
@@ -90,7 +166,6 @@ public class Player extends menu.sim.Player {
 			Map<FoodType, Double> lunchPrefs = new HashMap<>();
 			Map<FoodType, Double> dinnerPrefs = new HashMap<>();
 
-			memberNames.add(familyMember.getName());
 			orderedFamilyPreferences.put(familyMember.getName(), new LinkedHashMap<>());
 			orderedFamilyPreferences.get(familyMember.getName()).put(MealType.BREAKFAST, new LinkedHashMap<>());
 			orderedFamilyPreferences.get(familyMember.getName()).put(MealType.LUNCH, new LinkedHashMap<>());
@@ -139,8 +214,12 @@ public class Player extends menu.sim.Player {
 				}
 			}
 		}
+	}
 
-		Map<MealType, List<MemberName>> orderedMembersMeals = new HashMap<>();
+	private void updateMemberPriorityList(List<FamilyMember> familyMembers, Map<MealType, List<MemberName>> memberPriorityList, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
+		
+		memberPriorityList.clear();
+
 		for (MealType meal : Food.getAllMealTypes()){
 			List<MemberName> membersOrder = new ArrayList<>();
 			while(membersOrder.size() < familyMembers.size()){
@@ -161,48 +240,18 @@ public class Player extends menu.sim.Player {
 				}
 				membersOrder.add(lowestMember);
 			}
-			orderedMembersMeals.put(meal, membersOrder);
+			memberPriorityList.put(meal, membersOrder);
 		}
-
-		for (MemberName member : orderedFamilyPreferences.keySet())
-			for (MealType meal : Food.getAllMealTypes()){
-				simPrinter.println("\n" + member);
-				simPrinter.println("   " + meal);
-				simPrinter.println(orderedFamilyPreferences.get(member).get(meal));
-			}
-		Pantry originalPantry = pantry.clone();
-		
-		Planner planner = new Planner(memberNames);
-		for(MemberName memberName : memberNames) {
-
-			for(Day day : Day.values()) {
-				FoodType maxAvailableBreakfastMeal = getMaximumAvailableMeal(pantry, MealType.BREAKFAST);
-				if(pantry.getNumAvailableMeals(maxAvailableBreakfastMeal) > 0) {
-					planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
-					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);    				
-				}
-				FoodType maxAvailableLunchMeal = getMaximumAvailableMeal(pantry, MealType.LUNCH);
-				if(pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
-					planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
-					pantry.removeMealFromInventory(maxAvailableLunchMeal);    				
-				}
-			}
-		}
-		for(Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = getMaximumAvailableMeal(pantry, MealType.DINNER);
-			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
-			for(int i = 0; i < numDinners; i++) {
-				MemberName memberName = memberNames.get(i);
-				planner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
-				pantry.removeMealFromInventory(maxAvailableDinnerMeal);
-			}
-		}
-
-		if(Player.hasValidPlanner(planner, originalPantry))
-			return planner;
-		return new Planner();
 	}
-	
+
+	private MemberName getPriorityMember(List<MemberName> membersOrder){
+		return membersOrder.get(0);
+	}
+
+	private FoodType getBestFood(MealType meal, MemberName member, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
+		return orderedFamilyPreferences.get(member).get(meal).keySet().iterator().next();
+
+	}
 	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
 		FoodType maximumAvailableMeal = null;
 		int maxAvailableMeals = -1;
