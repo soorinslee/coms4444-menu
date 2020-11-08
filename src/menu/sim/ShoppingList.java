@@ -37,8 +37,8 @@ public class ShoppingList {
 		return allLimitsMap.get(mealType);
 	}
 	
-	public void addToOrder(MealType mealType, FoodType foodType) {
-		fullOrderMap.get(mealType).add(foodType);
+	public void addToOrder(FoodType foodType) {
+		fullOrderMap.get(Food.getMealType(foodType)).add(foodType);
 	}
 	
 	public void addLimit(MealType mealType, Integer limit) {

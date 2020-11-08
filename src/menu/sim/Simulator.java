@@ -311,118 +311,123 @@ public class Simulator {
 		    updateSatisfactions(currentWeek, finalPlanner);
 		    updateAverageSatisfactions(currentWeek);
 		    
-		    if(showGUI)
-				updateGUI(server, getGUIState(currentWeek, shoppingList));
-		}
-		
-		double leastAverageSatisfaction = getLeastAverageSatisfaction(weeks);
-		MemberName leastSatisfiedMember = getLeastSatisfiedMember(weeks);
+		    if(currentWeek == weeks) {
+				double leastAverageSatisfaction = getLeastAverageSatisfaction(weeks);
+				MemberName leastSatisfiedMember = getLeastSatisfiedMember(weeks);
 
-		DecimalFormat satisfactionFormat = new DecimalFormat("###.####");
-		
-		Log.writeToLogFile("");
-		Log.writeToLogFile("Weeks: " + weeks);
-		Log.writeToLogFile("Capacity: " + capacity);
-		Log.writeToLogFile("Family members: " + numFamilyMembers);
-		Log.writeToLogFile("Seed: " + seed);
-		Log.writeToLogFile("Configuration: " + configName);
-		Log.writeToLogFile("Average satisfaction of least satisfied member: " + satisfactionFormat.format(leastAverageSatisfaction));
-		Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name().substring(0, 1).toUpperCase() + leastSatisfiedMember.name().substring(1).toLowerCase());
-		
-//		<!-- Need to export assigned meals, planners, pantries, and satisfactions to separate log files  -->
-		
-		if(exportCSV) {
-			List<List<String>> plannersRows = new ArrayList<>();
-			for(int week : mealHistory.getAllPlanners().keySet()) {
-				Planner planner = mealHistory.getAllPlanners().get(week);
-				for(Day day : planner.getPlan().keySet()) {
-					Map<MemberName, Map<MealType, FoodType>> memberMap = planner.getPlan().get(day);
-					for(MemberName memberName : memberMap.keySet()) {
-						Map<MealType, FoodType> mealMap = memberMap.get(memberName);
-						for(MealType mealType : mealMap.keySet()) {
-							List<String> row = Arrays.asList(Integer.toString(week),
-									 day.name(),
-									 memberName.name(),
-									 mealType.name(),
-									 mealMap.get(mealType).name());
-							plannersRows.add(row);
+				DecimalFormat satisfactionFormat = new DecimalFormat("###.####");
+				
+				Log.writeToLogFile("");
+				Log.writeToLogFile("Weeks: " + weeks);
+				Log.writeToLogFile("Capacity: " + capacity);
+				Log.writeToLogFile("Family members: " + numFamilyMembers);
+				Log.writeToLogFile("Seed: " + seed);
+				Log.writeToLogFile("Configuration: " + configName);
+				Log.writeToLogFile("Average satisfaction of least satisfied member: " + satisfactionFormat.format(leastAverageSatisfaction));
+				Log.writeToLogFile("Least satisfied member: " + leastSatisfiedMember.name().substring(0, 1).toUpperCase() + leastSatisfiedMember.name().substring(1).toLowerCase());
+						
+				if(exportCSV) {
+					List<List<String>> plannersRows = new ArrayList<>();
+					for(int week : mealHistory.getAllPlanners().keySet()) {
+						Planner currentPlanner = mealHistory.getAllPlanners().get(week);
+						for(Day day : currentPlanner.getPlan().keySet()) {
+							Map<MemberName, Map<MealType, FoodType>> memberMap = currentPlanner.getPlan().get(day);
+							for(MemberName memberName : memberMap.keySet()) {
+								Map<MealType, FoodType> mealMap = memberMap.get(memberName);
+								for(MealType mealType : mealMap.keySet()) {
+									List<String> row = Arrays.asList(Integer.toString(week),
+											 day.name(),
+											 memberName.name(),
+											 mealType.name(),
+											 mealMap.get(mealType).name());
+									plannersRows.add(row);
+								}
+							}
 						}
 					}
-				}
-			}
-			
-			FileWriter csvWriter = new FileWriter(plannersPath);
-			csvWriter.append("Week,Day,Member,Meal Type,Meal\n");
-			for(List<String> row : plannersRows)
-				csvWriter.append(String.join(",", row) + "\n");
-			csvWriter.flush();
-			csvWriter.close();
-		
-			List<List<String>> pantriesRows = new ArrayList<>();
-			for(int week : mealHistory.getAllPantries().keySet()) {
-				Pantry pantry = mealHistory.getAllPantries().get(week);
-				for(MealType mealType : pantry.getMealsMap().keySet()) {
-					Map<FoodType, Integer> countMap = pantry.getMealsMap().get(mealType);
-					for(FoodType foodType : countMap.keySet()) {
-						List<String> row = Arrays.asList(Integer.toString(week),
-								 mealType.name(),
-								 foodType.name(),
-								 Integer.toString(countMap.get(foodType)));
-						pantriesRows.add(row);
+					
+					FileWriter csvWriter = new FileWriter(plannersPath);
+					csvWriter.append("Week,Day,Member,Meal Type,Meal\n");
+					for(List<String> row : plannersRows)
+						csvWriter.append(String.join(",", row) + "\n");
+					csvWriter.flush();
+					csvWriter.close();
+				
+					List<List<String>> pantriesRows = new ArrayList<>();
+					for(int week : mealHistory.getAllPantries().keySet()) {
+						Pantry pantry = mealHistory.getAllPantries().get(week);
+						for(MealType mealType : pantry.getMealsMap().keySet()) {
+							Map<FoodType, Integer> countMap = pantry.getMealsMap().get(mealType);
+							for(FoodType foodType : countMap.keySet()) {
+								List<String> row = Arrays.asList(Integer.toString(week),
+										 mealType.name(),
+										 foodType.name(),
+										 Integer.toString(countMap.get(foodType)));
+								pantriesRows.add(row);
+							}
+						}
 					}
-				}
-			}
-		
-			csvWriter = new FileWriter(pantriesPath);
-			csvWriter.append("Week,Meal Type,Meal,Quantity\n");
-			for(List<String> row : pantriesRows)
-				csvWriter.append(String.join(",", row) + "\n");
-			csvWriter.flush();
-			csvWriter.close();
+				
+					csvWriter = new FileWriter(pantriesPath);
+					csvWriter.append("Week,Meal Type,Meal,Quantity\n");
+					for(List<String> row : pantriesRows)
+						csvWriter.append(String.join(",", row) + "\n");
+					csvWriter.flush();
+					csvWriter.close();
 
-			List<List<String>> satisfactionRows = new ArrayList<>();
-			for(int week : mealHistory.getAllSatisfactions().keySet()) {
-				Map<MemberName, Double> satisfactionMap = mealHistory.getAllSatisfactions().get(week);
-				Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week);
-				for(MemberName memberName : satisfactionMap.keySet()) {
-					List<String> row = Arrays.asList(Integer.toString(week),
-							 memberName.name(),
-							 Double.toString(satisfactionMap.get(memberName)),
-							 Double.toString(averageSatisfactionMap.get(memberName)));
-					satisfactionRows.add(row);
-				}
-			}
-		
-			csvWriter = new FileWriter(satisfactionPath);
-			csvWriter.append("Week,Member,Satisfaction,Average Satisfaction\n");
-			for(List<String> row : satisfactionRows)
-				csvWriter.append(String.join(",", row) + "\n");
-			csvWriter.flush();
-			csvWriter.close();
-
-			List<List<String>> mealsRows = new ArrayList<>();
-			for(int day : mealHistory.getDailyFamilyMeals().keySet()) {
-				Map<MemberName, Map<MealType, FoodType>> memberMap = mealHistory.getDailyFamilyMeals().get(day);				
-				for(MemberName memberName : memberMap.keySet()) {
-					Map<MealType, FoodType> mealMap = memberMap.get(memberName);
-					for(MealType mealType : mealMap.keySet()) {
-						List<String> row = Arrays.asList(Integer.toString(day),
-								 memberName.name(),
-								 mealType.name(),
-								 mealMap.get(mealType).name());
-						mealsRows.add(row);	
+					List<List<String>> satisfactionRows = new ArrayList<>();
+					for(int week : mealHistory.getAllSatisfactions().keySet()) {
+						Map<MemberName, Double> satisfactionMap = mealHistory.getAllSatisfactions().get(week);
+						Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week);
+						for(MemberName memberName : satisfactionMap.keySet()) {
+							List<String> row = Arrays.asList(Integer.toString(week),
+									 memberName.name(),
+									 Double.toString(satisfactionMap.get(memberName)),
+									 Double.toString(averageSatisfactionMap.get(memberName)));
+							satisfactionRows.add(row);
+						}
 					}
+				
+					csvWriter = new FileWriter(satisfactionPath);
+					csvWriter.append("Week,Member,Satisfaction,Average Satisfaction\n");
+					for(List<String> row : satisfactionRows)
+						csvWriter.append(String.join(",", row) + "\n");
+					csvWriter.flush();
+					csvWriter.close();
+
+					List<List<String>> mealsRows = new ArrayList<>();
+					for(int day : mealHistory.getDailyFamilyMeals().keySet()) {
+						Map<MemberName, Map<MealType, FoodType>> memberMap = mealHistory.getDailyFamilyMeals().get(day);				
+						for(MemberName memberName : memberMap.keySet()) {
+							Map<MealType, FoodType> mealMap = memberMap.get(memberName);
+							for(MealType mealType : mealMap.keySet()) {
+								List<String> row = Arrays.asList(Integer.toString(day),
+										 memberName.name(),
+										 mealType.name(),
+										 mealMap.get(mealType).name());
+								mealsRows.add(row);	
+							}
+						}
+					}
+					
+					csvWriter = new FileWriter(mealsPath);
+					csvWriter.append("Day,Member,Meal Type,Meal\n");
+					for(List<String> row : mealsRows)
+						csvWriter.append(String.join(",", row) + "\n");
+					csvWriter.flush();
+					csvWriter.close();
 				}
-			}
-			
-			csvWriter = new FileWriter(mealsPath);
-			csvWriter.append("Day,Member,Meal Type,Meal\n");
-			for(List<String> row : mealsRows)
-				csvWriter.append(String.join(",", row) + "\n");
-			csvWriter.flush();
-			csvWriter.close();
+		    }
+		    
+		    if(showGUI) {
+		    	if(currentWeek == weeks)
+		    		while(true)
+						updateGUI(server, getGUIState(currentWeek, shoppingList));
+		    	else
+					updateGUI(server, getGUIState(currentWeek, shoppingList));
+		    }
 		}
-		
+				
 		if(!showGUI)
 			System.exit(1);
 	}
