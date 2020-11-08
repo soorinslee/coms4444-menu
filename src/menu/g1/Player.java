@@ -106,8 +106,9 @@ public class Player extends menu.sim.Player {
 		}
 		
 		for(MealType meal : Food.getAllMealTypes()){
-			for(Day day : Day.values()){
-				for(MemberName memberName : memberPriorityList.get(meal)){
+			for(MemberName memberName : memberPriorityList.get(meal)){
+				for(Day day : Day.values()){
+				
 					switch(meal){
 
 						case BREAKFAST:
@@ -136,8 +137,8 @@ public class Player extends menu.sim.Player {
 							break;
 					}
 				}
-				updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 			}
+			updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 		}
 		simPrinter.println("\n\n\n********* PLANNER ********\n");
 		for(MealType meal : Food.getAllMealTypes()){
