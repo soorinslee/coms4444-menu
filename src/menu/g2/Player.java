@@ -139,7 +139,7 @@ public class Player extends menu.sim.Player {
 	}
 
 	// Aum
-	// TODO
+	// TODO - test to make sure it totals to the actual pantry size
 	// 1.) calculate how many breakfast, lunch, and dinner items we want based on
 	// preferences
 	List<Integer> calcFreqMeals(Pantry pantry, int size, List<FamilyMember> familyMembers) {
@@ -187,13 +187,10 @@ public class Player extends menu.sim.Player {
 	}
 
 	// Ahad - Done by Aum
+	// Ahad
 	// TODO
-	// 2.) rank breakfast items
-	// cereal, milk, oatmeal....
-	// highest minimum
-	// for each meal find lowest satisfaction
-	// use that value to rank all the foods
-	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+	// 2.) rank breakfast items to maximum each person's satisfaction 
+	Map<FamilyMember, List<FoodType>> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.BREAKFAST);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
@@ -204,13 +201,14 @@ public class Player extends menu.sim.Player {
 			}
 			lowestPerson.put(food, lowest);
 		}
-		return sortByValue(lowestPerson);
+		return sortByValue(lowestPerson); //return right value
 	}
 
 	// Ahad - Done by Aum
-	// TODO
-	// 2.) rank lunch items
-	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+	// Ahad
+	// TODO on Wednesday - take into account the repeat penalty
+	// 2.) rank lunch items like breakfast
+	Map<FamilyMember, List<FoodType>> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.LUNCH);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
@@ -225,8 +223,8 @@ public class Player extends menu.sim.Player {
 	}
 
 	// Ahad - Done by Aum
-	// TODO
-	// 2.) rank dinner items
+	// TODO wednesday - weighting depending on if people are least satisfied
+	// 2.) rank dinner items based on the mean satisfaction of all the members (bring up the floor of everyone's satisfaction)
 	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.DINNER);
@@ -267,8 +265,7 @@ public class Player extends menu.sim.Player {
 	//SCOTT
 	//TODO
 	//determine frequency for breakfast items
-	//based on cutoffs, rankings
-	//stick with highest ranking
+	//based on cutoffs, what is already in the pantry, rankings, put higher priority in the shopping list on the people that are least satisfied
 	List<FoodType> calcBreakfast(Pantry pantry, MealHistory mealHistory) {
 		//numBreakfasts
 		int difference = numBreakfasts -  pantry.getNumAvailableMeals(MealType.BREAKFAST);
@@ -299,7 +296,7 @@ public class Player extends menu.sim.Player {
 	//SCOTT
 	//TODO
 	//determine frequency for lunch items
-	//balance between top couple
+	//based on cutoffs, what is already in the pantry, rankings, put higher priority in the shopping list on the people that are least satisfied
 	List<FoodType> calcLunch(Pantry pantry, MealHistory mealHistory) {
 		int difference = numLunches -  pantry.getNumAvailableMeals(MealType.LUNCH);
 
@@ -330,7 +327,7 @@ public class Player extends menu.sim.Player {
 	//SCOTT
 	//TODO
 	//determine frequency for dinner items
-	//multiples of the number of family members
+	//based on cutoffs, what is already in the pantry, rankings, put higher priority in the shopping list on the food that brings up the floor
 	List<FoodType> calcDinner(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
 		int numFamMembers = familyMembers.size();
 		int difference = numDinners -  pantry.getNumAvailableMeals(MealType.DINNER);
@@ -386,17 +383,17 @@ public class Player extends menu.sim.Player {
 		
 		//add all breakfast foods
 		for(FoodType breakfast : breakfasts) {
-			shoppingList.addToOrder(MealType.BREAKFAST, breakfast);
+			shoppingList.addToOrder(breakfast);
 		}
 
 		//add all lunch foods
 		for(FoodType lunch : lunches) {
-			shoppingList.addToOrder(MealType.LUNCH, lunch);
+			shoppingList.addToOrder(lunch);
 		}
 
 		//add all dinner foods
 		for(FoodType dinner : dinners) {
-			shoppingList.addToOrder(MealType.DINNER, dinner);
+			shoppingList.addToOrder(dinner);
 		}
 
 		return shoppingList;
