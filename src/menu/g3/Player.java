@@ -71,41 +71,6 @@ public class Player extends menu.sim.Player {
         if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() > 100000) {
             int numMeals = familyMembers.size() * 28;
         
-<<<<<<< HEAD
-        // TODO: create the breakfast, lunch, and dinner arrays (Nuneke)
-        
-        // family satisfaction, all 0 to start off 
-        // frequency array, all 0 to start off 
-
-        FoodType[] breakfastList = new FoodType[]{ FoodType.BREAKFAST1, FoodType.BREAKFAST2, FoodType.BREAKFAST3, FoodType.BREAKFAST4, FoodType.BREAKFAST5, FoodType.BREAKFAST6, FoodType.BREAKFAST7, FoodType.BREAKFAST8, FoodType.BREAKFAST9, FoodType.BREAKFAST10 };
-        FoodType[] lunchList = new FoodType[]{ FoodType.LUNCH1, FoodType.LUNCH2, FoodType.LUNCH3, FoodType.LUNCH4, FoodType.LUNCH5, FoodType.LUNCH6, FoodType.LUNCH7, FoodType.LUNCH8, FoodType.LUNCH9, FoodType.LUNCH10 };
-        FoodType[] dinnerList = new FoodType[]{ FoodType.DINNER1, FoodType.DINNER2, FoodType.DINNER3, FoodType.DINNER4, FoodType.DINNER5, FoodType.DINNER6, FoodType.DINNER7, FoodType.DINNER8, FoodType.DINNER9, FoodType.DINNER10, FoodType.DINNER11, FoodType.DINNER12, FoodType.DINNER13, FoodType.DINNER14, FoodType.DINNER15, FoodType.DINNER16, FoodType.DINNER17, FoodType.DINNER18, FoodType.DINNER19, FoodType.DINNER20 };
-
-        for (FamilyMember fm : familyMembers) {
-            MemberName fName = fm.getName();
-            Map<FoodType, Double> foodMap = fm.getFoodPreferenceMap();
-
-            List<Double> mapBList = new ArrayList<>();
-            List<Double> mapLList = new ArrayList<>();
-            List<Double> mapDList = new ArrayList<>();
-            List<Integer> repList = new ArrayList<>(List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); 
-
-            for (FoodType ft : breakfastList) {
-                mapBList.add((double) foodMap.get(ft));
-            }
-            for (FoodType ft : lunchList) {
-                mapLList.add((double) foodMap.get(ft));
-            }
-            for (FoodType ft : dinnerList) {
-                mapDList.add((double) foodMap.get(ft));
-            }
-
-            familySatisfaction.put(fName, 0.0);
-            breakfastArray.put(fName, mapBList);
-            lunchArray.put(fName, mapLList);
-            dinnerArray.put(fName, mapDList);
-            frequencyArray.put(fName, repList);
-=======
             ShoppingList shoppingList = new ShoppingList();
             shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
             shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
@@ -150,35 +115,50 @@ public class Player extends menu.sim.Player {
             int numMeals = familyMembers.size() * 7;
         
             ShoppingList shoppingList = new ShoppingList();
-            shoppingList.addLimit(MealType.BREAKFAST, numMeals);
-            shoppingList.addLimit(MealType.LUNCH, numMeals);
-            shoppingList.addLimit(MealType.DINNER, numMeals);
-            
-            List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-            List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-            List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
 
             // how many extra meals are available for every family member (assuming empty pantry)
             // int extraSpace = Math.floor((pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() - 21*familyMembers.size())/familyMembers.size());
             // if we have some leeway for overstocking pantry
             // if (extraSpace > 0) {
             if (false) {
+                return new ShoppingList();
                 // TODO?: make sure to use up "stale" food items
             }
 
             // we cannot overstock the pantry 
-            else {
-                // determine overall preference for each meal by running a fake week simulation
+            // determine overall preference for each meal by running a fake week simulation
                     // keeping track of the preverence values for every meal for every person for every day
                     // paying attention to the lowest satisfied family members when buying 
                     // find the best outcome cycle of dinners for the least satisfied family member 
+            else {
+                shoppingList.addLimit(MealType.BREAKFAST, numMeals);
+                shoppingList.addLimit(MealType.LUNCH, numMeals);
+                shoppingList.addLimit(MealType.DINNER, numMeals);
+
+                Pantry full_pantry = new Pantry(40 * numMeals);
+                for(FoodType ft : Food.getFoodTypes(MealType.BREAKFAST)){
+                    for(int i=0; i<numMeals; i++) {
+                        full_pantry.addMealToInventory(ft);
+                    }
+                }
+                for(FoodType ft : Food.getFoodTypes(MealType.LUNCH)){
+                    for(int i=0; i<numMeals; i++) {
+                        full_pantry.addMealToInventory(ft);
+                    }
+                }
+                for(FoodType ft : Food.getFoodTypes(MealType.DINNER)){
+                    for(int i=0; i<numMeals; i++) {
+                        full_pantry.addMealToInventory(ft);
+                    }
+                }
+                simulatePlan(familyMembers, full_pantry, mealHistory);
+                
                     
                 // make a list like the following: 
                     /* 
                     Simulation: 
                     HashMap<MealType, List<FoodType>> covetedFoods = new HashMap<>();
                         Qi:      BREAKFAST : list of most coveted -> least coveted (based on the weighted satisfaction they would give)
-
                     HashMap<MealType, HashMap<MemberName, List<FoodType>>> bestCycles = new HashMap<>();
                         Spencer: REAKFAST : FM1 : <BMon, BTues ... >
                                             FM2 : <BMon, BTues ... >
@@ -204,9 +184,18 @@ public class Player extends menu.sim.Player {
                             // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
                             // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already  
 
+                List<FoodType> breakfastList = getBreakfastList(familyMembers);
+                for(FoodType breakfastItem : breakfastList){
+                    shoppingList.addToOrder(breakfastItem);
+                }
+
                     // lunch 
                         // similar to dinner, get everyone's top options for every day and this is the beginning of the list 
                         // Everything after this: zipping together preferneces like in dinner
+                List<FoodType> lunchList = getLunchList(familyMembers);
+                for(FoodType lunchItem : lunchList){
+                    shoppingList.addToOrder(lunchItem);
+                }
 
                     // dinner: purhchase at least 7 * n, make list long enough for worst case 
                         // get best cycle from loop
@@ -223,34 +212,128 @@ public class Player extends menu.sim.Player {
                                 // 3*N*d1, 2*n*dinner2, 2*n*dinner3 (remember to subtract what is available in pantry)
                                 // 2*n*dinner4, 1*n*dinner2
                                 // 2*n*dinner5, 1*n*dinnner3
+                List<FoodType> dinnerList = getDinnerList(familyMembers);
+                for(FoodType dinnerItem : dinnerList){
+                    shoppingList.addToOrder(dinnerItem);
+                }
+
+                if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
+                    return shoppingList;
+                simPrinter.println("\n\nShopping list was invalid\n\n");
+                return new ShoppingList();
 
             }
 
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
         }
         
     }
 
-<<<<<<< HEAD
-        // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
-        int numMeals = familyMembers.size() * 28;
+    private List getBreakfastList(List<FamilyMember> familyMembers) {
         
-        ShoppingList shoppingList = new ShoppingList();
-        shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
-        shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
-        shoppingList.addLimit(MealType.DINNER, numMeals * 20);
+        List<FoodType> breakfastList = new ArrayList<>();
+
+        for(FamilyMember fm : familyMembers){
+            List<FoodType> fav = bestCycles.get(MealType.BREAKFAST).get(fm);
+            for(FoodType ft : fav){
+                breakfastList.add(ft);
+            }
+        }
+
+        List<FoodType> covBreakfast = covetedFoods.get(MealType.BREAKFAST);
+        for (int i=0; i<6; i++) {
+            for(FamilyMember fm : familyMembers){
+                for (int j=0; j<7; j++) {
+                    breakfastList.add(covBreakfast.get(i));
+                }
+            }
+        }
+
+        return breakfastList;
+
+    }
+
+    private List getLunchList(List<FamilyMember> familyMembers) {
         
-        List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-        List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-        List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
-=======
+        List<FoodType> lunchList = new ArrayList<>();
+
+        for(FamilyMember fm : familyMembers){
+            List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
+            for(FoodType ft : fav){
+                lunchList.add(ft);
+            }
+        }
+
+        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        for (int i=0; i<6; i++) {
+            for(FamilyMember fm : familyMembers){
+                if (i==0){
+                    for (int j=0; j<3; j++) {
+                        lunchList.add(covLunch.get(i));
+                    }
+                    for (int j=0; j<2; j++) {
+                        lunchList.add(covLunch.get(i+1));
+                    }
+                    for (int j=0; j<2; j++) {
+                        lunchList.add(covLunch.get(i+2));
+                    }
+                }
+                else{
+                    for (int j=0; j<2; j++) {
+                        lunchList.add(covLunch.get(i+2));
+                    }
+                    lunchList.add(covLunch.get(i));
+                }
+            }
+        }
+
+        return lunchList;
+
+    }
+
+    private List getDinnerList(List<FamilyMember> familyMembers) {
+        
+        List<FoodType> dinnerList = new ArrayList<>();
+
+        for(FamilyMember fm : familyMembers){
+            List<FoodType> fav = bestCycles.get(MealType.DINNER).get(fm);
+            for(FoodType ft : fav){
+                dinnerList.add(ft);
+            }
+        }
+
+        List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        for (int i=0; i<11; i++) {
+            for(FamilyMember fm : familyMembers){
+                if (i==0){
+                    for (int j=0; j<3; j++) {
+                        dinnerList.add(covDinner.get(i));
+                    }
+                    for (int j=0; j<2; j++) {
+                        dinnerList.add(covDinner.get(i+1));
+                    }
+                    for (int j=0; j<2; j++) {
+                        dinnerList.add(covDinner.get(i+2));
+                    }
+                }
+                else{
+                    for (int j=0; j<2; j++) {
+                        dinnerList.add(covDinner.get(i+2));
+                    }
+                    dinnerList.add(covDinner.get(i));
+                }
+            }
+        }
+
+        return dinnerList;
+
+    }
+
 
     private void simulatePlan(List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
         List<MemberName> memberNames = new ArrayList<>();
         for(FamilyMember familyMember : familyMembers)
             memberNames.add(familyMember.getName());
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
         
         Pantry originalPantry = pantry.clone();
         Planner planner = new Planner(memberNames);
@@ -351,21 +434,14 @@ public class Player extends menu.sim.Player {
             updateFrequency(lunchList, dinnerList);
             updatePreference(familyMembers);
         }
-<<<<<<< HEAD
-        // simPrinter.println(shoppingList.getFullOrderMap());
-        if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
-            return shoppingList;
-        simPrinter.println("\n\nShopping list was invalid\n\n");
-        return new ShoppingList();
-=======
 
-        printPlanner(planner, week);
+        //printPlanner(planner, week);
 
         if(Player.hasValidPlanner(planner, originalPantry))
-            return planner;
+            //return planner;
         simPrinter.println("\nPlanner was invalid");
-        return new Planner();
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
+        //return new Planner();
+
     }
 
 
@@ -402,55 +478,6 @@ public class Player extends menu.sim.Player {
         // the order of family members, sorted by their satisfaction 
         List<MemberName> familyMemberOrder = null;
         
-<<<<<<< HEAD
-        // Spencer:
-        Pantry originalPantry = pantry.clone();
-        List<MemberName> memberNames = getFamilyMembers();
-        HashMap<MemberName, FoodType> assignedMeal = new HashMap();
-        Planner planner = new Planner(memberNames); 
-
-        for(Day day : Day.values()) {
-
-            HashMap<MemberName, FoodType> breakfastList = new HashMap();
-            memberNames = getFamilyMembers();
-            for(MemberName memberName : memberNames) { 
-                FoodType breakfastMeal = getMaximumSatisfactionMeal(pantry, memberName, 0);
-                planner.addMeal(day, memberName, MealType.BREAKFAST, breakfastMeal);
-                pantry.removeMealFromInventory(breakfastMeal);
-                breakfastList.put(memberName, breakfastMeal);
-            }
-
-            recalcSatisfaction(breakfastList, 0);
-
-            HashMap<MemberName, FoodType> lunchList = new HashMap();
-            memberNames = getFamilyMembers();
-            for(MemberName memberName : memberNames) { 
-                FoodType lunchMeal = getMaximumSatisfactionMeal(pantry, memberName, 1);
-                planner.addMeal(day, memberName, MealType.LUNCH, lunchMeal);
-                pantry.removeMealFromInventory(lunchMeal);
-                lunchList.put(memberName, lunchMeal);
-            }
-
-            recalcSatisfaction(lunchList, 1);
-
-            HashMap<MemberName, FoodType> dinnerList = new HashMap();
-            memberNames = getFamilyMembers();
-            MemberName leastSat = memberNames .get(0);
-            FoodType dinnerMeal = getMaximumSatisfactionMeal(pantry, leastSat, 2);
-            for(MemberName memberName : memberNames) { 
-                planner.addMeal(day, memberName, MealType.DINNER, dinnerMeal);
-                pantry.removeMealFromInventory(dinnerMeal);
-                dinnerList.put(memberName, dinnerMeal);
-            }
-
-            recalcSatisfaction(dinnerList, 2);
-
-            updateFrequency(lunchList, dinnerList);
-            updatePreference(familyMembers);
-        }
-        
-        // for every day:
-=======
         // simPrinter.println("breakfast array:" + breakfastArray);
         // simPrinter.println("lunch array:" + lunchArray);
         // simPrinter.println("dinner array:" + dinnerArray);
@@ -459,7 +486,6 @@ public class Player extends menu.sim.Player {
 
         // Spencer: 
         for(Day day : Day.values()) {
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
             // breakfast
             // never modify breakfast satisfactions after it's created
 
@@ -594,12 +620,6 @@ public class Player extends menu.sim.Player {
             List<Integer> frequency = new ArrayList<Integer>(Collections.nCopies(40, 0));
             frequencyArray.put(p, frequency);
 
-<<<<<<< HEAD
-        if(Player.hasValidPlanner(planner, originalPantry))
-            return planner;
-
-        return new Planner();
-=======
             //initialize satisfaction
             familySatisfaction.put(p, 0.0);
         }
@@ -623,51 +643,8 @@ public class Player extends menu.sim.Player {
         frequencyArray.entrySet().forEach(entry->{
             simPrinter.println(entry.getKey() + " " + entry.getValue());  
         });
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
     }
 
-    private FoodType getMaximumSatisfactionMeal(Pantry pantry, MemberName memberName, Integer flagDigit) {
-        FoodType maximumSatisfactionMeal = null;
-        double maxSatisfaction = 0.0;
-
-        List<Double> foodArray;
-        if (flagDigit == 0) {
-            foodArray = (ArrayList<Double>) breakfastArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i];
-                    }
-                }
-            }
-        }
-        else if (flagDigit == 1) {
-            foodArray = (ArrayList<Double>) lunchArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i+10]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i+10];
-                    }
-                }
-            }
-        }
-        else {
-            foodArray = (ArrayList<Double>) dinnerArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i+20]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i+20];
-                    }
-                }
-            }
-        }
-
-        
-        return maximumSatisfactionMeal;
-    }
 
     /**
     * Updates the preferences for each meal at the end of each day
@@ -780,7 +757,7 @@ public class Player extends menu.sim.Player {
             public int compare(Map.Entry<MemberName, Double> l1,  
                                Map.Entry<MemberName, Double> l2) 
             { 
-                return (l2.getValue()).compareTo(l1.getValue()); 
+                return (l1.getValue()).compareTo(l2.getValue()); 
             } 
         }); 
           
@@ -794,165 +771,11 @@ public class Player extends menu.sim.Player {
 
 }
 
-<<<<<<< HEAD
-
-/*
-public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
-
-        // recalculate family satisfaction with new satisfaction for this week
-
-        // make hashmaps for planned meals
-        
-        // Spencer:
-        Pantry originalPantry = pantry.clone();
-        List<MemberName> memberNames = getFamilyMembers();
-        HashMap<MemberName, FoodType> assignedMeal = new HashMap();
-        Planner planner = new Planner(memberNames); 
-
-        for(Day day : Day.values()) {
-
-            HashMap<MemberName, FoodType> breakfastList = new HashMap();
-            memberNames = getFamilyMembers();
-            for(MemberName memberName : memberNames) { 
-                FoodType breakfastMeal = getMaximumSatisfactionMeal(pantry, memberName, 0);
-                planner.addMeal(day, memberName, MealType.BREAKFAST, breakfastMeal);
-                pantry.removeMealFromInventory(breakfastMeal);
-                breakfastList.put(memberName, breakfastMeal);
-            }
-
-            recalcSatisfaction(breakfastList, 0);
-
-            HashMap<MemberName, FoodType> lunchList = new HashMap();
-            memberNames = getFamilyMembers();
-            for(MemberName memberName : memberNames) { 
-                FoodType lunchMeal = getMaximumSatisfactionMeal(pantry, memberName, 1);
-                planner.addMeal(day, memberName, MealType.LUNCH, lunchMeal);
-                pantry.removeMealFromInventory(lunchMeal);
-                lunchList.put(memberName, lunchMeal);
-            }
-
-            recalcSatisfaction(lunchList, 1);
-
-            HashMap<MemberName, FoodType> dinnerList = new HashMap();
-            memberNames = getFamilyMembers();
-            MemberName leastSat = memberNames .get(0);
-            FoodType dinnerMeal = getMaximumSatisfactionMeal(pantry, leastSat, 2);
-            for(MemberName memberName : memberNames) { 
-                planner.addMeal(day, memberName, MealType.DINNER, dinnerMeal);
-                pantry.removeMealFromInventory(dinnerMeal);
-                dinnerList.put(memberName, dinnerMeal);
-            }
-
-            recalcSatisfaction(dinnerList, 2);
-
-            updateFrequency(lunchList, dinnerList);
-            updatePreference(familyMembers);
-        }
-        
-        // for every day:
-            // breakfast
-            // never modify breakfast satisfactions after it's created
-
-            // get order of family members (Nuneke's function)
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
-            // for every family member:
-                // for each of that family member's breakfast array (sorted):
-                    // assign the meal if it's available & break 
-                        // assign = hashmap: family member --> assigned breakfast      
-
-            // recalculate satisfcation
-            // recalcSatisfaction(hashmap of assigned breakfasts, 0) // --> update lunch + dinner satisfaction matrices
-
-
-
-
-            // lunch
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
-            // for every family member:
-                // for each of that family member's lunch array (sorted):
-                    // assign the meal if it's available & break     
-
-            // recalculate satisfcation
-            // recalcSatisfaction(hashmap of assigned lunches, 1) // --> update lunch + dinner satisfaction matrices
-
-
-
-
-            // dinner
-            // familyMemberList = getFamilyMembers() // --> returns orderded list of family members by satisfaction
-            // for every family member:
-                // for each of that family member's meals:
-                    // assign the meal if it's available & break     
-
-            // recalculate satisfcation
-            // recalcSatisfaction([list of dinners assigned in that day], familyMemberList, 2) // --> update lunch + dinner satisfaction matrices
-
-            // update frequency array
-            //udpateFrequency()
-            // updatePreferneces()
-
-
-        // create Planner object 
-
-        if(Player.hasValidPlanner(planner, originalPantry))
-            return planner;
-
-        return new Planner();
-    }
-
-    private FoodType getMaximumSatisfactionMeal(Pantry pantry, MemberName memberName, Integer flagDigit) {
-        FoodType maximumSatisfactionMeal = null;
-        double maxSatisfaction = 0.0;
-
-        List<Double> foodArray;
-        if (flagDigit == 0) {
-            foodArray = (ArrayList<Double>) breakfastArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i];
-                    }
-                }
-            }
-        }
-        else if (flagDigit == 1) {
-            foodArray = (ArrayList<Double>) lunchArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i+10]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i+10];
-                    }
-                }
-            }
-        }
-        else {
-            foodArray = (ArrayList<Double>) dinnerArray.get(memberName);
-            for(int i=0; i<foodArray.size(); i++) {
-                if (foodArray.get(i) >= maxSatisfaction) {
-                    if(pantry.getNumAvailableMeals(FoodType.values()[i+20]) > 0){
-                        maxSatisfaction = foodArray.get(i);
-                        maximumSatisfactionMeal = FoodType.values()[i+20];
-                    }
-                }
-            }
-        }
-
-        
-        return maximumSatisfactionMeal;
-    }
-*/
-=======
 /*  Makefile info:
 gui:
-	java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m nunekeConfig.dat -C 1000000 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals.csv planners.csv pantries.csv satisfactions.csv
-
+    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m nunekeConfig.dat -C 1000000 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals.csv planners.csv pantries.csv satisfactions.csv
 family:
-	java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m family.dat -C 84 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_family.csv planners_family.csv pantries_family.csv satisfactions_family.csv
-
+    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m family.dat -C 84 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_family.csv planners_family.csv pantries_family.csv satisfactions_family.csv
 sharon:
-	java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m sharonConfig.dat -C 105 -p 5 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_sharon.csv planners_sharon.csv pantries_sharon.csv satisfactions_sharon.csv
-
+    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m sharonConfig.dat -C 105 -p 5 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_sharon.csv planners_sharon.csv pantries_sharon.csv satisfactions_sharon.csv
 */
->>>>>>> d6de46f11d99e3cb30cb0add98d8697eb4cd4b61
