@@ -84,7 +84,7 @@ public class Player extends menu.sim.Player {
 
 		List<MemberName> memberNames = new ArrayList<>();
 
-		Map<MealType, List<MemberName>> memberPriorityList = new HashMap<>();
+		Map<MealType, List<MemberName>> memberPriorityList = new LinkedHashMap<>();
 
 		Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences = new HashMap<>();
 
@@ -96,49 +96,40 @@ public class Player extends menu.sim.Player {
 		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
 		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 
+
+		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
+
+		
+		simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
 		for (MemberName member : orderedFamilyPreferences.keySet()){
-			simPrinter.println("\n" + member);
-			for (MealType meal : Food.getAllMealTypes()){
-				simPrinter.println("   " + meal);
-				simPrinter.println(orderedFamilyPreferences.get(member).get(meal));
-				simPrinter.println(memberPriorityList.get(meal));
-			}
+			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.BREAKFAST));
 		}
 		
 		for(MealType meal : Food.getAllMealTypes()){
-			for(MemberName memberName : memberPriorityList.get(meal)){
-				for(Day day : Day.values()){
-				
-					switch(meal){
+			for(Day day : Day.values()){
+				for(MemberName memberName : memberPriorityList.get(meal)){
+					if (pantry.getNumAvailableMeals(meal) > 0){
+						switch(meal){
 
-						case BREAKFAST:
-							FoodType food = getBestFood(meal, memberName, orderedFamilyPreferences);
-							planner.addMeal(day, memberName, meal, food);
-							pantry.removeMealFromInventory(food);
-							updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
-							break;
+							case BREAKFAST:
+								FoodType food = getBestFood(meal, memberName, orderedFamilyPreferences);
+								planner.addMeal(day, memberName, meal, food);
+								pantry.removeMealFromInventory(food);
+								updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
+								break;
 
-						case LUNCH:
-							FoodType maxAvailableLunchMeal = getMaximumAvailableMeal(pantry, MealType.LUNCH);
-    						if(pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
-        	    				planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
-        	    				pantry.removeMealFromInventory(maxAvailableLunchMeal); 
-        	    			}
-							break;
+							case LUNCH:
+					
+								break;
 
-						case DINNER:
-							FoodType maxAvailableDinnerMeal = getMaximumAvailableMeal(pantry, MealType.DINNER);
-							Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
-							for(int i = 0; i < numDinners; i++) {
-								MemberName thisMember = memberNames.get(i);
-				    	    	planner.addMeal(day, thisMember, MealType.DINNER, maxAvailableDinnerMeal);
-						    	pantry.removeMealFromInventory(maxAvailableDinnerMeal);
-							}
-							break;
+							case DINNER:
+							
+								break;
+						}
 					}
 				}
+				updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 			}
-			updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 		}
 		simPrinter.println("\n\n\n********* PLANNER ********\n");
 		for(MealType meal : Food.getAllMealTypes()){
@@ -227,10 +218,12 @@ public class Player extends menu.sim.Player {
 				double bestPref = -1.0;
 				MemberName lowestMember = null;
 				for(FamilyMember familyMember : familyMembers){
-					Map<MealType, Map<FoodType, Double>> memberMealPrefs = orderedFamilyPreferences.get(familyMember.getName());
-					Map<FoodType, Double> memberFoodPrefs = memberMealPrefs.get(meal);
-					if (memberFoodPrefs.size() < 1)
+					Map<FoodType, Double> memberFoodPrefs = orderedFamilyPreferences.get(familyMember.getName()).get(meal);
+
+					if (memberFoodPrefs.size() < 1){
+						simPrinter.println("*****************CONTINUE*******************");
 						continue;
+					}
 					double memberBestPref = memberFoodPrefs.values().stream().findFirst().get();
 					if (bestPref < 0 || bestPref > memberBestPref){
 						if (!membersOrder.contains(familyMember.getName())){
