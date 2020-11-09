@@ -63,8 +63,17 @@ public class Player extends menu.sim.Player {
     */
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         // initialize frequency, preference, and satisfaction maps
-        if (week == 1) 
+        if (week == 1) {
             initializePreference(familyMembers);
+        } else {
+            covetedFoods = sortCovetedFoods(0.25);
+            simPrinter.println("Coveted Breakfast: ");
+            simPrinter.println(covetedFoods.get(MealType.BREAKFAST));
+            simPrinter.println("Coveted Lunch: ");
+            simPrinter.println(covetedFoods.get(MealType.LUNCH));
+            simPrinter.println("Coveted Dinner: ");
+            simPrinter.println(covetedFoods.get(MealType.DINNER));
+        }
         // printPreference();
 
         // TODO: vv should depend on the number of people in the family and be more reliable lmao 
@@ -752,6 +761,96 @@ public class Player extends menu.sim.Player {
                 frequencyArray.get(p).set(i, daysAgo);
             }
         }
+    }
+
+    /**
+    * Sort all food according to weighted satisfaction
+    * @param percentile    the preference of the bottom p percentile members will be weighted the most
+    **/
+    private HashMap<MealType, List<FoodType>> sortCovetedFoods(Double percentile) {
+        HashMap<MealType, List<FoodType>> covetedFoods = new HashMap<>();
+
+        List<MemberName> members = getFamilyMembers(familySatisfaction);
+        Double minSatisfaction = familySatisfaction.get(members.get(0));
+        Double maxSatisfaction = familySatisfaction.get(members.get(members.size() - 1));
+        Double threshold = (maxSatisfaction - minSatisfaction) * percentile + minSatisfaction;
+        //simPrinter.println("least satisfied: " + members.get(0));
+        //simPrinter.println("least satisfied member's breakfast preference: " + breakfastArray.get(members.get(0)));
+        //simPrinter.println("min : " + minSatisfaction);
+        //simPrinter.println("max : " + maxSatisfaction);
+        //simPrinter.println("threshold : " + threshold);
+
+        //find the Kth member whose satisfaction is just above the threshold
+        int start = 0, end = members.size() - 1, k = -1;
+        while (start <= end) {
+            int mid = (start + end) / 2;
+            if (familySatisfaction.get(members.get(mid)) <= threshold){
+                start = mid + 1;
+            } else {
+                k = mid;
+                end = mid - 1;
+            }
+        }
+        //simPrinter.println("k:");
+        //simPrinter.println(k);
+
+        //weighted Breakfast, lunch, and dinner preference
+        Double weightedBreakfast[] = new Double[10];
+        Double weightedLunch[] = new Double[10];
+        Double weightedDinner[] = new Double[20];
+        Arrays.fill(weightedBreakfast, 0.0);
+        Arrays.fill(weightedLunch, 0.0);
+        Arrays.fill(weightedDinner, 0.0);
+
+        for (int i=0; i<20; i++){
+            
+            for (int j=0; j<k; j++){ //only consider the least satisfied k members
+                //weighted preference for ith breakfast/lunch/dinner = sum of the preferences for k least satisfied member
+                //weights = k, k-1, ..., 1
+                if (i < 10) {
+                    //simPrinter.println("i: " + breakfastArray.get(members.get(j)).get(i) * (k-j));
+                    weightedBreakfast[i] += breakfastArray.get(members.get(j)).get(i) * (k-j);
+                    //simPrinter.println("weighted p: " + members.get(j));
+                    weightedLunch[i] += lunchArray.get(members.get(j)).get(i) * (k-j);
+                }
+                weightedDinner[i] += dinnerArray.get(members.get(j)).get(i) * (k-j);
+            }
+        }
+        
+        //sort the indices of the breakfast, lunch, and dinner items according to weighted preference values
+        Arrays.sort(breakfastIndices, new Comparator<Integer>() {
+            @Override public int compare(final Integer o1, final Integer o2) {
+                return Double.compare(weightedBreakfast[o2], weightedBreakfast[o1]);
+            }
+        });
+        Arrays.sort(lunchIndices, new Comparator<Integer>() {
+            @Override public int compare(final Integer o1, final Integer o2) {
+                return Double.compare(weightedLunch[o2], weightedLunch[o1]);
+            }
+        });
+        Arrays.sort(dinnerIndices, new Comparator<Integer>() {
+            @Override public int compare(final Integer o1, final Integer o2) {
+                return Double.compare(weightedDinner[o2], weightedDinner[o1]);
+            }
+        });
+
+        //make sorted list of covted food for each meal type
+        List<FoodType> orderedBreakfast = new ArrayList<>();
+        List<FoodType> orderedLunch = new ArrayList<>();
+        List<FoodType> orderedDinner = new ArrayList<>(); 
+        for (int i=0; i<20; i++){
+            if (i < 10){
+                orderedBreakfast.add(FoodType.values()[breakfastIndices[i]]);
+                orderedLunch.add(FoodType.values()[lunchIndices[i] + 10]);
+            }
+            orderedDinner.add(FoodType.values()[dinnerIndices[i] + 20]);
+        }
+
+        covetedFoods.put(MealType.BREAKFAST, orderedBreakfast);
+        covetedFoods.put(MealType.LUNCH, orderedLunch);
+        covetedFoods.put(MealType.DINNER, orderedDinner);
+
+        return covetedFoods;
     }
 
     // Nuneke
