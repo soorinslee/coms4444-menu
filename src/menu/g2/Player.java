@@ -194,33 +194,89 @@ public class Player extends menu.sim.Player {
 	// Ahad
 	// TODO
 	// 2.) rank breakfast items to maximum each person's satisfaction 
-	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+	// List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+	// 	Food f = new Food();
+	// 	List<FoodType> allBreakfasts = f.getFoodTypes(MealType.BREAKFAST);
+	// 	Map<FoodType, Double> lowestPerson = new HashMap<>();
+	// 	for(FoodType food: allBreakfasts){
+	// 		double lowest = 1.1;
+	// 		for(FamilyMember member: familyMembers){
+	// 			lowest = Math.min (member.getFoodPreference(food), lowest);
+	// 		}
+	// 		lowestPerson.put(food, lowest);
+	// 	}
+	// 	return sortByValue(lowestPerson); //return right value
+	// }
+
+
+	Map<FamilyMember, List<FoodType>> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+
+		Map<FamilyMember, List<FoodType>> familyBreakfastRankings = new HashMap<>();
+		
+		for(FamilyMember member: familyMembers){
+			familyBreakfastRankings.put(familyMembers, calcOrderRanksBreakfastForEachPersonHelper(member));
+		}
+		
+
+	}
+
+
+
+
+	//method for individual choices
+	List<FoodType> calcOrderRanksBreakfastForEachPersonHelper(FamilyMember> familyMember) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.BREAKFAST);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
 		for(FoodType food: allBreakfasts){
-			double lowest = 1.1;
-			for(FamilyMember member: familyMembers){
-				lowest = Math.min (member.getFoodPreference(food), lowest);
-			}
+			double lowest = 1.0;
+			lowest = member.getFoodPreference(food);
+			
 			lowestPerson.put(food, lowest);
 		}
 		return sortByValue(lowestPerson); //return right value
 	}
 
+
+
 	// Ahad - Done by Aum
 	// Ahad
 	// TODO on Wednesday - take into account the repeat penalty
 	// 2.) rank lunch items like breakfast
-	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+	// List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+	// 	Food f = new Food();
+	// 	List<FoodType> allBreakfasts = f.getFoodTypes(MealType.LUNCH);
+	// 	Map<FoodType, Double> lowestPerson = new HashMap<>();
+	// 	for(FoodType food: allBreakfasts){
+	// 		double lowest = 1.1;
+	// 		for(FamilyMember member: familyMembers){
+	// 			lowest = Math.min (member.getFoodPreference(food), lowest);
+	// 		}
+	// 		lowestPerson.put(food, lowest);
+	// 	}
+	// 	return sortByValue(lowestPerson);
+	// }
+
+	Map<FamilyMember, List<FoodType>> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+
+		Map<FamilyMember, List<FoodType>> familyLunchRankings = new HashMap<>();
+
+		for(FamilyMember member: familyMembers){
+			familyLunchRankings.put(member, calcOrderRanksLunchForEachHelper(member));
+		}
+
+
+	}
+
+
+
+	List<FoodType> calcOrderRanksLunchForEachHelper(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.LUNCH);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
 		for(FoodType food: allBreakfasts){
-			double lowest = 1.1;
-			for(FamilyMember member: familyMembers){
-				lowest = Math.min (member.getFoodPreference(food), lowest);
-			}
+			double lowest = 1.0;
+			lowest = member.getFoodPreference(food);
 			lowestPerson.put(food, lowest);
 		}
 		return sortByValue(lowestPerson);
@@ -233,12 +289,19 @@ public class Player extends menu.sim.Player {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.DINNER);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
+		double satisfactionSum = 0;
+		double count = 0;
 		for(FoodType food: allBreakfasts){
 			double lowest = 1.1;
 			for(FamilyMember member: familyMembers){
-				lowest = Math.min (member.getFoodPreference(food), lowest);
+				// lowest = Math.min (member.getFoodPreference(food), lowest);
+				satisfactionSum += member.getFoodPreference(food);
+				count += 1;
+				satisfactionSum = satisfactionSum/count;
+
 			}
-			lowestPerson.put(food, lowest);
+			// lowestPerson.put(food, lowest);
+			lowestPerson.put(food, satisfactionSum);
 		}
 		return sortByValue(lowestPerson);
 	}
