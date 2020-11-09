@@ -295,6 +295,8 @@ public class Player extends menu.sim.Player {
         Pantry pantryCopy = pantry.clone();
         for (FamilyMember member : familyMembers) {
             MemberName name = member.getName();
+            int l = 0;
+            int d = 0;
             for (Day day : Day.values()) {
 
                 // Breakfast
@@ -310,7 +312,6 @@ public class Player extends menu.sim.Player {
                 }
 
                 // Lunch
-                int l = 0;
                 while (l < this.allMemberLunch.get(name).size()) {
                     FoodType lunch = this.allMemberLunch.get(name).get(l);
                     if (pantryCopy.containsMeal(lunch)) {
@@ -325,19 +326,13 @@ public class Player extends menu.sim.Player {
                     l = 0;
 
                 // Dinner
-                int d = 0;
-                while (d < this.allMemberDinner.size()) {
-                    FoodType dinner = this.allMemberDinner.get(d);
-                    if (pantryCopy.containsMeal(dinner)) {
-                        planner.addMeal(day, name, MealType.DINNER, dinner);
-                        pantryCopy.removeMealFromInventory(dinner);
-                        d++;
-                        break;
-                    }
-                    d++;
-                }
-                if (d == this.allMemberDinner.size())
-                    d = 0;
+                //FoodType dinner = this.allMemberDinner.get(d);
+                //if (pantryCopy.containsMeal(dinner)) {
+                //    planner.addMeal(day, name, MealType.DINNER, dinner);
+                //    pantryCopy.removeMealFromInventory(dinner);
+                //    break;
+                //}
+                //d++;
             }
         }
         return planner;
