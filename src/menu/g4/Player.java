@@ -50,11 +50,9 @@ public class Player extends menu.sim.Player {
      */
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
-        // A bit tight; might want to adjust in the future (espcially for lunch food)
-        // Assumption: You use all breakfast and lunch foods in the pantry each week
-        // There are extras for dinner
-        int numBreakfastFoods = 7 * numFamilyMembers;
-    	int numLunchFoods = 7 * numFamilyMembers;
+        // 1/4 capacity to breakfast and lunch and rest to dinner
+        int numBreakfastFoods = Math.round(super.capacity/4) - numInPantry(MealType.BREAKFAST, pantry);
+    	int numLunchFoods = Math.round(super.capacity/4) - numInPantry(MealType.LUNCH, pantry);
     	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
 
         ShoppingList shoppingList = new ShoppingList();
@@ -120,23 +118,19 @@ public class Player extends menu.sim.Player {
         }
         simPrinter.println("Moving ahead to adding to pantry.");
 
+        // store top breakfast foods in lists
+        List<FoodType> firstBreakfast = new ArrayList<FoodType>();
+        List<FoodType> secondBreakfast = new ArrayList<FoodType>();
+
         // Adding to pantry
         for (FamilyMember member : familyMembers) {
             MemberName name = member.getName();
-            // Add 7 breakfast foods per family member
-            // Add four of first choices, two of second choice, one of third choice
-            for(int i = 0; i < 4; i++) {
-                shoppingList.addToOrder(this.allMemberBreakfastSorted.get(name).get(0));
-            }
-            for(int i = 0; i < 2; i++) {
-                shoppingList.addToOrder(this.allMemberBreakfastSorted.get(name).get(1));
-            }
-            for(int i = 0; i < 1; i++) {
-                shoppingList.addToOrder(this.allMemberBreakfastSorted.get(name).get(2));
-            }
+            
+            // first and second choice breakfast foods to list
+            firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(0));
+            firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(1));
 
             // Add 7 lunch foods per family member according to optimal cycle
-
             int ind = 0;
             for (int count = 0; count < 20; count++) {
                 if (ind == this.allMemberLunchSorted.get(name).size() || ind == 7)
@@ -147,6 +141,20 @@ public class Player extends menu.sim.Player {
 
             simPrinter.println("Iterating through " + name + "'s order and adding to pantry.");
             // simPrinter.println(shoppingList.getFullOrderMap());
+        }
+
+        // Add breakfast to shopping list
+        // 10 of first choice
+        // 5 of second choice
+        for (FoodType firstFood : firstBreakfast) {
+            for (int count = 0; count < 15; count++) {
+                shoppingList.addToOrder(firstFood);
+            }
+        }
+        for (FoodType secondFood : secondBreakfast) {
+            for (int count = 0; count < 5; count++) {
+                shoppingList.addToOrder(secondFood);
+            }
         }
 
         int count = 0;
@@ -185,6 +193,15 @@ public class Player extends menu.sim.Player {
         else {
             return new ShoppingList();
         }
+    }
+
+    private int numInPantry(MealType type, Pantry pantry) {
+        int num = 0;
+        for (FoodType food : pantry.getMealsMap().get(type).keySet()) {
+            num += pantry.getMealsMap().get(type).get(food);
+        }
+
+        return num;
     }
 
     private boolean hasShoppingList(ShoppingList shoppingList, Integer numEmptySlots) {
