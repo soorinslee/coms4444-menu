@@ -50,7 +50,7 @@ public class Simulator {
 	private static boolean exportCSV = false;
 
 	// Defaults
-	private static boolean enablePrints = false;
+	private static boolean enablePrints = true;
 	private static long timeout = 1000;
 	private static int currentWeek = 0;
 	private static String version = "1.0";
