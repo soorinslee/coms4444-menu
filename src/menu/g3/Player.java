@@ -74,18 +74,16 @@ public class Player extends menu.sim.Player {
             covetedFoods.put(MealType.DINNER, dinnerFoods); 
         } else {
             covetedFoods = sortCovetedFoods(0.25);
-            simPrinter.println("Coveted Breakfast: ");
-            simPrinter.println(covetedFoods.get(MealType.BREAKFAST));
-            simPrinter.println("Coveted Lunch: ");
-            simPrinter.println(covetedFoods.get(MealType.LUNCH));
-            simPrinter.println("Coveted Dinner: ");
-            simPrinter.println(covetedFoods.get(MealType.DINNER));
+            // simPrinter.println("Coveted Breakfast:\n" + covetedFoods.get(MealType.BREAKFAST));
+            // simPrinter.println("\nCoveted Lunch:\n" + covetedFoods.get(MealType.LUNCH));
+            // simPrinter.println("\nCoveted Dinner:\n" + covetedFoods.get(MealType.DINNER));
         }
         // printPreference();
-
-        // TODO: vv should depend on the number of people in the family and be more reliable lmao 
-        // (Spencer) just add 28 of each meal for each member (enough to last 4 weeks if we cannot buy again)
-        if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() > 100000) {
+        
+        // TODO: fix to be smarter using Qi's math! 
+        // current implementation makes invalid shopping lists sometimes but still does well
+        
+        if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() >= 100000) {
             int numMeals = familyMembers.size() * 28;
         
             ShoppingList shoppingList = new ShoppingList();
@@ -113,8 +111,10 @@ public class Player extends menu.sim.Player {
             simPrinter.println("\n\nShopping list was invalid\n\n");
             return new ShoppingList();
         }
+        
 
         // if we can max out every food item for every family member to last at least one week under high demand
+        // instead of 280, make it every meal that would be necessary in an optimum round! 
         // else if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() >= 280*familyMembers.size()) {
             // pay attention to what we have in our pantry rn 
             // breakfast 
@@ -127,121 +127,107 @@ public class Player extends menu.sim.Player {
                     // for subsequent weeks, only do ^ when the least satsified is not getting the breakfasts they like 
         // }
         
-        // for small pantry sizes (minimum = 21*number of family members)
-        else {
-            int numMeals = familyMembers.size() * 7;
-        
-            ShoppingList shoppingList = new ShoppingList();
+        // for smaller pantry sizes (minimum = 21*number of family members)
+        // we cannot overstock the pantry 
+        // determine overall preference for each meal by running a fake week simulation
+                // keeping track of the preverence values for every meal for every person for every day
+                // paying attention to the lowest satisfied family members when buying 
+                // find the best outcome cycle of dinners for the least satisfied family member 
+        ShoppingList shoppingList = new ShoppingList();
+        int numMeals = (int)(numEmptySlots / 3);
+        shoppingList.addLimit(MealType.BREAKFAST, numMeals);
+        shoppingList.addLimit(MealType.LUNCH, numMeals);
+        shoppingList.addLimit(MealType.DINNER, numMeals);
+        simPrinter.println("\nEmpty Slots in Pantry: " + numEmptySlots);
 
-            // how many extra meals are available for every family member (assuming empty pantry)
-            // int extraSpace = Math.floor((pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() - 21*familyMembers.size())/familyMembers.size());
-            // if we have some leeway for overstocking pantry
-            // if (extraSpace > 0) {
-            if (false) {
-                return new ShoppingList();
-                // TODO?: make sure to use up "stale" food items
-            }
-
-            // we cannot overstock the pantry 
-            // determine overall preference for each meal by running a fake week simulation
-                    // keeping track of the preverence values for every meal for every person for every day
-                    // paying attention to the lowest satisfied family members when buying 
-                    // find the best outcome cycle of dinners for the least satisfied family member 
-            else {
-                shoppingList.addLimit(MealType.BREAKFAST, numMeals);
-                shoppingList.addLimit(MealType.LUNCH, numMeals);
-                shoppingList.addLimit(MealType.DINNER, numMeals);
-
-                Pantry full_pantry = new Pantry(40 * numMeals);
-                for(FoodType ft : Food.getFoodTypes(MealType.BREAKFAST)){
-                    for(int i=0; i<numMeals; i++) {
-                        full_pantry.addMealToInventory(ft);
-                    }
-                }
-                for(FoodType ft : Food.getFoodTypes(MealType.LUNCH)){
-                    for(int i=0; i<numMeals; i++) {
-                        full_pantry.addMealToInventory(ft);
-                    }
-                }
-                for(FoodType ft : Food.getFoodTypes(MealType.DINNER)){
-                    for(int i=0; i<numMeals; i++) {
-                        full_pantry.addMealToInventory(ft);
-                    }
-                }
-                simulatePlan(familyMembers, full_pantry, mealHistory);  
-
-                
-
-                // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
-                    // for breakfast: 
-                        // according to family member preferences, find everyone's favorite breakfast foods
-                        // add 7 of each person's favoite breakfast foods 
-
-                    // 7*least satisfied favorite breakfast, 7*next least satisfied favorite breakfast ... 
-                        // if every family member does not get their # 1 favorite, then we will move on to the ranked preferences 
-                    
-                    // the rest of the list 
-                        // 7 * n * most coveted breakfast - (7 * most coveted * number of times it appeared in ^^) - # of breakfast we have already 
-                        // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
-                        // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already  
-                List<FoodType> breakfastList = getBreakfastList(familyMembers);
-                for(FoodType breakfastItem : breakfastList){
-                    shoppingList.addToOrder(breakfastItem);
-                }
-
-                // lunch 
-                    // similar to dinner, get everyone's top options for every day and this is the beginning of the list 
-                    // Everything after this: zipping together preferneces like in dinner
-                List<FoodType> lunchList = getLunchList(familyMembers);
-                for(FoodType lunchItem : lunchList){
-                    shoppingList.addToOrder(lunchItem);
-                }
-
-                // dinner: purhchase at least 7 * n, make list long enough for worst case 
-                    // get best cycle from loop
-                        // try to buy that cycle
-
-                    // if that cycle is not available
-                        // look at the 25% least satisfied people
-                            // for every day in simulation:
-                                // for the least satisfied family member:
-                                    // for each dinner:
-                                        // adjust the preference value for that dinner
-
-                        // buy maximum 7*n, list is 37*n
-                            // 3*N*d1, 2*n*dinner2, 2*n*dinner3 (remember to subtract what is available in pantry)
-                            // 2*n*dinner4, 1*n*dinner2
-                            // 2*n*dinner5, 1*n*dinnner3
-                List<FoodType> dinnerList = getDinnerList(familyMembers);
-                for(FoodType dinnerItem : dinnerList){
-                    shoppingList.addToOrder(dinnerItem);
-                }
-
-                simPrinter.println("\nEmpty Slots in Pantry: " + numEmptySlots);
-                simPrinter.println("Shopping limit: " + (shoppingList.getAllLimitsMap().get(MealType.BREAKFAST) + shoppingList.getAllLimitsMap().get(MealType.LUNCH) + shoppingList.getAllLimitsMap().get(MealType.DINNER)));
-                // simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
-                // simPrinter.println("Breakfast shopping list size: " + breakfastList.size());
-                // for(FoodType ft : breakfastList){
-                //     simPrinter.print(ft + " ");
-                // }
-                // simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
-                // simPrinter.println("Lunch shopping list size: " + breakfastList.size());
-                // for(FoodType ft : lunchList){
-                //     simPrinter.print(ft + " ");
-                // }
-                // simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
-                // simPrinter.println("Dinner shopping list size: " + dinnerList.size());
-                // for(FoodType ft : dinnerList){
-                //     simPrinter.print(ft + " ");
-                // }
-
-                if(Player.hasValidShoppingList(shoppingList, numEmptySlots)){
-                    return shoppingList;
-                }
-                simPrinter.println("Shopping list was invalid");
-                return new ShoppingList();
+        Pantry full_pantry = new Pantry(40 * numMeals);
+        for(FoodType ft : Food.getFoodTypes(MealType.BREAKFAST)){
+            for(int i=0; i<numMeals; i++) {
+                full_pantry.addMealToInventory(ft);
             }
         }
+        for(FoodType ft : Food.getFoodTypes(MealType.LUNCH)){
+            for(int i=0; i<numMeals; i++) {
+                full_pantry.addMealToInventory(ft);
+            }
+        }
+        for(FoodType ft : Food.getFoodTypes(MealType.DINNER)){
+            for(int i=0; i<numMeals; i++) {
+                full_pantry.addMealToInventory(ft);
+            }
+        }
+        simulatePlan(familyMembers, full_pantry, mealHistory);  
+
+        
+
+        // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
+            // for breakfast: 
+                // according to family member preferences, find everyone's favorite breakfast foods
+                // add 7 of each person's favoite breakfast foods 
+
+            // 7*least satisfied favorite breakfast, 7*next least satisfied favorite breakfast ... 
+                // if every family member does not get their # 1 favorite, then we will move on to the ranked preferences 
+            
+            // the rest of the list 
+                // 7 * n * most coveted breakfast - (7 * most coveted * number of times it appeared in ^^) - # of breakfast we have already 
+                // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
+                // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already  
+        List<FoodType> breakfastList = getBreakfastList(familyMembers);
+        for(FoodType breakfastItem : breakfastList){
+            shoppingList.addToOrder(breakfastItem);
+        }
+
+        // lunch 
+            // similar to dinner, get everyone's top options for every day and this is the beginning of the list 
+            // Everything after this: zipping together preferneces like in dinner
+        List<FoodType> lunchList = getLunchList(familyMembers);
+        for(FoodType lunchItem : lunchList){
+            shoppingList.addToOrder(lunchItem);
+        }
+
+        // dinner: purhchase at least 7 * n, make list long enough for worst case 
+            // get best cycle from loop
+                // try to buy that cycle
+
+            // if that cycle is not available
+                // look at the 25% least satisfied people
+                    // for every day in simulation:
+                        // for the least satisfied family member:
+                            // for each dinner:
+                                // adjust the preference value for that dinner
+
+                // buy maximum 7*n, list is 37*n
+                    // 3*N*d1, 2*n*dinner2, 2*n*dinner3 (remember to subtract what is available in pantry)
+                    // 2*n*dinner4, 1*n*dinner2
+                    // 2*n*dinner5, 1*n*dinnner3
+        List<FoodType> dinnerList = getDinnerList(familyMembers);
+        for(FoodType dinnerItem : dinnerList){
+            shoppingList.addToOrder(dinnerItem);
+        }
+
+        
+        simPrinter.println("Shopping limit: " + (shoppingList.getAllLimitsMap().get(MealType.BREAKFAST) + shoppingList.getAllLimitsMap().get(MealType.LUNCH) + shoppingList.getAllLimitsMap().get(MealType.DINNER)));
+        simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
+        // simPrinter.println("Breakfast shopping list size: " + breakfastList.size());
+        // for(FoodType ft : breakfastList){
+        //     simPrinter.print(ft + " ");
+        // }
+        simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
+        // simPrinter.println("Lunch shopping list size: " + breakfastList.size());
+        // for(FoodType ft : lunchList){
+        //     simPrinter.print(ft + " ");
+        // }
+        simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
+        // simPrinter.println("Dinner shopping list size: " + dinnerList.size());
+        // for(FoodType ft : dinnerList){
+        //     simPrinter.print(ft + " ");
+        // }
+
+        if(Player.hasValidShoppingList(shoppingList, numEmptySlots)){
+            return shoppingList;
+        }
+        simPrinter.println("Shopping list was invalid");
+        return new ShoppingList();
     }
 
     private List getBreakfastList(List<FamilyMember> familyMembers) {
@@ -569,14 +555,17 @@ public class Player extends menu.sim.Player {
                 }
             }); 
             // TODO: see if we should choose a less favorable dinner if we have enough to go around 
-            for (MemberName fam2 : familyMemberOrder) {
-                // assign the meal if it's available & break 
-                // TODO?: make sure we have enough of the meal!
-                int din = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
-                if (din >= 1) {
-                    planner.addMeal(day, fam2, MealType.DINNER, Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
-                    pantry.removeMealFromInventory(Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
-                    dinnerList.put(fam2,Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
+
+            for (Integer dinnerIndx : dinnerIndices) {
+                int din = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(dinnerIndx + 20));
+                if (din >= familyMembers.size()) {
+                    for (MemberName fam2 : familyMemberOrder) {
+                        // assign the meal if it's available & break 
+                        planner.addMeal(day, fam2, MealType.DINNER, Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        pantry.removeMealFromInventory(Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        dinnerList.put(fam2,Food.getAllFoodTypes().get(dinnerIndx + 20));
+                    } 
+                    break;  
                 }
             }
             // recalculate satisfcation
@@ -791,7 +780,6 @@ public class Player extends menu.sim.Player {
         Arrays.fill(weightedDinner, 0.0);
 
         for (int i=0; i<20; i++){
-            
             for (int j=0; j<k; j++){ //only consider the least satisfied k members
                 //weighted preference for ith breakfast/lunch/dinner = sum of the preferences for k least satisfied member
                 //weights = k, k-1, ..., 1
@@ -804,7 +792,6 @@ public class Player extends menu.sim.Player {
                 weightedDinner[i] += dinnerArray.get(members.get(j)).get(i) * (k-j);
             }
         }
-        
         //sort the indices of the breakfast, lunch, and dinner items according to weighted preference values
         Arrays.sort(breakfastIndices, new Comparator<Integer>() {
             @Override public int compare(final Integer o1, final Integer o2) {
@@ -924,7 +911,27 @@ public class Player extends menu.sim.Player {
 gui:
     java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m nunekeConfig.dat -C 1000000 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals.csv planners.csv pantries.csv satisfactions.csv
 family:
-    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m family.dat -C 84 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_family.csv planners_family.csv pantries_family.csv satisfactions_family.csv
+    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m family.dat -C 105 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_family.csv planners_family.csv pantries_family.csv satisfactions_family.csv
 sharon:
-    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m sharonConfig.dat -C 105 -p 5 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_sharon.csv planners_sharon.csv pantries_sharon.csv satisfactions_sharon.csv
+    java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m sharonConfig.dat -C 84 -p 5 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_sharon.csv planners_sharon.csv pantries_sharon.csv satisfactions_sharon.csv
+
+results from class:
+family.dat, 200 pantry size
+    g3 13.47 fm5 
+    g1 12.03 fm5
+    g4 11.21 fm4 
+    g2 8.779 fm4
+    g5 7.18  fm5
+
+sharonconfig.data
+    g3 - 1.8561 fm2
+    g1 - 1.814 fm2
+    g4 - 1.571 fm2
+    g2 - 1.4101 fm2
+    g5 - 1.1465 fm2
+
+100,000 slots
+    new implementation -- andy least satisfied @ 16.2449
+    old implementation -- andy leasy satisfied @ 16.4487
+
 */
