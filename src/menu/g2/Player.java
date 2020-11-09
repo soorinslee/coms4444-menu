@@ -18,6 +18,8 @@ public class Player extends menu.sim.Player {
 	int numLunches = 0;
 	int numDinners = 0;
 
+	StorePredictor pred;
+
 	/**
 	 * Player constructor
 	 *
@@ -72,6 +74,7 @@ public class Player extends menu.sim.Player {
 		// preferences
 		this.size = familyMembers.size();
 		if(week == 1){
+			this.pred = new StorePredictor();
 			this.pantrySize = pantry.getNumEmptySlots();
 		}
 		List<Integer> cutoffs = calcFreqMeals(pantry, this.size, familyMembers);
@@ -84,6 +87,7 @@ public class Player extends menu.sim.Player {
 		lunchRanks = calcOrderRanksLunch(familyMembers);
 		dinnerRanks = calcOrderRanksDinner(familyMembers);
 
+		this.pred.setPreviousPantry(pantry);
 		return calcShoppingList(pantry, mealHistory, familyMembers);
 
 		// TODO: Make these smart allocations
@@ -282,7 +286,7 @@ public class Player extends menu.sim.Player {
 			FoodType topFood = breakfastRanks.get(i);
 			int freqTop = map.get(MealType.BREAKFAST).get(topFood);
 
-			breakfasts = addFoods(breakfasts, topFood, (int) (difference/3*1.5));
+			breakfasts = addFoods(breakfasts, topFood, (int) (difference/2*1.5));
 		}
 
 	/*	for(int i = 4; i < breakfastRanks.size(); i++) {
@@ -308,17 +312,16 @@ public class Player extends menu.sim.Player {
 		List<FoodType> lunches = new ArrayList<>();
 
 		//target top 5 top lunches
-		for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < 3; i++) {
 			FoodType topFood = lunchRanks.get(i);
 			int freqTop = map.get(MealType.LUNCH).get(topFood);
 
-			lunches = addFoods(lunches, topFood, (int) (difference/5*1.3));
+			lunches = addFoods(lunches, topFood, (int) (difference/2*1.3));
 		}
 
 	/*	for(int i = 6; i < lunchRanks.size(); i++) {
 			FoodType badFood = lunchRanks.get(i);
 			int freqBad = map.get(MealType.LUNCH).get(badFood);
-
 			lunches = addFoods(lunches, badFood, (int) (difference/7*1.2));
 		} */
 
@@ -348,13 +351,12 @@ public class Player extends menu.sim.Player {
 
 
 
-			dinners = addFoods(dinners, topFood, (int) (difference/3*1.6));
+			dinners = addFoods(dinners, topFood, (int) (difference/2*1.6));
 		}
 	//	System.out.println(dinners.size());
 	/*	for(int i = 6; i < dinnerRanks.size(); i++) {
 			FoodType badFood = dinnerRanks.get(i);
 			int freqBad = map.get(MealType.DINNER).get(badFood);
-
 			dinners = addFoods(dinners, badFood, (int) (difference/7*1.2));
 		} */
 
@@ -421,6 +423,7 @@ public class Player extends menu.sim.Player {
 		// 1. randomly choose between top three meals only in lunch and dinner
 		// get max available or second max available, remove from inventory, add to
 		// planner
+		this.pred.setCurrentPantry(pantry);
 
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
