@@ -214,7 +214,7 @@ public class Player extends menu.sim.Player {
         List<FoodType> breakfastList = new ArrayList<>();
 
         for(FamilyMember fm : familyMembers){
-            List<FoodType> fav = bestCycles.get(MealType.BREAKFAST).get(fm);
+            List<FoodType> fav = bestCycles.get(MealType.BREAKFAST).get(fm.getName());
             for(FoodType ft : fav){
                 breakfastList.add(ft);
             }
@@ -237,7 +237,7 @@ public class Player extends menu.sim.Player {
         
         List<FoodType> lunchList = new ArrayList<>();
         for(FamilyMember fm : familyMembers){
-            List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
+            List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm.getName());
             for(FoodType ft : fav){
                 lunchList.add(ft);
             }
@@ -275,7 +275,7 @@ public class Player extends menu.sim.Player {
         List<FoodType> dinnerList = new ArrayList<>();
 
         for(FamilyMember fm : familyMembers){
-            List<FoodType> fav = bestCycles.get(MealType.DINNER).get(fm);
+            List<FoodType> fav = bestCycles.get(MealType.DINNER).get(fm.getName());
             for(FoodType ft : fav){
                 dinnerList.add(ft);
             }
@@ -414,15 +414,13 @@ public class Player extends menu.sim.Player {
             }); 
             
             for (MemberName fam2 : familyMemberOrder) {
-                for (Integer dinnerIndx : dinnerIndices) {
-                    bestCycles.get(MealType.DINNER).get(fam2).add(Food.getAllFoodTypes().get(dinnerIndx + 20));
-                    dinnerList.put(fam2, Food.getAllFoodTypes().get(dinnerIndx + 20));
-                }
+                bestCycles.get(MealType.DINNER).get(fam2).add(Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
+                dinnerList.put(fam2, Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
             }
 
             for (MemberName fam : familyMemberOrder) {
                 first = true;
-                for (Integer lunchcIndx : lunchIndices) {
+                for (Integer dinnerInx : dinnerIndices) {
                     if (first)
                         first = false;
 
@@ -482,11 +480,11 @@ public class Player extends menu.sim.Player {
 
             // get order of family members (Nuneke's function)
             familyMemberOrder = getFamilyMembers(familySatisfaction); // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
+
+            Set<FoodType> restricted = getRestrictedFoods(familyMemberOrder, familyMembers);
+
             // simPrinter.println("family member order: " + familyMemberOrder);
             for (MemberName fam : familyMemberOrder) {
-                // TODO: (Spencer) Create a set of meals not to touch for bottom 25% 
-                    // highest satisfaction - lowest satisfaction / 4 --> anyone < this number is nnot satisfied 
-
                 // for each of that family member's breakfast array (sorted):
                 Arrays.sort(breakfastIndices, new Comparator<Integer>() {
                     @Override public int compare(final Integer o1, final Integer o2) {
@@ -573,6 +571,26 @@ public class Player extends menu.sim.Player {
         simPrinter.println("\nPlanner was invalid");
         return new Planner();
     }
+
+    /* This will create a set of the foods that are the favorites of the lowest 25% satisfied family members
+    *  so that the other family members know not to eat these foods if there are not enough for a week.
+    */
+    private Set<FoodType> getRestrictedFoods(List<MemberName> familyMemberOrder, List<FamilyMember> familyMembers) {
+        // TODO (Spencer): Perhaps it would be better to just choose the least satisfied satsifaction? 
+        FamilyMember leastSatisfied = null;
+        FamilyMember mostSatisfied = null;
+        for (FamilyMember mem : familyMembers) {
+            if (mem.getName() == familyMemberOrder.get(0))
+                leastSatisfied = mem;
+            else if (mem.getName() == familyMemberOrder.get(familyMemberOrder.size()-1))
+                mostSatisfied = mem;
+        }
+        Double satisfactionCutoff = (mostSatisfied.getSatisfaction() - leastSatisfied.getSatisfaction()) / 4;
+        // Double satisfactionCutoff = leastSatisfied.getSatisfaction();
+        Set<FoodType> restricted = new HashSet<>();
+        return restricted;
+    }
+
 
 
     /**
