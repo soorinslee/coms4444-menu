@@ -64,7 +64,14 @@ public class Player extends menu.sim.Player {
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         // initialize frequency, preference, and satisfaction maps
         if (week == 1) {
+            List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
+            List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
+            List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+            
             initializePreference(familyMembers);
+            covetedFoods.put(MealType.BREAKFAST, breakfastFoods);
+            covetedFoods.put(MealType.LUNCH, lunchFoods);
+            covetedFoods.put(MealType.DINNER, dinnerFoods); 
         } else {
             covetedFoods = sortCovetedFoods(0.25);
             simPrinter.println("Coveted Breakfast: ");
@@ -126,10 +133,6 @@ public class Player extends menu.sim.Player {
         
             ShoppingList shoppingList = new ShoppingList();
 
-            List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-            List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-            List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
-
             // how many extra meals are available for every family member (assuming empty pantry)
             // int extraSpace = Math.floor((pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() - 21*familyMembers.size())/familyMembers.size());
             // if we have some leeway for overstocking pantry
@@ -165,11 +168,8 @@ public class Player extends menu.sim.Player {
                         full_pantry.addMealToInventory(ft);
                     }
                 }
-                simulatePlan(familyMembers, full_pantry, mealHistory);
+                simulatePlan(familyMembers, full_pantry, mealHistory);  
 
-                //covetedFoods.put(MealType.BREAKFAST, breakfastFoods);
-                //covetedFoods.put(MealType.LUNCH, lunchFoods);
-                //covetedFoods.put(MealType.DINNER, dinnerFoods);   
                 
 
                 // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
@@ -318,26 +318,36 @@ public class Player extends menu.sim.Player {
 
         List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
         for (int i=0; i<11; i++) {
-            for(FamilyMember fm : familyMembers){
-                if (i==0){
+            if (i==0){
+                for(FamilyMember fm : familyMembers){
                     for (int j=0; j<3; j++) {
                         dinnerList.add(covDinner.get(i));
                     }
+                }
+                for(FamilyMember fm : familyMembers){
                     for (int j=0; j<2; j++) {
                         dinnerList.add(covDinner.get(i+1));
                     }
+                }
+                for(FamilyMember fm : familyMembers){
                     for (int j=0; j<2; j++) {
                         dinnerList.add(covDinner.get(i+2));
                     }
                 }
-                else{
+            }
+            else{
+                for(FamilyMember fm : familyMembers){
                     for (int j=0; j<2; j++) {
                         dinnerList.add(covDinner.get(i+2));
                     }
+                }
+                for(FamilyMember fm : familyMembers){
                     dinnerList.add(covDinner.get(i));
                 }
             }
         }
+
+        // simPrinter.println(dinnerList);
         
         return dinnerList;
 
@@ -581,7 +591,7 @@ public class Player extends menu.sim.Player {
 
         if(Player.hasValidPlanner(planner, originalPantry))
             return planner;
-        simPrinter.println("\nPlanner was invalid");
+        System.out.println("\nPlanner was invalid");
         return new Planner();
     }
 
