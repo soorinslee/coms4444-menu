@@ -64,6 +64,7 @@ public class Player extends menu.sim.Player {
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         // initialize frequency, preference, and satisfaction maps
         if (week == 1) {
+<<<<<<< HEAD
             List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
             List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
             List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
@@ -72,6 +73,9 @@ public class Player extends menu.sim.Player {
             covetedFoods.put(MealType.BREAKFAST, breakfastFoods);
             covetedFoods.put(MealType.LUNCH, lunchFoods);
             covetedFoods.put(MealType.DINNER, dinnerFoods); 
+=======
+            initializePreference(familyMembers);
+>>>>>>> caeeba7d4f2d66631bb047a62b3c55525f7fac2f
         } else {
             covetedFoods = sortCovetedFoods(0.25);
             simPrinter.println("Coveted Breakfast: ");
@@ -740,6 +744,13 @@ public class Player extends menu.sim.Player {
         }
     }
 
+<<<<<<< HEAD
+=======
+    /**
+    * Sort all food according to weighted satisfaction
+    * @param percentile    the preference of the bottom p percentile members will be weighted the most
+    **/
+>>>>>>> caeeba7d4f2d66631bb047a62b3c55525f7fac2f
     private HashMap<MealType, List<FoodType>> sortCovetedFoods(Double percentile) {
         HashMap<MealType, List<FoodType>> covetedFoods = new HashMap<>();
 
@@ -776,7 +787,11 @@ public class Player extends menu.sim.Player {
         Arrays.fill(weightedDinner, 0.0);
 
         for (int i=0; i<20; i++){
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> caeeba7d4f2d66631bb047a62b3c55525f7fac2f
             for (int j=0; j<k; j++){ //only consider the least satisfied k members
                 //weighted preference for ith breakfast/lunch/dinner = sum of the preferences for k least satisfied member
                 //weights = k, k-1, ..., 1
@@ -789,7 +804,11 @@ public class Player extends menu.sim.Player {
                 weightedDinner[i] += dinnerArray.get(members.get(j)).get(i) * (k-j);
             }
         }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> caeeba7d4f2d66631bb047a62b3c55525f7fac2f
         //sort the indices of the breakfast, lunch, and dinner items according to weighted preference values
         Arrays.sort(breakfastIndices, new Comparator<Integer>() {
             @Override public int compare(final Integer o1, final Integer o2) {
