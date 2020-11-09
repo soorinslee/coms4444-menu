@@ -117,6 +117,10 @@ public class Player extends menu.sim.Player {
         
             ShoppingList shoppingList = new ShoppingList();
 
+            List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
+            List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
+            List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+
             // how many extra meals are available for every family member (assuming empty pantry)
             // int extraSpace = Math.floor((pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() - 21*familyMembers.size())/familyMembers.size());
             // if we have some leeway for overstocking pantry
@@ -153,9 +157,12 @@ public class Player extends menu.sim.Player {
                     }
                 }
                 simulatePlan(familyMembers, full_pantry, mealHistory);
+
+                //covetedFoods.put(MealType.BREAKFAST, breakfastFoods);
+                //covetedFoods.put(MealType.LUNCH, lunchFoods);
+                //covetedFoods.put(MealType.DINNER, dinnerFoods);   
                 
-                    
-                
+
                 // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
                     // for breakfast: 
                         // according to family member preferences, find everyone's favorite breakfast foods
@@ -201,9 +208,15 @@ public class Player extends menu.sim.Player {
                     shoppingList.addToOrder(dinnerItem);
                 }
 
-                if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
+                simPrinter.println("numemptyspots: " + numEmptySlots);
+                for (MealType mt: Food.getAllMealTypes()){
+                    simPrinter.println("listlimit: " + shoppingList.getAllLimitsMap().get(mt));
+                }
+
+                if(Player.hasValidShoppingList(shoppingList, numEmptySlots)){
                     return shoppingList;
-                simPrinter.println("\n\nShopping list was invalid\n\n");
+                }
+                simPrinter.println("Shopping list was invalid");
                 return new ShoppingList();
             }
         }
