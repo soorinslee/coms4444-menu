@@ -209,7 +209,7 @@ public class Player extends menu.sim.Player {
 	// }
 
 
-	Map<FamilyMember, List<FoodType>> calcOrderRanksBreakfastForEachPerson(List<FamilyMember> familyMembers) {
+	Map<FamilyMember, List<FoodType>> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
 
 		Map<FamilyMember, List<FoodType>> familyBreakfastRankings = new HashMap<>();
 		
@@ -257,7 +257,7 @@ public class Player extends menu.sim.Player {
 	// 	return sortByValue(lowestPerson);
 	// }
 
-	Map<FamilyMember, List<FoodType>> calcOrderRanksLunchForEach (List<FamilyMember> familyMembers) {
+	Map<FamilyMember, List<FoodType>> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
 
 		Map<FamilyMember, List<FoodType>> familyLunchRankings = new HashMap<>();
 
