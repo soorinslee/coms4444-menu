@@ -128,11 +128,11 @@ public class Player extends menu.sim.Player {
             
             // first and second choice breakfast foods to list
             firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(0));
-            firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(1));
+            secondBreakfast.add(this.allMemberBreakfastSorted.get(name).get(1));
 
-            // Add 7 lunch foods per family member according to optimal cycle
+            // Add 14 lunch foods per family member according to optimal cycle
             int ind = 0;
-            for (int count = 0; count < 20; count++) {
+            for (int count = 0; count < 14; count++) {
                 if (ind == this.allMemberLunchSorted.get(name).size() || ind == 7)
                     ind = 0;
                 shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
