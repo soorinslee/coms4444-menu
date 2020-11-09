@@ -208,10 +208,23 @@ public class Player extends menu.sim.Player {
                     shoppingList.addToOrder(dinnerItem);
                 }
 
-                simPrinter.println("numemptyspots: " + numEmptySlots);
-                for (MealType mt: Food.getAllMealTypes()){
-                    simPrinter.println("listlimit: " + shoppingList.getAllLimitsMap().get(mt));
-                }
+                simPrinter.println("\nEmpty Slots in Pantry: " + numEmptySlots);
+                simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
+                simPrinter.println("Breakfast shopping list size: " + breakfastList.size());
+                // for(FoodType ft : breakfastList){
+                //     simPrinter.print(ft + " ");
+                // }
+                simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
+                simPrinter.println("Lunch shopping list size: " + breakfastList.size());
+                // for(FoodType ft : lunchList){
+                //     simPrinter.print(ft + " ");
+                // }
+                simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
+                simPrinter.println("Dinner shopping list size: " + dinnerList.size());
+                // for(FoodType ft : dinnerList){
+                //     simPrinter.print(ft + " ");
+                // }
+
 
                 if(Player.hasValidShoppingList(shoppingList, numEmptySlots)){
                     return shoppingList;
@@ -233,14 +246,14 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        List<FoodType> covBreakfast = covetedFoods.get(MealType.BREAKFAST);
-        for (int i=0; i<6; i++) {
-            for(FamilyMember fm : familyMembers){
-                for (int j=0; j<7; j++) {
-                    breakfastList.add(covBreakfast.get(i));
-                }
-            }
-        }
+        // List<FoodType> covBreakfast = covetedFoods.get(MealType.BREAKFAST);
+        // for (int i=0; i<6; i++) {
+        //     for(FamilyMember fm : familyMembers){
+        //         for (int j=0; j<7; j++) {
+        //             breakfastList.add(covBreakfast.get(i));
+        //         }
+        //     }
+        // }
 
         return breakfastList;
 
@@ -256,28 +269,28 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
-        for (int i=0; i<6; i++) {
-            for(FamilyMember fm : familyMembers){
-                if (i==0){
-                    for (int j=0; j<3; j++) {
-                        lunchList.add(covLunch.get(i));
-                    }
-                    for (int j=0; j<2; j++) {
-                        lunchList.add(covLunch.get(i+1));
-                    }
-                    for (int j=0; j<2; j++) {
-                        lunchList.add(covLunch.get(i+2));
-                    }
-                }
-                else{
-                    for (int j=0; j<2; j++) {
-                        lunchList.add(covLunch.get(i+2));
-                    }
-                    lunchList.add(covLunch.get(i));
-                }
-            }
-        }
+        // List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        // for (int i=0; i<6; i++) {
+        //     for(FamilyMember fm : familyMembers){
+        //         if (i==0){
+        //             for (int j=0; j<3; j++) {
+        //                 lunchList.add(covLunch.get(i));
+        //             }
+        //             for (int j=0; j<2; j++) {
+        //                 lunchList.add(covLunch.get(i+1));
+        //             }
+        //             for (int j=0; j<2; j++) {
+        //                 lunchList.add(covLunch.get(i+2));
+        //             }
+        //         }
+        //         else{
+        //             for (int j=0; j<2; j++) {
+        //                 lunchList.add(covLunch.get(i+2));
+        //             }
+        //             lunchList.add(covLunch.get(i));
+        //         }
+        //     }
+        // }
 
         return lunchList;
 
@@ -294,29 +307,29 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
-        for (int i=0; i<11; i++) {
-            for(FamilyMember fm : familyMembers){
-                if (i==0){
-                    for (int j=0; j<3; j++) {
-                        dinnerList.add(covDinner.get(i));
-                    }
-                    for (int j=0; j<2; j++) {
-                        dinnerList.add(covDinner.get(i+1));
-                    }
-                    for (int j=0; j<2; j++) {
-                        dinnerList.add(covDinner.get(i+2));
-                    }
-                }
-                else{
-                    for (int j=0; j<2; j++) {
-                        dinnerList.add(covDinner.get(i+2));
-                    }
-                    dinnerList.add(covDinner.get(i));
-                }
-            }
-        }
-
+        // List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        // for (int i=0; i<11; i++) {
+        //     for(FamilyMember fm : familyMembers){
+        //         if (i==0){
+        //             for (int j=0; j<3; j++) {
+        //                 dinnerList.add(covDinner.get(i));
+        //             }
+        //             for (int j=0; j<2; j++) {
+        //                 dinnerList.add(covDinner.get(i+1));
+        //             }
+        //             for (int j=0; j<2; j++) {
+        //                 dinnerList.add(covDinner.get(i+2));
+        //             }
+        //         }
+        //         else{
+        //             for (int j=0; j<2; j++) {
+        //                 dinnerList.add(covDinner.get(i+2));
+        //             }
+        //             dinnerList.add(covDinner.get(i));
+        //         }
+        //     }
+        // }
+        
         return dinnerList;
 
     }
