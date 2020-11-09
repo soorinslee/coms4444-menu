@@ -51,18 +51,23 @@ public class FamilyTracker {
                 compositeScore += mt.getWeightedPreference(dinner, day);
             }
             FoodScore dinnerScore = new FoodScore(dinner, compositeScore);
+            dinners.add(dinnerScore);
         }
         return dinners;
     }
 
-    public PriorityQueue<FoodScore> getDinnersByCompositeScore(int day, ArrayList<Food.FoodType> dinnerClusters) {
+    public PriorityQueue<FoodScore> getDinnersByCompositeScore(int day, Map<Food.FoodType, Integer> inventory) {
         PriorityQueue<FoodScore> dinners = new PriorityQueue<>(20, Collections.reverseOrder());
-        for (Food.FoodType dinner: dinnerClusters) {
+        for (Map.Entry<Food.FoodType, Integer> dinnerEntry: inventory.entrySet()) {
+            Food.FoodType dinner = dinnerEntry.getKey();
+            Integer quantity = dinnerEntry.getValue();
             Double compositeScore = 0.0;
             for (MemberTracker mt: members.values()) {
                 compositeScore += mt.getWeightedPreference(dinner, day);
             }
+            compositeScore *= (((double) quantity)/members.size());
             FoodScore dinnerScore = new FoodScore(dinner, compositeScore);
+            dinners.add(dinnerScore);
         }
         return dinners;
     }

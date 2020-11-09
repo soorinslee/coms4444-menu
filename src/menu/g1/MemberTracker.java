@@ -45,7 +45,7 @@ public class MemberTracker implements Comparable<MemberTracker> {
             weight = scale/0.0000001;
         }
         else {
-            weight = scale/avgSatisfaction;
+            weight = scale/(avgSatisfaction * avgSatisfaction);
         }
     }
 
