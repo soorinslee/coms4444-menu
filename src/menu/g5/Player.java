@@ -15,6 +15,8 @@ public class Player extends menu.sim.Player {
 	private Map<MemberName, Map<MealType, List<memberFoodSatis>>> originMemberMap;
 	private Map<MealType, Map<FoodType, Integer>> idealPantry;
 	private Map<MealType, Map<FoodType, Integer>> backupPantry;
+	private Map<MealType, Map<FoodType, Integer>> backupPantry2;
+	private Map<MealType, Map<FoodType, Integer>> backupPantry3;
 
     /**
      * Player constructor
@@ -74,6 +76,24 @@ public class Player extends menu.sim.Player {
 				m.put(f, 0);
 			}
 			backupPantry.put(mt, m);
+		}
+
+		backupPantry2 = new HashMap<MealType, Map<FoodType, Integer>>();
+		for (MealType mt: MealType.values()) {
+			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
+			for (FoodType f: Food.getFoodTypes(mt)) {
+				m.put(f, 0);
+			}
+			backupPantry2.put(mt, m);
+		}
+
+		backupPantry3 = new HashMap<MealType, Map<FoodType, Integer>>();
+		for (MealType mt: MealType.values()) {
+			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
+			for (FoodType f: Food.getFoodTypes(mt)) {
+				m.put(f, 0);
+			}
+			backupPantry3.put(mt, m);
 		}
 
 		for (FamilyMember fm: familyMembers) {
@@ -323,15 +343,15 @@ public class Player extends menu.sim.Player {
 			int position = 0;
 			for (memberFoodSatis mfs: l) {
 				if (position == 0) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
+					m.put(mfs.f, m.get(mfs.f)+eachFood);
 				} else if (position == 1) {
 					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
 				} else if (position == 2) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
+					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
 				} else if (position == 3) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
+					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
 				} else {
-					m.put(mfs.f, m.get(mfs.f)+eachFood);
+					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
 				}
 				position++;
 			}
@@ -342,7 +362,7 @@ public class Player extends menu.sim.Player {
 			for (memberFoodSatis mfs: l) {
 				if (position == 0) {
 					if (capleft >= 5) {
-						m.put(mfs.f, m.get(mfs.f)+4);
+						m.put(mfs.f, m.get(mfs.f));
 						capleft -= 5;
 					} else {
 						m.put(mfs.f, m.get(mfs.f)+capleft);
@@ -358,6 +378,138 @@ public class Player extends menu.sim.Player {
 					}
 				} else if (position == 2) {
 					if (capleft >= 3) {
+						m.put(mfs.f, m.get(mfs.f)+4);
+						capleft -= 3;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 3) {
+					if (capleft >= 2) {
+						m.put(mfs.f, m.get(mfs.f)+3);
+						capleft -= 2;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else {
+					if (capleft >= 1) {
+						m.put(mfs.f, m.get(mfs.f)+2);
+						capleft -= 1;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+
+		m = backupPantry2.get(mt);
+		if (cap >= 20) {
+			int eachFood = cap/(5+4+3+2+1*6);
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood);
+				} else if (position == 1) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
+				} else if (position == 2) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
+				} else if (position == 3) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
+				} else {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
+				}
+				position++;
+			}
+
+		} else {
+			int capleft = cap;
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					if (capleft >= 5) {
+						m.put(mfs.f, m.get(mfs.f));
+						capleft -= 5;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 1) {
+					if (capleft >= 4) {
+						m.put(mfs.f, m.get(mfs.f)+2);
+						capleft -= 4;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 2) {
+					if (capleft >= 3) {
+						m.put(mfs.f, m.get(mfs.f)+5);
+						capleft -= 3;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 3) {
+					if (capleft >= 2) {
+						m.put(mfs.f, m.get(mfs.f)+4);
+						capleft -= 2;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else {
+					if (capleft >= 1) {
+						m.put(mfs.f, m.get(mfs.f)+3);
+						capleft -= 1;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+
+		m = backupPantry2.get(mt);
+		if (cap >= 20) {
+			int eachFood = cap/(5+4+3+2+1*6);
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood);
+				} else if (position == 1) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
+				} else if (position == 2) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
+				} else if (position == 3) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
+				} else {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
+				}
+				position++;
+			}
+
+		} else {
+			int capleft = cap;
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					if (capleft >= 5) {
+						m.put(mfs.f, m.get(mfs.f));
+						capleft -= 5;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 1) {
+					if (capleft >= 4) {
+						m.put(mfs.f, m.get(mfs.f)+2);
+						capleft -= 4;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 2) {
+					if (capleft >= 3) {
 						m.put(mfs.f, m.get(mfs.f)+3);
 						capleft -= 3;
 					} else {
@@ -366,7 +518,7 @@ public class Player extends menu.sim.Player {
 					}
 				} else if (position == 3) {
 					if (capleft >= 2) {
-						m.put(mfs.f, m.get(mfs.f)+2);
+						m.put(mfs.f, m.get(mfs.f)+5);
 						capleft -= 2;
 					} else {
 						m.put(mfs.f, m.get(mfs.f)+capleft);
@@ -374,7 +526,7 @@ public class Player extends menu.sim.Player {
 					}
 				} else {
 					if (capleft >= 1) {
-						m.put(mfs.f, m.get(mfs.f)+1);
+						m.put(mfs.f, m.get(mfs.f)+4);
 						capleft -= 1;
 					} else {
 						break;
