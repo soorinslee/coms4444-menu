@@ -267,7 +267,24 @@ public class Player extends menu.sim.Player {
     		this.cs = s;
     	}
     }
-    ß
+
+    private void updateMemberFavorite(FamilyMember fm) {
+    	MemberName mn = fm.getName();
+    	Map<MealType, List<memberFoodSatis>> m = memberMap.get(mn);
+		for (MealType mt: m.keySet()) {
+			if (mt == MealType.BREAKFAST) {
+	    		continue;
+	    	}
+			List<memberFoodSatis> l = m.get(mt);
+			for (memberFoodSatis mfs: l) {
+	    		FoodType f = mfs.f;
+	    		int days = (mt == MealType.LUNCH ? lunchServedDaysBefore.get(mn).get(f):dinnerServedDaysBefore.get(f));
+	    		mfs.cs = mfs.s * days/(days+1);
+	    	}
+	    	Collections.sort(l, new sortmfs());
+			Collections.reverse(l);
+		}
+    }
     
     private Map<MealType, List<memberFoodSatis>> getFavorite(FamilyMember m) {
     	Map<FoodType, Double> foodPreferenceMap = m.getFoodPreferenceMap();
