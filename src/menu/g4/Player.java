@@ -122,8 +122,14 @@ public class Player extends menu.sim.Player {
         List<FoodType> firstBreakfast = new ArrayList<FoodType>();
         List<FoodType> secondBreakfast = new ArrayList<FoodType>();
 
+
         // Adding to pantry
-        for (FamilyMember member : familyMembers) {
+        Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
+        List<FamilyMember> sortedFamilyMembers = familyMembers;
+        // Sort from least average satisfaction to most
+        if (week > 1)
+            sortedFamilyMembers = sortByValue(averageSatisfactionMap, true, familyMembers);
+        for (FamilyMember member : sortedFamilyMembers) {
             MemberName name = member.getName();
             
             // first and second choice breakfast foods to list
@@ -411,6 +417,38 @@ public class Player extends menu.sim.Player {
 
     }
 
+    /**
+     * Sort map by value
+     * For planMeals and stockPantry
+     *
+     * @param unsortedMap    map of unsorted member : average satisfaction
+     * @param familyMembers  list of unsorted family members
+     * @param order          true -> ascending, false -> descending
+     * @return               list of sorted family members
+     *
+     */
+    private static List<FamilyMember> sortByValue(Map<MemberName, Double> unsortedMap, final boolean order,
+                                                  List<FamilyMember> familyMembers)
+    {
+        List<Entry<MemberName, Double>> list = new LinkedList<>(unsortedMap.entrySet());
+        List<FamilyMember> sortedFamilyMembers = new ArrayList<>();
+
+        // Sorting the list based on values
+        list.sort((o1, o2) -> order ? o1.getValue().compareTo(o2.getValue()) == 0
+                ? o1.getKey().compareTo(o2.getKey())
+                : o1.getValue().compareTo(o2.getValue()) : o2.getValue().compareTo(o1.getValue()) == 0
+                ? o2.getKey().compareTo(o1.getKey())
+                : o2.getValue().compareTo(o1.getValue()));
+
+        Map<MemberName, Double> sortedMap = list.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+        for (Map.Entry<MemberName, Double> entry : sortedMap.entrySet())
+            for (FamilyMember member : familyMembers)
+                if (entry.getKey().equals(member.getName()))
+                    sortedFamilyMembers.add(member);
+
+        return sortedFamilyMembers;
+    }
+
 
     private List<FoodType> getOptimalDinnerCycle(TreeMap<Double, FoodType> rewardToFood) {
         List<FoodType> cycle = new ArrayList<>();
@@ -441,7 +479,12 @@ public class Player extends menu.sim.Player {
     public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
-        for (FamilyMember member : familyMembers) {
+        Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
+        List<FamilyMember> sortedFamilyMembers = familyMembers;
+        // Sort from least average satisfaction to most
+        if (week > 1)
+            sortedFamilyMembers = sortByValue(averageSatisfactionMap, true, familyMembers);
+        for (FamilyMember member : sortedFamilyMembers) {
             MemberName name = member.getName();
             int l = 0;
             int d = 0;
