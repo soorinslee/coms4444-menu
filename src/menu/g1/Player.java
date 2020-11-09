@@ -165,6 +165,7 @@ public class Player extends menu.sim.Player {
 								break;
 
 							case LUNCH:
+								updateFoodPreferences(week, day, meal, memberName, weightedPreferences, planner, mealHistory);
 								food = getBestFood(meal, memberName, orderedFamilyPreferences);
 								planner.addMeal(day, memberName, meal, food);
 								pantry.removeMealFromInventory(food);
@@ -196,6 +197,15 @@ public class Player extends menu.sim.Player {
 			return planner;
 		return new Planner();
 	}
+	/*
+	private void updateFoodPreferences(Integer week, Day day, MealType meal, MemberName memberName, List<FamilyMember> familyMembers, Planner planner, MealHistory mealHistory){
+		MealHistory weightedMealHistory = mealHistory;
+		Map<Integer, Map<MemberName, Map<MealType, FoodType>>>
+		weightedMealHistory.getDailyFamilyMeals().get(week)
+		(week - 1) * 7 + new ArrayList<>(Arrays.asList(Day.values())).indexOf(day) + 1
+		addDailyFamilyMeal(week, day, memberName, Map<MealType, FoodType> mealMap)
+	}
+	*/
 
 	private void updateFamilyPreferenceMap(Pantry pantry, List<FamilyMember> familyMembers, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
 
