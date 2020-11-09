@@ -39,6 +39,8 @@ public class Player extends menu.sim.Player {
 									List<FamilyMember> familyMembers,
 									Pantry pantry,
 									MealHistory mealHistory) {
+
+		pantry.clearInventory();
 		
 		int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
 		int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
@@ -47,18 +49,18 @@ public class Player extends menu.sim.Player {
 		ShoppingList shoppingList = new ShoppingList();
 		shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
 		shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
-		shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
+		//shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
 		
 		List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
 		List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-		List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+		//List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
 		
 		for(int i = 0; i < 2 * capacity; i++)
 			shoppingList.addToOrder(breakfastFoods.get(random.nextInt(breakfastFoods.size())));
 		for(int i = 0; i < 2 * capacity; i++)
 			shoppingList.addToOrder(lunchFoods.get(random.nextInt(lunchFoods.size())));
-		for(int i = 0; i < 2 * capacity; i++)
-			shoppingList.addToOrder(dinnerFoods.get(random.nextInt(dinnerFoods.size())));
+		//for(int i = 0; i < 2 * capacity; i++)
+		//	shoppingList.addToOrder(dinnerFoods.get(random.nextInt(dinnerFoods.size())));
 		
 		if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
 			return shoppingList;
@@ -83,6 +85,7 @@ public class Player extends menu.sim.Player {
 		Pantry originalPantry = pantry.clone();
 
 		List<MemberName> memberNames = new ArrayList<>();
+		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
 
 		Map<MealType, List<MemberName>> memberPriorityList = new LinkedHashMap<>();
 
@@ -98,6 +101,7 @@ public class Player extends menu.sim.Player {
 
 
 		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
+		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.LUNCH));
 
 		
 		simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
@@ -109,17 +113,21 @@ public class Player extends menu.sim.Player {
 			for(Day day : Day.values()){
 				for(MemberName memberName : memberPriorityList.get(meal)){
 					if (pantry.getNumAvailableMeals(meal) > 0){
+						FoodType food;
 						switch(meal){
 
 							case BREAKFAST:
-								FoodType food = getBestFood(meal, memberName, orderedFamilyPreferences);
+								food = getBestFood(meal, memberName, orderedFamilyPreferences);
 								planner.addMeal(day, memberName, meal, food);
 								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
+								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 								break;
 
 							case LUNCH:
-					
+								food = getBestFood(meal, memberName, orderedFamilyPreferences);
+								planner.addMeal(day, memberName, meal, food);
+								pantry.removeMealFromInventory(food);
+								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 								break;
 
 							case DINNER:
@@ -128,7 +136,7 @@ public class Player extends menu.sim.Player {
 						}
 					}
 				}
-				updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
+				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
 		}
 		simPrinter.println("\n\n\n********* PLANNER ********\n");
@@ -142,6 +150,7 @@ public class Player extends menu.sim.Player {
 			}
 		}
 
+		pantry.clearInventory();
 		if(Player.hasValidPlanner(planner, originalPantry))
 			return planner;
 		return new Planner();
@@ -221,7 +230,6 @@ public class Player extends menu.sim.Player {
 					Map<FoodType, Double> memberFoodPrefs = orderedFamilyPreferences.get(familyMember.getName()).get(meal);
 
 					if (memberFoodPrefs.size() < 1){
-						simPrinter.println("*****************CONTINUE*******************");
 						continue;
 					}
 					double memberBestPref = memberFoodPrefs.values().stream().findFirst().get();
