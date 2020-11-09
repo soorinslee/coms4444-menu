@@ -88,7 +88,6 @@ public class Player extends menu.sim.Player {
 		dinnerRanks = calcOrderRanksDinner(familyMembers);
 		this.pred.setPreviousPantry(pantry);
 		this.prevList= calcShoppingList(pantry, mealHistory, familyMembers);
-		this.pred.calculateProbabilities(this.prevList, week);
 		return this.prevList;
 		// TODO: Make these smart allocations
 		/*
@@ -423,6 +422,7 @@ public class Player extends menu.sim.Player {
 		// get max available or second max available, remove from inventory, add to
 		// planner
 		this.pred.setCurrentPantry(pantry);
+		this.pred.calculateProbabilities(this.prevList, week);
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
 			memberNames.add(familyMember.getName());
