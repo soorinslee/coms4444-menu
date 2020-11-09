@@ -138,15 +138,8 @@ public class Player extends menu.sim.Player {
             // Add 7 lunch foods per family member according to optimal cycle
 
             int ind = 0;
-            for (int count = 0; count < 7; count++) {
-                if (ind == this.allMemberLunchSorted.get(name).size())
-                    ind = 0;
-                shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
-                ind++;
-            }
-            ind = 0;
-            for (int count = 0; count < 7; count++) {
-                if (ind == this.allMemberLunchSorted.get(name).size())
+            for (int count = 0; count < 20; count++) {
+                if (ind == this.allMemberLunchSorted.get(name).size() || ind == 7)
                     ind = 0;
                 shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
                 ind++;
