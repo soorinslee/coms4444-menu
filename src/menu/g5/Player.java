@@ -14,6 +14,7 @@ public class Player extends menu.sim.Player {
 	private Map<MemberName, Map<MealType, List<memberFoodSatis>>> memberMap;
 	private Map<MemberName, Map<MealType, List<memberFoodSatis>>> originMemberMap;
 	private Map<MealType, Map<FoodType, Integer>> idealPantry;
+	private Map<MealType, Map<FoodType, Integer>> backupPantry;
 
     /**
      * Player constructor
@@ -38,10 +39,8 @@ public class Player extends menu.sim.Player {
 			}
 			lunchServedDaysBefore.put(fm.getName(), m);
 		}
-		
-		
+
 		dinnerServedDaysBefore = new HashMap<FoodType, Integer>();
-		
 		for (FoodType f: Food.getFoodTypes(MealType.DINNER)) {
 			dinnerServedDaysBefore.put(f, 0);
 		}
@@ -67,12 +66,33 @@ public class Player extends menu.sim.Player {
 			}
 			idealPantry.put(mt, m);
 		}
+
+		backupPantry = new HashMap<MealType, Map<FoodType, Integer>>();
+		for (MealType mt: MealType.values()) {
+			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
+			for (FoodType f: Food.getFoodTypes(mt)) {
+				m.put(f, 0);
+			}
+			backupPantry.put(mt, m);
+		}
+
+		for (FamilyMember fm: familyMembers) {
+			for (MealType mt: MealType.values()) {
+				int cap = (mt == MealType.DINNER ? eachMember/2 : eachMember/4);
+				updateBackupPantry(mt, fm.getName(), cap);
+			}
+		}
+
+		//System.out.println(idealPantry);
+
 		for (FamilyMember fm: familyMembers) {
 			for (MealType mt: MealType.values()) {
 				int cap = (mt == MealType.DINNER ? eachMember/2 : eachMember/4);
 				addEachFoodWeighted(mt, fm.getName(), cap);
 			}
 		}
+
+		//System.out.println(idealPantry);
 	}
 	
 	private void incrementDay() {
@@ -117,6 +137,7 @@ public class Player extends menu.sim.Player {
     		int before = space;
     		
     		Map<FoodType, Integer> m = idealPantry.get(mt);
+    		//System.out.println(m);
     		for (FoodType f: m.keySet()) {
     			List<FoodType> left = pantry.getAvailableFoodTypes(mt);
     			int need = m.get(f);
@@ -145,36 +166,75 @@ public class Player extends menu.sim.Player {
     		
     		limits.put(mt, before-space);
     	}
-    	System.out.println("ShoppingList map before: ");
-    	System.out.println(shoppingList.getFullOrderMap());
-    	
-    	for (int j=0; j< addList.size(); j++) {
-    		shoppingList.addToOrder(addList.get(j));
-    	}
+
+    	//System.out.println("ShoppingList map before: ");
+    	//System.out.println(shoppingList.getFullOrderMap());
+
+		for (MealType mt: MealType.values()) {
+			int before = space;
+
+			Map<FoodType, Integer> m = backupPantry.get(mt);
+			for (FoodType f: m.keySet()) {
+				List<FoodType> left = pantry.getAvailableFoodTypes(mt);
+				int need = m.get(f);
+				if (left.contains(f)) {
+					need = pantry.getNumAvailableMeals() - m.get(f);
+				}
+				if (need <= 0) {
+					continue;
+				} else {
+					if (space >= need) {
+						space -= need;
+						for (int i=0; i< need; i++) {
+							shoppingList.addToOrder(f);
+							addList.add(f);
+						}
+					} else {
+						for (int i=0; i< space; i++) {
+							shoppingList.addToOrder(f);
+							addList.add(f);
+						}
+						space = 0;
+						break;
+					}
+				}
+			}
+		}
 
     	if (space > 0) {
-    		System.out.println("Space left: " + space);
+    		//System.out.println("Space left: " + space);
     		limits.put(MealType.DINNER, limits.get(MealType.DINNER)+space);
     	}
-    	
+
     	for (MealType mt: limits.keySet()) {
     		shoppingList.addLimit(mt, limits.get(mt));
     	}
 
-		System.out.println("ShoppingList map after: ");
-		System.out.println(shoppingList.getFullOrderMap());
+		for (int j=0; j< addList.size(); j++) {
+			shoppingList.addToOrder(addList.get(j));
+		}
 
-    	System.out.println("ShoppingList limits: ");
-    	System.out.println(shoppingList.getAllLimitsMap());
+		//System.out.println("ShoppingList map after: ");
+		//System.out.println(shoppingList.getFullOrderMap());
+
+    	//System.out.println("ShoppingList limits: ");
+    	//System.out.println(shoppingList.getAllLimitsMap());
     	
     	
     	
     	if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
     		return shoppingList;
     	}
-    	System.out.println("Not valid shopping list");
+    	//System.out.println("Not valid shopping list");
     	return new ShoppingList();
     }
+
+    private List<FoodType> getSecondaryList(List<FamilyMember> familyMembers) {
+		List<FoodType> addList = new ArrayList<FoodType>();
+
+
+		return addList;
+	}
     
     
     /**
@@ -186,7 +246,6 @@ public class Player extends menu.sim.Player {
      */
     public Map<FoodType, Integer> addEachFoodWeighted(MealType mt, MemberName mn, int cap) {
     	List<memberFoodSatis> l = originMemberMap.get(mn).get(mt);
-    	//Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
     	Map<FoodType, Integer> m = idealPantry.get(mt);
     	if (cap >= 20) {
     		int eachFood = cap/(5+4+3+2+1*6);
@@ -255,6 +314,77 @@ public class Player extends menu.sim.Player {
     	
     	return m;
     }
+
+	public Map<FoodType, Integer> updateBackupPantry(MealType mt, MemberName mn, int cap) {
+		List<memberFoodSatis> l = originMemberMap.get(mn).get(mt);
+		Map<FoodType, Integer> m = backupPantry.get(mt);
+		if (cap >= 20) {
+			int eachFood = cap/(5+4+3+2+1*6);
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
+				} else if (position == 1) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
+				} else if (position == 2) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
+				} else if (position == 3) {
+					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
+				} else {
+					m.put(mfs.f, m.get(mfs.f)+eachFood);
+				}
+				position++;
+			}
+
+		} else {
+			int capleft = cap;
+			int position = 0;
+			for (memberFoodSatis mfs: l) {
+				if (position == 0) {
+					if (capleft >= 5) {
+						m.put(mfs.f, m.get(mfs.f)+4);
+						capleft -= 5;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 1) {
+					if (capleft >= 4) {
+						m.put(mfs.f, m.get(mfs.f)+5);
+						capleft -= 4;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 2) {
+					if (capleft >= 3) {
+						m.put(mfs.f, m.get(mfs.f)+3);
+						capleft -= 3;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else if (position == 3) {
+					if (capleft >= 2) {
+						m.put(mfs.f, m.get(mfs.f)+2);
+						capleft -= 2;
+					} else {
+						m.put(mfs.f, m.get(mfs.f)+capleft);
+						break;
+					}
+				} else {
+					if (capleft >= 1) {
+						m.put(mfs.f, m.get(mfs.f)+1);
+						capleft -= 1;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+
+		return m;
+	}
     
     private class memberFoodSatis {
     	FoodType f;
@@ -350,14 +480,13 @@ public class Player extends menu.sim.Player {
     						 Pantry pantry,
     						 MealHistory mealHistory) {
 
-    	System.out.println("Week: "+week+"; plan");
-    	for (MealType mt: MealType.values()) {
-    		System.out.println("mt: "+ mt);
-    		System.out.println(pantry.getNumAvailableMeals(mt));
-    	}
-
+    	//System.out.println("Week: "+week+"; plan");
+//    	for (MealType mt: MealType.values()) {
+//    		System.out.println("mt: "+ mt);
+//    		System.out.println(pantry.getNumAvailableMeals(mt));
+//    	}
     	
-    	printMemberMap();
+    	//printMemberMap();
     	List<MemberName> memberNames = new ArrayList<>();
     	for(FamilyMember familyMember : familyMembers)
     		memberNames.add(familyMember.getName());
@@ -427,7 +556,7 @@ public class Player extends menu.sim.Player {
     		
     	}
     	
-    	printPlan(planner);
+    	//printPlan(planner);
     	
     	if(Player.hasValidPlanner(planner, originalPantry)) {
     		return planner;
