@@ -144,6 +144,13 @@ public class Player extends menu.sim.Player {
                 shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
                 ind++;
             }
+            ind = 0;
+            for (int count = 0; count < 7; count++) {
+                if (ind == this.allMemberLunchSorted.get(name).size())
+                    ind = 0;
+                shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
+                ind++;
+            }
 
             simPrinter.println("Iterating through " + name + "'s order and adding to pantry.");
             // simPrinter.println(shoppingList.getFullOrderMap());
