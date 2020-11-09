@@ -23,8 +23,8 @@ public class StorePredictor {
 
     public Map<FoodType, Double> calculateProbabilities(ShoppingList shoppingList, int week) {
         this.previous = shoppingList;
-        System.out.println("PREV: "  + this.previousPantry.getMealsMap().toString());
-        System.out.println("CURR: "  + this.currentPantry.getMealsMap().toString());
+        //System.out.println("PREV: "  + this.previousPantry.getMealsMap().toString());
+        //System.out.println("CURR: "  + this.currentPantry.getMealsMap().toString());
         if (week != 1) {
             HashMap<FoodType, Double> probsClone = new HashMap<>();
             probsClone.putAll(this.probs);
@@ -36,7 +36,7 @@ public class StorePredictor {
                 this.probs.put(key, previousProb);
             }
             this.previousPantry = this.currentPantry;
-            System.out.println("MAPS: "  + this.probs.toString());
+            //System.out.println("MAPS: "  + this.probs.toString());
         }
         return this.probs;
     }
