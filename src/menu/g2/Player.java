@@ -13,7 +13,8 @@ public class Player extends menu.sim.Player {
 	List<FoodType> breakfastRanks; // weekly
 	List<FoodType> lunchRanks;
 	List<FoodType> dinnerRanks;
-
+	StorePredictor pred;
+	ShoppingList prevList;
 	int numBreakfasts = 0;
 	int numLunches = 0;
 	int numDinners = 0;
@@ -73,6 +74,8 @@ public class Player extends menu.sim.Player {
 		this.size = familyMembers.size();
 		if(week == 1){
 			this.pantrySize = pantry.getNumEmptySlots();
+			this.pred = new StorePredictor();
+
 		}
 		List<Integer> cutoffs = calcFreqMeals(pantry, this.size, familyMembers);
 		numBreakfasts = cutoffs.get(0);
@@ -83,9 +86,10 @@ public class Player extends menu.sim.Player {
 		breakfastRanks = calcOrderRanksBreakfast(familyMembers);
 		lunchRanks = calcOrderRanksLunch(familyMembers);
 		dinnerRanks = calcOrderRanksDinner(familyMembers);
-
-		return calcShoppingList(pantry, mealHistory, familyMembers);
-
+		this.pred.setPreviousPantry(pantry);
+		this.prevList= calcShoppingList(pantry, mealHistory, familyMembers);
+		this.pred.calculateProbabilities(this.prevList, week);
+		return this.prevList;
 		// TODO: Make these smart allocations
 		/*
 		 * int numBreakfastFoods = random.nextInt(numEmptySlots + 1); int numLunchFoods
@@ -190,7 +194,7 @@ public class Player extends menu.sim.Player {
 	// Ahad
 	// TODO
 	// 2.) rank breakfast items to maximum each person's satisfaction 
-	Map<FamilyMember, List<FoodType>> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
+	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.BREAKFAST);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
@@ -208,7 +212,7 @@ public class Player extends menu.sim.Player {
 	// Ahad
 	// TODO on Wednesday - take into account the repeat penalty
 	// 2.) rank lunch items like breakfast
-	Map<FamilyMember, List<FoodType>> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
+	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
 		Food f = new Food();
 		List<FoodType> allBreakfasts = f.getFoodTypes(MealType.LUNCH);
 		Map<FoodType, Double> lowestPerson = new HashMap<>();
@@ -418,7 +422,7 @@ public class Player extends menu.sim.Player {
 		// 1. randomly choose between top three meals only in lunch and dinner
 		// get max available or second max available, remove from inventory, add to
 		// planner
-
+		this.pred.setCurrentPantry(pantry);
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
 			memberNames.add(familyMember.getName());
