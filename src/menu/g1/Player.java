@@ -40,6 +40,40 @@ public class Player extends menu.sim.Player {
 	 * @return               shopping list of foods to order
 	 *
 	 */
+
+	/* RANDOM STOCKER */
+	public ShoppingList stockPantry(Integer week,
+    								Integer numEmptySlots,
+    								List<FamilyMember> familyMembers,
+    								Pantry pantry,
+    								MealHistory mealHistory) {
+    	
+    	int numBreakfastFoods = random.nextInt(numEmptySlots + 1);
+    	int numLunchFoods = random.nextInt(numEmptySlots - numBreakfastFoods + 1);
+    	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+    	
+    	ShoppingList shoppingList = new ShoppingList();
+    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
+    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
+    	//shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
+    	
+    	List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
+    	List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
+    	//List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
+    	
+    	for(int i = 0; i < 2 * capacity; i++)
+    		shoppingList.addToOrder(breakfastFoods.get(random.nextInt(breakfastFoods.size())));
+    	for(int i = 0; i < 2 * capacity; i++)
+    		shoppingList.addToOrder(lunchFoods.get(random.nextInt(lunchFoods.size())));
+    	//for(int i = 0; i < 2 * capacity; i++)
+    	//	shoppingList.addToOrder(dinnerFoods.get(random.nextInt(dinnerFoods.size())));
+    	
+    	if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
+    		return shoppingList;
+    	return new ShoppingList();
+    }
+
+	/* JOES STOCKER
 	public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 		weighter.update(week, mealHistory, familyMembers);
 		resetOptimisticPlanner(familyMembers);
@@ -51,6 +85,9 @@ public class Player extends menu.sim.Player {
 
 		return shoppingList;
 	}
+	*/
+
+
 
 	// does not work with dinner meals
 	private void addMeals(MealType mealType, List<FamilyMember> familyMembers, ShoppingList shoppingList) {
@@ -200,7 +237,7 @@ public class Player extends menu.sim.Player {
 				}
 			}
 		}
-		
+
 		if(Player.hasValidPlanner(planner, originalPantry))
 			return planner;
 		return new Planner();
