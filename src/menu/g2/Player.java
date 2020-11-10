@@ -116,38 +116,44 @@ public class Player extends menu.sim.Player {
 	
 	private void calculateBreakfastShoppingList() {
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < this.shoppingQuantities.get(0); i++)
+			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(0));
 		}
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < this.shoppingQuantities.get(0); i++)
+			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(1));
+		}
+		for (FamilyMember member : this.familyMembers) {
+			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
+				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(2));
 		}
 	}
 
 	private void calculateLunchShoppingList() {
+		int quantity = (int) Math.max(7, this.shoppingQuantities.get(1)/this.familyMembers.size());
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(0));
 		}
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(1));
 		}
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(2));
 		}
 	}
 
 	private void calculateDinnerShoppingList() {
-		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
+		int quantity = (int) Math.max(7*this.familyMembers.size(), this.shoppingQuantities.get(2)/1.6);
+		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(0));
-		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
+		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(1));
-		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
+		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(2));
-		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
+		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(3));
 	}
 
@@ -251,7 +257,7 @@ public class Player extends menu.sim.Player {
 		}
 		for (Day day : Day.values()) {
 			FoodType maxAvailableDinnerMeal = getMaximumAvailableDinner(pantry, MealType.DINNER);
-			System.out.println(maxAvailableDinnerMeal + " " + pantry.getNumAvailableMeals(maxAvailableDinnerMeal));
+			// System.out.println(maxAvailableDinnerMeal + " " + pantry.getNumAvailableMeals(maxAvailableDinnerMeal));
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
