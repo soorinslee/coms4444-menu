@@ -23,6 +23,8 @@ public class StorePredictor {
 
     public Map<FoodType, Double> calculateProbabilities(ShoppingList shoppingList, int week) {
         this.previous = shoppingList;
+        //System.out.println("PREV: "  + this.previousPantry.getMealsMap().toString());
+        //System.out.println("CURR: "  + this.currentPantry.getMealsMap().toString());
         if (week != 1) {
             HashMap<FoodType, Double> probsClone = new HashMap<>();
             probsClone.putAll(this.probs);
@@ -34,7 +36,7 @@ public class StorePredictor {
                 this.probs.put(key, previousProb);
             }
             this.previousPantry = this.currentPantry;
-            // System.out.println(this.probs.toString());
+            //System.out.println("MAPS: "  + this.probs.toString());
         }
         return this.probs;
     }
@@ -52,6 +54,7 @@ public class StorePredictor {
             System.out.println("NULL");
         }
         List<FoodType> breakfast = this.previous.getFullOrderMap().get(MealType.BREAKFAST);
+        // System.out.println(breakfast.toString());
         List<FoodType> lunch = this.previous.getFullOrderMap().get(MealType.LUNCH);
         List<FoodType> dinner = this.previous.getFullOrderMap().get(MealType.DINNER);
         // System.out.println(breakfast);
@@ -64,7 +67,7 @@ public class StorePredictor {
                 for (int i = 0; i < breakfast.size(); i++) {
                     maxIndex = (diff.contains(breakfast.get(i))) ? i : maxIndex;
                 }
-                return breakfast.indexOf(food) < maxIndex && !diff.contains(food);
+                return !(breakfast.indexOf(food) < maxIndex && !diff.contains(food));
             } else if (lunch.contains(food2)) {
                 
                 List<FoodType> diff = getDifferences(MealType.LUNCH);
@@ -73,7 +76,7 @@ public class StorePredictor {
                 for (int i = 0; i < lunch.size(); i++) {
                     maxIndex = (diff.contains(lunch.get(i))) ? i : maxIndex;
                 }
-                return lunch.indexOf(food) < maxIndex && !diff.contains(food);
+                return !(lunch.indexOf(food) < maxIndex && !diff.contains(food));
             } else if (dinner.contains(food2)){
                 List<FoodType> diff = getDifferences(MealType.DINNER);
 
@@ -81,7 +84,7 @@ public class StorePredictor {
                 for (int i = 0; i < dinner.size(); i++) {
                     maxIndex = (diff.contains(dinner.get(i))) ? i : maxIndex;
                 }
-                return dinner.indexOf(food) < maxIndex && !diff.contains(food);
+                return !(dinner.indexOf(food) < maxIndex && !diff.contains(food));
             }
         }
         return true;
@@ -92,9 +95,13 @@ public class StorePredictor {
         Food f = new Food();
         // System.out.println(f.getFoodTypes(mealType).toString());
         for (FoodType food : f.getFoodTypes(mealType)) {
-            if (this.previousPantry.getNumAvailableMeals(food) != this.currentPantry.getNumAvailableMeals(food)) {
+            if (this.previousPantry.getNumAvailableMeals(food) < this.currentPantry.getNumAvailableMeals(food)) {
                 diff.add(food);
             }
+        }
+        
+        if(mealType == MealType.BREAKFAST){
+             System.out.println("DIFF: " + diff.toString());
         }
         return diff;
     }
