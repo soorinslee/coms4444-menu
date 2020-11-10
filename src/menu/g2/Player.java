@@ -20,6 +20,29 @@ public class Player extends menu.sim.Player {
 	private List<Integer> shoppingQuantities;
 	private ShoppingList shoppingList;
 
+	private Map<FamilyMember, List<FoodType>> breakfastAllocRanks;
+	private Map<FamilyMember, List<FoodType>> lunchAllocRanks;
+	private List<FoodType> dinnerAllocRanks;
+
+	private Planner currentPlanner;
+
+	private List<FamilyMember> squeakyFamilyMembers;
+
+	//for tomorrow:
+	//Aum
+	//todo: add more backups to shopping list (should always feed everyone)
+	// Scott
+	//lunch alloc ranks
+	//change alloc to reference the alloc ranks (shouldn't always repeat meals)
+
+	//Ahad
+	//dinner alloc ranks
+
+	//for friday:
+	//todo: new squeakyFamilyMembers
+	//how far should meal history go back?
+	//pantry partitioning dynamic (small, medium, large pantry sizes)
+
 	/**
 	 * Player constructor
 	 *
@@ -199,24 +222,28 @@ public class Player extends menu.sim.Player {
 	 *
 	 */
 	public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+		this.mealHistory = mealHistory;
+		this.week = week;
+
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
 			memberNames.add(familyMember.getName());
 
 		Pantry originalPantry = pantry.clone();
 
-		Planner planner = new Planner(memberNames);
+		this.currentPlanner = new Planner(memberNames);
+
 		for (FamilyMember member : this.familyMembers) {
 
 			for (Day day : Day.values()) {
 				FoodType maxAvailableBreakfastMeal = getMaximumAvailableBreakfast(pantry, MealType.BREAKFAST, member);
 				if (pantry.getNumAvailableMeals(maxAvailableBreakfastMeal) > 0) {
-					planner.addMeal(day, member.getName(), MealType.BREAKFAST, maxAvailableBreakfastMeal);
+					this.currentPlanner.addMeal(day, member.getName(), MealType.BREAKFAST, maxAvailableBreakfastMeal);
 					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);
 				}
 				FoodType maxAvailableLunchMeal = getMaximumAvailableLunch(pantry, MealType.LUNCH, member);
 				if (pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
-					planner.addMeal(day, member.getName(), MealType.LUNCH, maxAvailableLunchMeal);
+					this.currentPlanner.addMeal(day, member.getName(), MealType.LUNCH, maxAvailableLunchMeal);
 					pantry.removeMealFromInventory(maxAvailableLunchMeal);
 				}
 			}
@@ -227,17 +254,19 @@ public class Player extends menu.sim.Player {
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
-				planner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
+				this.currentPlanner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
 				pantry.removeMealFromInventory(maxAvailableDinnerMeal);
 			}
 		}
 
-		if (Player.hasValidPlanner(planner, originalPantry))
-			return planner;
+		if (Player.hasValidPlanner(this.currentPlanner, originalPantry))
+			return this.currentPlanner;
 		return new Planner();
 	}
 
 	private FoodType getMaximumAvailableBreakfast(Pantry pantry, MealType mealType, FamilyMember member) {
+		updateBreakfastAlloc();
+
 		int num = 0;
 		int max = 0;
 		FoodType maximumAvailableMealType = this.breakfastRanks.get(member).get(num);
@@ -257,6 +286,8 @@ public class Player extends menu.sim.Player {
 	}
 
 	private FoodType getMaximumAvailableLunch(Pantry pantry, MealType mealType, FamilyMember member) {
+		updateLunchAlloc();
+
 		Random r = new Random();
 		int num = r.nextInt(2);
 		int max = 0;
@@ -277,6 +308,8 @@ public class Player extends menu.sim.Player {
 	}
 
 	private FoodType getMaximumAvailableDinner(Pantry pantry, MealType mealType) {
+		updateDinnerAlloc();
+
 		int num = 0;
 		int max = 0;
 		FoodType maximumAvailableMealType = this.dinnerRanks.get(num);
@@ -294,4 +327,37 @@ public class Player extends menu.sim.Player {
 		}
 		return maximumAvailableMealType;
 	}
+
+	//Scott
+	private void updateBreakfastAlloc() {
+		this.breakfastAllocRanks = this.breakfastRanks;
+	}
+
+	//Scott
+	//find most recent time in past week that food was eaten:
+	//look at this planner
+	//if not in it,
+	//look at last week
+	//calc new value
+	private void updateLunchAlloc() {
+
+	}
+
+	//Ahad
+	//find most recent time in past week that food was eaten:
+	//look at this planner
+	//look through list
+	//find how long ago food was eaten
+
+	//update mean:
+	//look through all people's preferences, multiply by factor, recalc mean
+
+	//sorting all the means:
+	//pass to sortByValue to sort dinners
+	//set dinnerallocranks to that
+
+	private void updateDinnerAlloc() {
+
+	}
+
 }
