@@ -238,7 +238,7 @@ public class Player extends menu.sim.Player {
 		Pantry originalPantry = pantry.clone();
 
 		this.currentPlanner = new Planner(memberNames);
-		System.out.println("sizeeee here is " + currentPlanner.getPlan().size());
+		//System.out.println("sizeeee here is " + currentPlanner.getPlan().size());
 
 		for (FamilyMember member : this.familyMembers) {
 
@@ -358,10 +358,10 @@ public class Player extends menu.sim.Player {
 			for(FoodType foodType : lunchRanks.get(familyMember)) {
 				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
 				int factor = 1;
-				System.out.println("food type is " + foodType);
+				//System.out.println("food type is " + foodType);
 
 				if(daysAgo > 0) {
-					System.out.println("days ago is " + daysAgo);
+					//System.out.println("days ago is " + daysAgo);
 					factor = daysAgo/(daysAgo+1);
 				}
 
@@ -375,9 +375,9 @@ public class Player extends menu.sim.Player {
 			List<FoodType> lunches = new ArrayList<>(lunchRanks.get(familyMember));
 			lunches.sort((lunch1, lunch2) -> (int) (100*currentPreferences.get(lunch2)) - (int) (100*currentPreferences.get(lunch1)));
 
-			for(FoodType lunch : lunches) {
+			/*for(FoodType lunch : lunches) {
 				System.out.println(lunch + ", " + currentPreferences.get(lunch));
-			}
+			}*/
 
 			//add currentPreference list to lunchAllocRanks
 			this.lunchAllocRanks.put(familyMember, lunches);
@@ -386,7 +386,7 @@ public class Player extends menu.sim.Player {
 
 	//look in planner and last week
 	private int lastEaten(FoodType foodType, FamilyMember familyMember, MealType mealType) {
-		System.out.println();
+		//System.out.println();
 		//System.out.println("WEEK: " + this.week + ", SEARCHING FOR MEAL: " + foodType);
 
 		//check in this planner
