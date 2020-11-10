@@ -232,6 +232,7 @@ public class Player extends menu.sim.Player {
 		Pantry originalPantry = pantry.clone();
 
 		this.currentPlanner = new Planner(memberNames);
+		System.out.println("sizeeee here is " + currentPlanner.getPlan().size());
 
 		for (FamilyMember member : this.familyMembers) {
 
@@ -269,14 +270,14 @@ public class Player extends menu.sim.Player {
 
 		int num = 0;
 		int max = 0;
-		FoodType maximumAvailableMealType = this.breakfastRanks.get(member).get(num);
-		while(num < this.breakfastRanks.get(member).size()){
-			FoodType maximumAvailableMeal = this.breakfastRanks.get(member).get(num);
+		FoodType maximumAvailableMealType = this.breakfastAllocRanks.get(member).get(num);
+		while(num < this.breakfastAllocRanks.get(member).size()){
+			FoodType maximumAvailableMeal = this.breakfastAllocRanks.get(member).get(num);
 			if(pantry.getNumAvailableMeals(maximumAvailableMeal) >= 1){
 				return maximumAvailableMeal;
 			} else {
 				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)){
-					maximumAvailableMealType = this.breakfastRanks.get(member).get(num);
+					maximumAvailableMealType = this.breakfastAllocRanks.get(member).get(num);
 					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
 				}
 			}
@@ -291,14 +292,14 @@ public class Player extends menu.sim.Player {
 		Random r = new Random();
 		int num = r.nextInt(2);
 		int max = 0;
-		FoodType maximumAvailableMealType = this.lunchRanks.get(member).get(num);
-		while(num < this.lunchRanks.get(member).size()){
-			FoodType maximumAvailableMeal = this.lunchRanks.get(member).get(num);
+		FoodType maximumAvailableMealType = this.lunchAllocRanks.get(member).get(num);
+		while(num < this.lunchAllocRanks.get(member).size()){
+			FoodType maximumAvailableMeal = this.lunchAllocRanks.get(member).get(num);
 			if(pantry.getNumAvailableMeals(maximumAvailableMeal) >= 1){
 				return maximumAvailableMeal;
 			} else {
 				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)){
-					maximumAvailableMealType = this.lunchRanks.get(member).get(num);
+					maximumAvailableMealType = this.lunchAllocRanks.get(member).get(num);
 					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
 				}
 			}
@@ -340,7 +341,137 @@ public class Player extends menu.sim.Player {
 	//look at last week
 	//calc new value
 	private void updateLunchAlloc() {
+		this.lunchAllocRanks = new HashMap<FamilyMember, List<FoodType>>();
 
+		for(FamilyMember familyMember : familyMembers) {
+			//for each family member, calculate their current preferences
+			HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+
+			//System.out.println(lunchRanks.get(familyMember));
+
+			for(FoodType foodType : lunchRanks.get(familyMember)) {
+				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
+				int factor = 1;
+				System.out.println("food type is " + foodType);
+
+				if(daysAgo > 0) {
+					System.out.println("days ago is " + daysAgo);
+					factor = daysAgo/(daysAgo+1);
+				}
+
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor*globalPreference;
+				
+				currentPreferences.put(foodType, currentPreference);
+			}
+
+			//sort lunches by current preference
+			List<FoodType> lunches = new ArrayList<>(lunchRanks.get(familyMember));
+			lunches.sort((lunch1, lunch2) -> (int) (100*currentPreferences.get(lunch2)) - (int) (100*currentPreferences.get(lunch1)));
+
+			for(FoodType lunch : lunches) {
+				System.out.println(lunch + ", " + currentPreferences.get(lunch));
+			}
+
+			//add currentPreference list to lunchAllocRanks
+			this.lunchAllocRanks.put(familyMember, lunches);
+		}
+	}
+
+	//look in planner and last week
+	private int lastEaten(FoodType foodType, FamilyMember familyMember, MealType mealType) {
+		System.out.println();
+		//System.out.println("WEEK: " + this.week + ", SEARCHING FOR MEAL: " + foodType);
+
+		//check in this planner
+		//System.out.println("this week:");
+		int daysAgoThisWeek = searchPlanner(foodType, familyMember, mealType, this.currentPlanner);
+
+		//found in this planner
+		if(daysAgoThisWeek > 0){
+			//System.out.println("TOTALLLLL: " + daysAgoThisWeek);
+			return daysAgoThisWeek;
+		}
+
+		//check last week
+		if(this.week > 1) {
+			//System.out.println("last week:");
+			Planner lastPlanner = this.mealHistory.getPlanner(week-1);
+
+			int daysAgoLastWeek = searchPlanner(foodType, familyMember, mealType, lastPlanner);
+
+			if(daysAgoLastWeek > 0) {
+				int daysAgo =  daysAgoThisWeek*-1 + daysAgoLastWeek;
+				/*System.out.println("TOTALLLLL with second week: " + daysAgo);
+
+				System.out.println("this week:");
+				for(int i = (Day.values().length-1); i >= 0; i--) {
+					Day day = Day.values()[i];
+					if(this.currentPlanner.getPlan().get(day).get(familyMember.getName()).containsKey(mealType)) {
+						System.out.println("Day: " + day + ", Food: " + this.currentPlanner.getPlan().get(day).get(familyMember.getName()).get(mealType));
+					}
+					else {
+						System.out.println("Day not scheduled: " + day );
+					}
+				}
+
+				System.out.println();
+				System.out.println("last week:");
+
+				for(int i = (Day.values().length-1); i >= 0; i--) {
+					Day day = Day.values()[i];
+					if(lastPlanner.getPlan().get(day).get(familyMember.getName()).containsKey(mealType)) {
+						System.out.println("Day: " + day + ", Food: " + lastPlanner.getPlan().get(day).get(familyMember.getName()).get(mealType));
+					}
+					else {
+						System.out.println("Day not scheduled: " + day );
+					}
+				}*/
+				return daysAgo;
+			}
+		}
+
+		//System.out.println("TOTALLLL: NOT EITHER WEEKS");
+		return -1;
+	}
+
+	int searchPlanner(FoodType foodType, FamilyMember familyMember, MealType mealType, Planner planner) {
+		MemberName name = familyMember.getName();
+
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> plan = planner.getPlan();
+		/*for(int i = (Day.values().length-1); i >= 0; i--) {
+			Day day = Day.values()[i];
+			if(plan.get(day).get(name).containsKey(mealType)) {
+				System.out.println("Day: " + day + ", Food: " + plan.get(day).get(name).get(mealType));
+			}
+			else {
+				System.out.println("Day not scheduled: " + day );
+			}
+		}*/
+		int end = 7;
+
+		if(plan.keySet().size() > 0) {
+			//System.out.println("size is " + Day.values().length);
+
+			for(int i = (Day.values().length-1); i >= 0; i--) {
+				//System.out.println("i is "  + i);
+				Day day = Day.values()[i];
+				if(!plan.get(day).get(name).containsKey(mealType)) {
+					end--;
+					//System.out.println("not here");
+				}
+
+				//if the day has been planned and it is the sought after foodType
+				else if(plan.get(day).get(name).get(mealType) == foodType) {
+					//System.out.println("end is " + end);
+					int start = i;
+					//System.out.println("days ago is " + (end-start));
+					return end - start;
+				}
+			}
+		}
+		//System.out.println(foodType + " not found");
+		return -1*end;
 	}
 
 	//Ahad
