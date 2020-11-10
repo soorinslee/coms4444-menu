@@ -78,6 +78,7 @@ public abstract class Player {
     	int totalLimits = 0;
     	for(MealType mealType : allLimitsMap.keySet())
     		totalLimits += allLimitsMap.get(mealType);
+    	
     	return totalLimits <= numEmptySlots;
     }
     
