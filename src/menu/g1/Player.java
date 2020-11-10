@@ -1,5 +1,6 @@
 package menu.g1;
 
+import java.text.BreakIterator;
 import java.util.*;
 
 import menu.sim.*;
@@ -22,6 +23,7 @@ public class Player extends menu.sim.Player {
 	private Weighter weighter;
 	private Map<MealType, Map<FamilyMember, ArrayList<FoodType>>> optimisticPlanner;
 	private FamilyTracker familyTracker;
+	private Map<MealType, Integer> maxCapacities;
 
 	
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
@@ -29,6 +31,18 @@ public class Player extends menu.sim.Player {
 		this.optimisticPlanner = new HashMap<>();
 		this.weighter = new Weighter(numFamilyMembers);
 		this.familyTracker = new FamilyTracker();
+		this.maxCapacities = getMaxCapacitiesForMealTypes(capacity, numFamilyMembers);
+	}
+
+	private Map<MealType, Integer> getMaxCapacitiesForMealTypes(Integer capacity, Integer numFamilyMembers) {
+		// TODO Adaeze:
+		// for now lunch and dinner allocation will just be 7 * numFamilyMembers
+		/* ex: capacity = 105, numFamilyMembers = 3
+		* BF: 105 - (L + D) => 105 - 42 => 63
+		* L: 7p => 21
+		* D: 7p => 21
+		* */
+		return null;
 	}
 
 	/**
@@ -58,6 +72,44 @@ public class Player extends menu.sim.Player {
 		shopDinner(shoppingList);
 
 		return shoppingList;
+	}
+
+	private void shopBreakfast(ShoppingList shoppingList, Pantry pantry) {
+		Integer breakfastCapacity = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
+		Map<MemberName, Integer> memberAllocations = getMemberAllocations(breakfastCapacity);
+
+		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry);
+		if (minBreakfastsNeeded == 0) {
+			// shopping list that only includes first choice meals
+		}
+		else {
+			// shopping list that includes all the foods
+		}
+	}
+
+	private Integer getMinBreakfastsNeeded(Pantry pantry) {
+		// TODO Adaeze:
+		// returns the minimum amount of breakfast meals that we need to get in order for everyone
+		// to be fed based on what is in the pantry currently
+		// how many meals would we have to get this round to ensure everyone is fed
+		return null;
+	}
+
+	private Map<MemberName, Integer> getMemberAllocations(Integer breakfastCapacity) {
+		// TODO Adaeze: returns map of how much space we give for each member based on their weight
+		// each members allocation = (weight/(sum of all weights)) * breakfastCapacity
+		Map<MemberName, Integer> memberAllocations = new HashMap<>();
+		/* PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		while (!memberTrackers.isEmpty()) {
+			MemberTracker memberTracker = memberTrackers.poll();
+			memberTracker.getWeight();
+		}*/
+		return memberAllocations;
+	}
+
+	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry) {
+		// TODO Adaeze:
+		return null;
 	}
 
 	private void shopDinner(ShoppingList shoppingList) {
