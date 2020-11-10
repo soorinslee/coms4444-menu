@@ -61,6 +61,7 @@ public class Player extends menu.sim.Player {
 		return calculateShoppingList();
 	}
 
+	//TODO add dynamic partitioning
 	private void calculateQuantities() {
 		this.shoppingQuantities = new ArrayList<>();
 		int minQuantity = 7 * this.numFamilyMembers;
@@ -74,10 +75,6 @@ public class Player extends menu.sim.Player {
 		this.shoppingList.addLimit(MealType.BREAKFAST, this.shoppingQuantities.get(0));
 		this.shoppingList.addLimit(MealType.LUNCH, this.shoppingQuantities.get(1));
 		this.shoppingList.addLimit(MealType.DINNER, this.shoppingQuantities.get(2));
-
-		List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-		List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
-		List<FoodType> dinnerFoods = Food.getFoodTypes(MealType.DINNER);
 
 		calculateBreakfastRanks();
 		calculateLunchRanks();
@@ -93,18 +90,15 @@ public class Player extends menu.sim.Player {
 		return new ShoppingList();
 	}
 
+	
 	private void calculateBreakfastShoppingList() {
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < this.shoppingQuantities.get(0); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(0));
 		}
 		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < this.shoppingQuantities.get(0); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(1));
-		}
-		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < 7; i++)
-				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(2));
 		}
 	}
 
@@ -124,12 +118,14 @@ public class Player extends menu.sim.Player {
 	}
 
 	private void calculateDinnerShoppingList() {
-		for (int i = 0; i < this.shoppingQuantities.get(2); i++)
+		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(0));
-		for (int i = 0; i < this.shoppingQuantities.get(2); i++)
+		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(1));
-		for (int i = 0; i < this.shoppingQuantities.get(2); i++)
+		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(2));
+		for (int i = 0; i < this.shoppingQuantities.get(2)/1.6; i++)
+			shoppingList.addToOrder(this.dinnerRanks.get(3));
 	}
 
 	private void calculateBreakfastRanks() {
@@ -281,7 +277,6 @@ public class Player extends menu.sim.Player {
 	}
 
 	private FoodType getMaximumAvailableDinner(Pantry pantry, MealType mealType) {
-		Random r = new Random();
 		int num = 0;
 		int max = 0;
 		FoodType maximumAvailableMealType = this.dinnerRanks.get(num);
