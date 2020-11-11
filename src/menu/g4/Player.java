@@ -170,7 +170,6 @@ public class Player extends menu.sim.Player {
                     simPrinter.println("Iterating through " + name + "'s lunch order and adding to pantry.");
             }
         }
-        System.out.println(shoppingList.getMealOrder(MealType.LUNCH));
 
         // Add breakfast to shopping list
         // 10 of first choice
@@ -624,7 +623,6 @@ public class Player extends menu.sim.Player {
     public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
-        System.out.println(pantry.getMealsMap().get(MealType.LUNCH));
 
         Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
         List<FamilyMember> sortedFamilyMembers = familyMembers;
