@@ -319,14 +319,14 @@ public class Player extends menu.sim.Player {
 
 		int num = 0;
 		int max = 0;
-		FoodType maximumAvailableMealType = this.dinnerRanks.get(num);
-		while(num < this.dinnerRanks.size()){
-			FoodType maximumAvailableMeal = this.dinnerRanks.get(num);
+		FoodType maximumAvailableMealType = this.dinnerAllocRanks.get(num);
+		while(num < this.dinnerAllocRanks.size()){
+			FoodType maximumAvailableMeal = this.dinnerAllocRanks.get(num);
 			if(pantry.getNumAvailableMeals(maximumAvailableMeal) >= this.numFamilyMembers){
 				return maximumAvailableMeal;
 			} else {
 				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)){
-					maximumAvailableMealType = this.dinnerRanks.get(num);
+					maximumAvailableMealType = this.dinnerAllocRanks.get(num);
 					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
 				}
 			}
@@ -357,12 +357,13 @@ public class Player extends menu.sim.Player {
 
 			for(FoodType foodType : lunchRanks.get(familyMember)) {
 				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
-				int factor = 1;
+				double factor = 1;
 				//System.out.println("food type is " + foodType);
 
 				if(daysAgo > 0) {
 					//System.out.println("days ago is " + daysAgo);
-					factor = daysAgo/(daysAgo+1);
+					factor = (double) daysAgo/ (double) (daysAgo+1);
+					//System.out.println("factor is " + factor);
 				}
 
 				double globalPreference = familyMember.getFoodPreference(foodType);
@@ -494,7 +495,34 @@ public class Player extends menu.sim.Player {
 	//set dinnerallocranks to that
 
 	private void updateDinnerAlloc() {
+		HashMap<FoodType, Double> currentPrefAverages = new HashMap<>();
+		for(FoodType foodType : dinnerRanks) {
+			int daysAgo = lastEaten(foodType, this.familyMembers.get(0), MealType.DINNER);
 
+			double factor = 1;
+			//calculate factor based on last eaten
+			if(daysAgo > 0) {
+				factor = (double) daysAgo/ (double) (daysAgo+1);
+			}
+
+			//calculate sum by adding all preferences*factor
+			double sum = 0;
+			for(FamilyMember familyMember : this.familyMembers) {
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor*globalPreference;
+
+				sum += currentPreference;
+			}
+
+			double avg = sum/this.familyMembers.size();
+
+			currentPrefAverages.put(foodType, avg);
+			//double 
+		}
+
+		this.dinnerAllocRanks = new ArrayList<>(dinnerRanks);
+
+		this.dinnerAllocRanks.sort((dinner1, dinner2) -> (int) (100*currentPrefAverages.get(dinner2)) - (int) (100*currentPrefAverages.get(dinner1)));	
 	}
 
 }
