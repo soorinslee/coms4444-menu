@@ -164,36 +164,23 @@ public class Player extends menu.sim.Player {
 			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.LUNCH));
 		}
 		
-		for(MealType meal : Food.getAllMealTypes()){
-			for(Day day : Day.values()){
-				for(MemberName memberName : memberPriorityList.get(meal)){
-					if (pantry.getNumAvailableMeals(meal) > 0){
-						FoodType food;
-						switch(meal){
-
-							case BREAKFAST:
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case LUNCH:
-								updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case DINNER:
-								
-								break;
-						}
-					}
+		for(Day day : Day.values()){
+			for(MemberName memberName : memberPriorityList.get(MealType.BREAKFAST)){
+				if (pantry.getNumAvailableMeals(MealType.BREAKFAST) > 0){
+					FoodType food = getBestFood(MealType.BREAKFAST, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.BREAKFAST, food);
+					pantry.removeMealFromInventory(food);
 				}
+				if (pantry.getNumAvailableMeals(MealType.LUNCH) > 0){
+					updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
+					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.LUNCH, food);
+					pantry.removeMealFromInventory(food);
+				}
+				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
+			
 		}
 
 		planDinners(planner, pantry, familyMembers);
