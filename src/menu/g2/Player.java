@@ -530,7 +530,7 @@ public class Player extends menu.sim.Player {
 
 			//sort dinners by current preference
 
-			this.dinnerAllocRanks = new ArrayList<>(lunchRanks.get(familyMember));
+			this.dinnerAllocRanks = new ArrayList<>(dinnerRanks);
 			dinnerAllocRanks.sort((dinner1, dinner2) -> (int) (100*currentPreferences.get(dinner2)) - (int) (100*currentPreferences.get(dinner1)));
 
 			/*for(FoodType lunch : dinners) {
