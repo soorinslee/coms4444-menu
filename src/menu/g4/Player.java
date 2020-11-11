@@ -138,6 +138,8 @@ public class Player extends menu.sim.Player {
         // Sort from least average satisfaction to most
         if (week > 1)
             sortedFamilyMembers = sortByValue(averageSatisfactionMap, true, familyMembers);
+    
+        // Add breakfast foods to pantry
         for (FamilyMember member : sortedFamilyMembers) {
             MemberName name = member.getName();
             
@@ -145,18 +147,30 @@ public class Player extends menu.sim.Player {
             firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(0));
             secondBreakfast.add(this.allMemberBreakfastSorted.get(name).get(1));
 
-            // Add 14 lunch foods per family member according to optimal cycle
-            int ind = 0;
-            for (int count = 0; count < 14; count++) {
-                if (ind == this.allMemberLunchSorted.get(name).size() || ind == 7)
-                    ind = 0;
-                shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
-                ind++;
-            }
-
-            simPrinter.println("Iterating through " + name + "'s order and adding to pantry.");
+            simPrinter.println("Iterating through " + name + "'s breakfast order and adding to pantry.");
             // simPrinter.println(shoppingList.getFullOrderMap());
         }
+
+
+        // Add lunch foods to pantry according to optimal cycle
+        int numCycles = 10;
+        for (int i = 0; i < numCycles; i++) {
+            for (FamilyMember member : sortedFamilyMembers) {
+                MemberName name = member.getName();
+                int ind = 0;
+    
+                for (int count = 0; count < 7; count++) {
+                    if (ind == this.allMemberLunchSorted.get(name).size() || ind == 7)
+                        ind = 0;
+                    shoppingList.addToOrder(this.allMemberLunchSorted.get(name).get(ind));
+                    ind++;
+                }
+    
+                if (i == 0)
+                    simPrinter.println("Iterating through " + name + "'s lunch order and adding to pantry.");
+            }
+        }
+        System.out.println(shoppingList.getMealOrder(MealType.LUNCH));
 
         // Add breakfast to shopping list
         // 10 of first choice
@@ -174,8 +188,6 @@ public class Player extends menu.sim.Player {
 
 
         // get the available from pantry
-        simPrinter.println("Hello");
-
         HashMap<FoodType, Integer> availableMap = new HashMap<FoodType, Integer>();
         List<FoodType> availableFoods = pantry.getAvailableFoodTypes(MealType.DINNER);
         for (FoodType availableFood: availableFoods) {
@@ -184,10 +196,7 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        simPrinter.println("Hello");
-
         List<FoodType> dinnerCycle = getOptimalDinnerCycleWithConstraints(this.allMemberRewardToFood, this.allMemberFoodToRewards, availableMap, 3);
-        simPrinter.println("Hello");
         simPrinter.println(dinnerCycle);
         Pantry clone = pantry.clone();
         for (FoodType foodType: dinnerCycle) {
@@ -419,7 +428,8 @@ public class Player extends menu.sim.Player {
         for (Map.Entry<Double, List<FoodType>> entry : foods.entrySet()) {
             for (FoodType food : entry.getValue()) {
                 if (d > 0 && -entry.getKey()<(d*greatestValue/(d+1)))
-                    break outerloop;
+                    if (cycle.size() >= 4)      // cycle is at least four foods long
+                        break outerloop;
                 cycle.add(food);
                 d++;
             }
@@ -614,6 +624,7 @@ public class Player extends menu.sim.Player {
     public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
+        System.out.println(pantry.getMealsMap().get(MealType.LUNCH));
 
         Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
         List<FamilyMember> sortedFamilyMembers = familyMembers;
@@ -628,8 +639,6 @@ public class Player extends menu.sim.Player {
                 availableMap.put(availableFood, pantry.getNumAvailableMeals(availableFood));
             }
         }
-
-        simPrinter.println("Hello");
 
         List<FoodType> dinnerCycle = getOptimalDinnerCycleWithConstraints(this.allMemberRewardToFood, this.allMemberFoodToRewards, availableMap, 3);
         for (FamilyMember member : sortedFamilyMembers) {
