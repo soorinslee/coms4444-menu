@@ -77,258 +77,26 @@ public class Player extends menu.sim.Player {
             covetedFoods.put(MealType.BREAKFAST, breakfastFoods);
             covetedFoods.put(MealType.LUNCH, lunchFoods);
             covetedFoods.put(MealType.DINNER, dinnerFoods); 
-        } else {
+        } 
+        else {
             covetedFoods = sortCovetedFoods(0.25);
             // simPrinter.println("Coveted Breakfast:\n" + covetedFoods.get(MealType.BREAKFAST));
             // simPrinter.println("\nCoveted Lunch:\n" + covetedFoods.get(MealType.LUNCH));
             // simPrinter.println("\nCoveted Dinner:\n" + covetedFoods.get(MealType.DINNER));
         }
         // printPreference();
-        
-        // TODO: fix to be smarter using Qi's math! 
-        // current implementation makes invalid shopping lists sometimes but still does well
 
         // in simulation, keep track of everyone's FoodType rankings for every meal for every day
         simulatePlan(familyMembers);
+        ShoppingList shoppingList = new ShoppingList();
         int numMeals = (int)(numEmptySlots / 3);
-        // int uniques = 0; 
-        // for (MealType meal : Food.getAllMealTypes()) {
-        //     for (FamilyMember fm : familyMembers) {
-        //         uniques += uniqueFoods.get(meal).get(fm.getName()).size();
-        //     }
-        // }
-        // if (numEmptySlots >= uniques) {
-        // if (numEmptySlots >= familyMembers.size() * 210) { // TODO: if we have enough to save for 10 weeks?
-        // if (week == 1 && numEmptySlots >= familyMembers.size() * 42)
-        //     numMeals = familyMembers.size()*7;
-        // if (week > 1 && numEmptySlots >= familyMembers.size() * 210) { // TODO: if we have enough to save for 10 weeks?
-        // if (false) { // TODO: if we have enough to save for 10 weeks?
-        // if (week > 1 && numEmptySlots >= familyMembers.size() * 42) { // if we can save over 2 weeks 
-        if (numEmptySlots >= familyMembers.size() * 42) { // if we can save over 2 weeks 
-        // if (numEmptySlots >= familyMembers.size() * 84) { // if we can save over 2 weeks 
-            // numMeals = familyMembers.size() * 28;
-            numMeals = familyMembers.size() * 14;
-            if (numEmptySlots >= familyMembers.size() * 63)
-                numMeals = familyMembers.size() * 21;
-            else if (numEmptySlots >= familyMembers.size() * 84)
-                numMeals = familyMembers.size() * 28;
-            else if (numEmptySlots >= familyMembers.size() * 105)
-                numMeals = familyMembers.size() * 35;
-            else if (numEmptySlots >= familyMembers.size() * 126)
-                numMeals = familyMembers.size() * 42;
-            else if (numEmptySlots >= familyMembers.size() * 147)
-                numMeals = familyMembers.size() * 49;
-            else if (numEmptySlots >= familyMembers.size() * 168)
-                numMeals = familyMembers.size() * 56;
-            else if (numEmptySlots >= familyMembers.size() * 189)
-                numMeals = familyMembers.size() * 63;
-            else if (numEmptySlots >= familyMembers.size() * 210)
-                numMeals = familyMembers.size() * 70;
 
-            ShoppingList shoppingList = new ShoppingList();
+        if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
+            numMeals = familyMembers.size() * 52;
+        
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
             shoppingList.addLimit(MealType.LUNCH, numMeals);
-            shoppingList.addLimit(MealType.DINNER, numMeals);
-
-            // HashMap<MealType, HashMap<MemberName, Set<FoodType>>> uniqueFoods = new HashMap<>();
-            //     meal type --> name --> set of unique items they have in top 4 preferences 
-            // HashMap<MealType, HashMap<MemberName, HashMap<Integer, List<FoodType>>>> allCycles = new HashMap<>();
-            //     meal type --> member name --> choice # --> cycle of those choice #s
-            // HashMap<Day, HashMap<MealType, List<MemberName>>> dailyRankings = new HashMap<>();
-            //     day --> MealType --> least satisfied - most satisfied 
-
-            // 1  
-            // for every day: every family member's first choice breakfasts 
-            // for every day: every family member's first choice lunches 
-            // for every day: least satisfied's first choice dinners (for all) 
-            int dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(0).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // 1  
-            // for every day: every family member's first choice breakfasts 
-            // for every day: every family member's first choice lunches 
-            // for every day: least satisfied's first choice dinners (for all) 
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(0).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // 2 
-            // for every day: every family member's second choice breakfasts
-            // for every day: every family member's second choice lunches
-            // for every day: least satisfied's second choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(1).get(dayInt));
-                }
-                dayInt++;
-            }
-            
-            // 1 2 3 
-            // for every day:every family member's first choice breakfasts
-            // for every day:every family member's first choice lunches
-            // for every day:least satisfied's first choice dinners (for all)
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(0).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // for every day:every family member's second choice breakfasts
-            // for every day:every family member's second choice lunches
-            // for every day:least satisfied's second choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(1).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // for every day: every family member's third choice breakfasts
-            // for every day: every family member's third choice lunches
-            // for every day: least satisfied's third choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(2).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(2).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(2).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // 1 2 3 4 
-            // for every day: every family member's first choice breakfasts
-            // for every day: every family member's first choice lunches
-            // for every day: least satisfied's first choice dinners (for all)
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(0).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(0).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // for every day:every family member's second choice breakfasts
-            // for every day:every family member's second choice lunches
-            // for every day:least satisfied's second choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(1).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(1).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // for every day: every family member's third choice breakfasts
-            // for every day: every family member's third choice lunches
-            // for every day: least satisfied's third choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(2).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(2).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(2).get(dayInt));
-                }
-                dayInt++;
-            }
-
-            // for every day: every family member's fourth choice breakfasts
-            // for every day: every family member's fourth choice lunches
-            // for every day: least satisfied's fourth choice dinners
-            dayInt = 0;
-            for (Day day : Day.values()) {
-                for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(3).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(3).get(dayInt));
-                }
-                for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
-                    shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(3).get(dayInt));
-                }
-                dayInt++;
-            }
-            simPrinter.println("Shopping limit: " + (shoppingList.getAllLimitsMap().get(MealType.BREAKFAST) + shoppingList.getAllLimitsMap().get(MealType.LUNCH) + shoppingList.getAllLimitsMap().get(MealType.DINNER)));
-            simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
-            simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
-            simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
-            if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
-                return shoppingList;
-            simPrinter.println("\n\nShopping list was invalid\n\n");
-            return new ShoppingList();
-        }
-
-
-        else if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() >= 100000) {
-            numMeals = familyMembers.size() * 28;
-        
-            ShoppingList shoppingList = new ShoppingList();
-            shoppingList.addLimit(MealType.BREAKFAST, numMeals * 10);
-            shoppingList.addLimit(MealType.LUNCH, numMeals * 10);
-            shoppingList.addLimit(MealType.DINNER, numMeals * 20);
+            shoppingList.addLimit(MealType.DINNER, numMeals * 2);
             
             List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
             List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH);
@@ -344,108 +112,125 @@ public class Player extends menu.sim.Player {
                     shoppingList.addToOrder(dinnerFoods.get(i));
                 }
             }
-            // simPrinter.println(shoppingList.getFullOrderMap());
-            if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
-                return shoppingList;
-            simPrinter.println("\n\nShopping list was invalid\n\n");
-            return new ShoppingList();
         }
-        
 
-        // if we can max out every food item for every family member to last at least one week under high demand
-        // instead of 280, make it every meal that would be necessary in an optimum round! 
-        // else if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() >= 280*familyMembers.size()) {
-            // pay attention to what we have in our pantry rn 
-            // breakfast 
-                    // for first week breafkast (40x7xn slots available)
-                            // Qi's magic probability math, reduces the size of the shopping list for breakfast
-                                // order 4*7 copies of each item for each person
-                                // order 3*7 copies of each item for each person
-                                // order 2*7 copies of each item for each person
-                                // order 1*7 copies of each item for each person
-                    // for subsequent weeks, only do ^ when the least satsified is not getting the breakfasts they like 
+        // int uniques = 0; 
+        // for (MealType meal : Food.getAllMealTypes()) {
+        //     for (FamilyMember fm : familyMembers) {
+        //         uniques += uniqueFoods.get(meal).get(fm.getName()).size();
+        //     }
         // }
-        
-        // for smaller pantry sizes (minimum = 21*number of family members)
-        // we cannot overstock the pantry 
-        // determine overall preference for each meal by running a fake week simulation
-                // keeping track of the preverence values for every meal for every person for every day
-                // paying attention to the lowest satisfied family members when buying 
-                // find the best outcome cycle of dinners for the least satisfied family member 
-        ShoppingList shoppingList = new ShoppingList();
-        
-        shoppingList.addLimit(MealType.BREAKFAST, numMeals);
-        shoppingList.addLimit(MealType.LUNCH, numMeals);
-        shoppingList.addLimit(MealType.DINNER, numMeals);
-        simPrinter.println("\nEmpty Slots in Pantry: " + numEmptySlots);
+        // if (numEmptySlots >= uniques) {
+    
+        // if (week == 1 && numEmptySlots >= familyMembers.size() * 42)
+        //     numMeals = familyMembers.size()*7;
+        // if (week > 1 && numEmptySlots >= familyMembers.size() * 210) { // if we have enough to save for 10 weeks?
+        // if (false) { 
+        // if (week > 1 && numEmptySlots >= familyMembers.size() * 42) { // if we can save over 2 weeks 
+        // if (numEmptySlots >= familyMembers.size() * 84) {
+            // numMeals = familyMembers.size() * 28;
 
-        // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
-            // for breakfast: 
-                // according to family member preferences, find everyone's favorite breakfast foods
-                // add 7 of each person's favoite breakfast foods 
+        else if (numEmptySlots >= familyMembers.size() * 42) { // if we can save over 2 weeks 
+            numMeals = getMaxListSize(numEmptySlots, familyMembers);
 
-            // 7*least satisfied favorite breakfast, 7*next least satisfied favorite breakfast ... 
-                // if every family member does not get their # 1 favorite, then we will move on to the ranked preferences 
+            shoppingList.addLimit(MealType.BREAKFAST, numMeals);
+            shoppingList.addLimit(MealType.LUNCH, numMeals);
+            shoppingList.addLimit(MealType.DINNER, numMeals);
+
+            // 1st choices
+            stockUpOnChoices(shoppingList, 0);
+
+            // 1st and 2nd choices 
+            stockUpOnChoices(shoppingList, 0);
+            stockUpOnChoices(shoppingList, 1);
             
-            // the rest of the list 
-                // 7 * n * most coveted breakfast - (7 * most coveted * number of times it appeared in ^^) - # of breakfast we have already 
-                // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
-                // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already  
-        List<FoodType> breakfastList = getBreakfastList(familyMembers);
-        for(FoodType breakfastItem : breakfastList){
-            shoppingList.addToOrder(breakfastItem);
+            // 1st, 2nd, and 3rd choices
+            stockUpOnChoices(shoppingList, 0);
+            stockUpOnChoices(shoppingList, 1);
+            stockUpOnChoices(shoppingList, 2);
+
+            // 1st, 2nd, 3rd, and 4th choices
+            stockUpOnChoices(shoppingList, 0);
+            stockUpOnChoices(shoppingList, 1);
+            stockUpOnChoices(shoppingList, 2);
+            stockUpOnChoices(shoppingList, 3);
         }
 
-        // lunch 
-            // similar to dinner, get everyone's top options for every day and this is the beginning of the list 
-            // Everything after this: zipping together preferneces like in dinner
-        List<FoodType> lunchList = getLunchList(familyMembers);
-        for(FoodType lunchItem : lunchList){
-            shoppingList.addToOrder(lunchItem);
+        else {
+            // if we can max out every food item for every family member to last at least one week under high demand
+            // instead of 280, make it every meal that would be necessary in an optimum round! 
+            // else if (pantry.getNumAvailableMeals() + pantry.getNumEmptySlots() >= 280*familyMembers.size()) {
+                // pay attention to what we have in our pantry rn 
+                // breakfast 
+                        // for first week breafkast (40x7xn slots available)
+                                // Qi's magic probability math, reduces the size of the shopping list for breakfast
+                                    // order 4*7 copies of each item for each person
+                                    // order 3*7 copies of each item for each person
+                                    // order 2*7 copies of each item for each person
+                                    // order 1*7 copies of each item for each person
+                        // for subsequent weeks, only do ^ when the least satsified is not getting the breakfasts they like 
+            // }
+            
+            // for smaller pantry sizes (minimum = 21*number of family members)
+            // we cannot overstock the pantry 
+            // determine overall preference for each meal by running a fake week simulation
+                    // keeping track of the preverence values for every meal for every person for every day
+                    // paying attention to the lowest satisfied family members when buying 
+                    // find the best outcome cycle of dinners for the least satisfied family member 
+            shoppingList.addLimit(MealType.BREAKFAST, numMeals);
+            shoppingList.addLimit(MealType.LUNCH, numMeals);
+            shoppingList.addLimit(MealType.DINNER, numMeals);
+
+            // breakfast: purhcase at least 7 * n, try to over stock because it's dependable 
+                // for breakfast: 
+                    // according to family member preferences, find everyone's favorite breakfast foods
+                    // add 7 of each person's favoite breakfast foods 
+
+                // 7*least satisfied favorite breakfast, 7*next least satisfied favorite breakfast ... 
+                    // if every family member does not get their # 1 favorite, then we will move on to the ranked preferences 
+                
+                // the rest of the list 
+                    // 7 * n * most coveted breakfast - (7 * most coveted * number of times it appeared in ^^) - # of breakfast we have already 
+                    // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
+                    // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already  
+            List<FoodType> breakfastList = getBreakfastList(familyMembers);
+            for(FoodType breakfastItem : breakfastList){
+                shoppingList.addToOrder(breakfastItem);
+            }
+
+            // lunch 
+                // similar to dinner, get everyone's top options for every day and this is the beginning of the list 
+                // Everything after this: zipping together preferneces like in dinner
+            List<FoodType> lunchList = getLunchList(familyMembers);
+            for(FoodType lunchItem : lunchList){
+                shoppingList.addToOrder(lunchItem);
+            }
+
+            // dinner: purhchase at least 7 * n, make list long enough for worst case 
+                // get best cycle from loop
+                    // try to buy that cycle
+
+                // if that cycle is not available
+                    // look at the 25% least satisfied people
+                        // for every day in simulation:
+                            // for the least satisfied family member:
+                                // for each dinner:
+                                    // adjust the preference value for that dinner
+
+                    // buy maximum 7*n, list is 37*n
+                        // 3*N*d1, 2*n*dinner2, 2*n*dinner3 (remember to subtract what is available in pantry)
+                        // 2*n*dinner4, 1*n*dinner2
+                        // 2*n*dinner5, 1*n*dinnner3
+            List<FoodType> dinnerList = getDinnerList(familyMembers);
+            for(FoodType dinnerItem : dinnerList){
+                shoppingList.addToOrder(dinnerItem);
+            }
         }
-
-        // dinner: purhchase at least 7 * n, make list long enough for worst case 
-            // get best cycle from loop
-                // try to buy that cycle
-
-            // if that cycle is not available
-                // look at the 25% least satisfied people
-                    // for every day in simulation:
-                        // for the least satisfied family member:
-                            // for each dinner:
-                                // adjust the preference value for that dinner
-
-                // buy maximum 7*n, list is 37*n
-                    // 3*N*d1, 2*n*dinner2, 2*n*dinner3 (remember to subtract what is available in pantry)
-                    // 2*n*dinner4, 1*n*dinner2
-                    // 2*n*dinner5, 1*n*dinnner3
-        List<FoodType> dinnerList = getDinnerList(familyMembers);
-        for(FoodType dinnerItem : dinnerList){
-            shoppingList.addToOrder(dinnerItem);
-        }
-
         
-        simPrinter.println("Shopping limit: " + (shoppingList.getAllLimitsMap().get(MealType.BREAKFAST) + shoppingList.getAllLimitsMap().get(MealType.LUNCH) + shoppingList.getAllLimitsMap().get(MealType.DINNER)));
-        simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
-        // simPrinter.println("Breakfast shopping list size: " + breakfastList.size());
-        // for(FoodType ft : breakfastList){
-        //     simPrinter.print(ft + " ");
-        // }
-        simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
-        // simPrinter.println("Lunch shopping list size: " + breakfastList.size());
-        // for(FoodType ft : lunchList){
-        //     simPrinter.print(ft + " ");
-        // }
-        simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
-        // simPrinter.println("Dinner shopping list size: " + dinnerList.size());
-        // for(FoodType ft : dinnerList){
-        //     simPrinter.print(ft + " ");
-        // }
-
-        if(Player.hasValidShoppingList(shoppingList, numEmptySlots)){
+        printShoppingLimits(numEmptySlots, shoppingList);
+        if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
             return shoppingList;
-        }
-        simPrinter.println("Shopping list was invalid");
+        simPrinter.println("\n\nShopping list was invalid\n\n");
         return new ShoppingList();
     }
 
@@ -831,7 +616,7 @@ public class Player extends menu.sim.Player {
 
         if(Player.hasValidPlanner(planner, originalPantry))
             return planner;
-        simPrinter.println("\nPlanner was invalid");
+        simPrinter.println("\n\nPlanner was invalid\n\n");
         return new Planner();
     }
 
@@ -1154,6 +939,56 @@ public class Player extends menu.sim.Player {
             copy.put(entry.getKey(), Double.valueOf(entry.getValue()));
         }
         return copy;
+    }
+
+    // spencer 
+    private int getMaxListSize(int numEmptySlots, List<FamilyMember> familyMembers) {
+        int numMeals = familyMembers.size() * 14;
+        if (numEmptySlots >= familyMembers.size() * 63)
+            numMeals = familyMembers.size() * 21;
+        else if (numEmptySlots >= familyMembers.size() * 84)
+            numMeals = familyMembers.size() * 28;
+        else if (numEmptySlots >= familyMembers.size() * 105)
+            numMeals = familyMembers.size() * 35;
+        else if (numEmptySlots >= familyMembers.size() * 126)
+            numMeals = familyMembers.size() * 42;
+        else if (numEmptySlots >= familyMembers.size() * 147)
+            numMeals = familyMembers.size() * 49;
+        else if (numEmptySlots >= familyMembers.size() * 168)
+            numMeals = familyMembers.size() * 56;
+        else if (numEmptySlots >= familyMembers.size() * 189)
+            numMeals = familyMembers.size() * 63;
+        else if (numEmptySlots >= familyMembers.size() * 210)
+            numMeals = familyMembers.size() * 70;
+        return numMeals;
+    }
+
+    // spencer 
+    // for every day: every family member's N choice breakfasts 
+    // for every day: every family member's N choice lunches 
+    // for every day: least satisfied's N choice dinners (for all family members)
+    private void stockUpOnChoices(ShoppingList shoppingList, int choice) {
+        int dayInt = 0;
+        for (Day day : Day.values()) {
+            for (MemberName memb : dailyRankings.get(day).get(MealType.BREAKFAST)) {
+                shoppingList.addToOrder(allCycles.get(MealType.BREAKFAST).get(memb).get(choice).get(dayInt));
+            }
+            for (MemberName memb : dailyRankings.get(day).get(MealType.LUNCH)) {
+                shoppingList.addToOrder(allCycles.get(MealType.LUNCH).get(memb).get(choice).get(dayInt));
+            }
+            for (MemberName memb : dailyRankings.get(day).get(MealType.DINNER)) {
+                shoppingList.addToOrder(allCycles.get(MealType.DINNER).get(dailyRankings.get(day).get(MealType.DINNER).get(0)).get(choice).get(dayInt));
+            }
+            dayInt++;
+        }
+    }
+
+    private void printShoppingLimits(int emptySlots, ShoppingList shoppingList) {
+        simPrinter.println("\nEmpty slots in pantry: " + emptySlots);
+        simPrinter.println("Shopping limit: " + (shoppingList.getAllLimitsMap().get(MealType.BREAKFAST) + shoppingList.getAllLimitsMap().get(MealType.LUNCH) + shoppingList.getAllLimitsMap().get(MealType.DINNER)));
+        simPrinter.println("Breakfast shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.BREAKFAST));
+        simPrinter.println("Lunch shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.LUNCH));
+        simPrinter.println("Dinner shopping limit: " + shoppingList.getAllLimitsMap().get(MealType.DINNER));
     }
 
 }
