@@ -84,7 +84,7 @@ public class Player extends menu.sim.Player {
                     }
                 }
 
-                List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 3);
+                List<FoodType> topBreakfastFoods = getTopNFoods(orderedBreakfastFoods, 10);
                 this.allMemberBreakfastSorted.put(member.getName(), topBreakfastFoods);
 
                 List<FoodType> optimalLunchCycle = getOptimalCycle(orderedLunchFoods);
@@ -130,7 +130,7 @@ public class Player extends menu.sim.Player {
         // store top breakfast foods in lists
         List<FoodType> firstBreakfast = new ArrayList<FoodType>();
         List<FoodType> secondBreakfast = new ArrayList<FoodType>();
-
+        List<FoodType> thirdBreakfast = new ArrayList<FoodType>();
 
         // Adding to pantry
         Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
@@ -146,6 +146,7 @@ public class Player extends menu.sim.Player {
             // first and second choice breakfast foods to list
             firstBreakfast.add(this.allMemberBreakfastSorted.get(name).get(0));
             secondBreakfast.add(this.allMemberBreakfastSorted.get(name).get(1));
+            thirdBreakfast.add(this.allMemberBreakfastSorted.get(name).get(2));
 
             simPrinter.println("Iterating through " + name + "'s breakfast order and adding to pantry.");
             // simPrinter.println(shoppingList.getFullOrderMap());
@@ -172,16 +173,22 @@ public class Player extends menu.sim.Player {
         }
 
         // Add breakfast to shopping list
-        // 10 of first choice
-        // 5 of second choice
+        // 14 of first choice
+        // 7 of second choice
+        // 7 of third choice
         for (FoodType firstFood : firstBreakfast) {
-            for (int count = 0; count < 15; count++) {
+            for (int count = 0; count < 14; count++) {
                 shoppingList.addToOrder(firstFood);
             }
         }
         for (FoodType secondFood : secondBreakfast) {
-            for (int count = 0; count < 5; count++) {
+            for (int count = 0; count < 7; count++) {
                 shoppingList.addToOrder(secondFood);
+            }
+        }
+        for (FoodType thirdFood : thirdBreakfast) {
+            for (int count = 0; count < 7; count++) {
+                shoppingList.addToOrder(thirdFood);
             }
         }
 
@@ -624,6 +631,7 @@ public class Player extends menu.sim.Player {
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
 
+        System.out.println(pantryCopy.getMealsMap().get(MealType.BREAKFAST));
         Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
         List<FamilyMember> sortedFamilyMembers = familyMembers;
         // Sort from least average satisfaction to most
@@ -647,15 +655,13 @@ public class Player extends menu.sim.Player {
             for (Day day : Day.values()) {
 
                 // Breakfast
-                int b = 0;
-                while (b < 3) {
+                for (int b = 0; b < 10; b++) {
                     FoodType breakfast = this.allMemberBreakfastSorted.get(name).get(b);
                     if (pantryCopy.containsMeal(breakfast)) {
                         planner.addMeal(day, name, MealType.BREAKFAST, breakfast);
                         pantryCopy.removeMealFromInventory(breakfast);
                         break;
                     }
-                    b++;
                 }
 
                 // Lunch
