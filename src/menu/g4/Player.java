@@ -177,7 +177,7 @@ public class Player extends menu.sim.Player {
         // 7 of second choice
         // 7 of third choice
         for (FoodType firstFood : firstBreakfast) {
-            for (int count = 0; count < 14; count++) {
+            for (int count = 0; count < Math.round(numBreakfastFoods/3); count++) {
                 shoppingList.addToOrder(firstFood);
             }
         }
