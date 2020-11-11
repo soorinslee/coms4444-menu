@@ -42,7 +42,12 @@ public class Player extends menu.sim.Player {
 		* L: 7p => 21
 		* D: 7p => 21
 		* */
-		return null;
+		Map<MealType, Integer> maxCapForMealTypes = new HashMap<>();
+		maxCapForMealTypes.put(MealType.BREAKFAST, capacity - 14*numFamilyMembers);
+		maxCapForMealTypes.put(MealType.LUNCH, 7*numFamilyMembers);
+		maxCapForMealTypes.put(MealType.DINNER, 7*numFamilyMembers);
+
+		return maxCapForMealTypes;
 	}
 
 	/**
@@ -74,10 +79,10 @@ public class Player extends menu.sim.Player {
 		return shoppingList;
 	}
 
-	private void shopBreakfast(ShoppingList shoppingList, Pantry pantry) {
-		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
-		Map<MemberName, Integer> memberAllocations = getMemberAllocations(spotsForBreakfast);
-		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry);
+	private void shopBreakfast(ShoppingList shoppingList, Pantry pantry, List<FamilyMember> familyMembers) {
+		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry, numFamilyMembers);
+		Map<MemberName, Integer> memberAllocations = getMemberAllocations(familyMembers, spotsForBreakfast);
+		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry, numFamilyMembers);
 
 		shoppingList.addLimit(MealType.BREAKFAST, spotsForBreakfast);
 		addFirstChoiceBreakfasts(shoppingList, memberAllocations);
@@ -104,29 +109,59 @@ public class Player extends menu.sim.Player {
 		}
 	}
 
-	private Integer getMinBreakfastsNeeded(Pantry pantry) {
+	private Integer getMinBreakfastsNeeded(Pantry pantry, Integer numFamilyMembers) {
 		// TODO Adaeze:
 		// returns the minimum amount of breakfast meals that we need to get in order for everyone
 		// to be fed based on what is in the pantry currently
 		// how many meals would we have to get this round to ensure everyone is fed
-		return null;
+
+		Integer breakfastInPantry = 0;
+		for(FoodType foodType : Food.getFoodTypes(MealType.BREAKFAST)) {
+			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
+			breakfastInPantry += numAvailableMeals; 
+		}
+		if (breakfastInPantry > 21*numFamilyMembers) {
+			return 21*numFamilyMembers - breakfastInPantry; 
+		} else {
+			return 0;
+		}
+		
 	}
 
-	private Map<MemberName, Integer> getMemberAllocations(Integer breakfastCapacity) {
+	private Map<MemberName, Integer> getMemberAllocations(List<FamilyMember> familyMembers, Integer breakfastCapacity) {
 		// TODO Adaeze: returns map of how much space we give for each member based on their weight
 		// each members allocation = (weight/(sum of all weights)) * breakfastCapacity
 		Map<MemberName, Integer> memberAllocations = new HashMap<>();
-		/* PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		Double totalWeight = 0.0; 
+
 		while (!memberTrackers.isEmpty()) {
 			MemberTracker memberTracker = memberTrackers.poll();
-			memberTracker.getWeight();
-		}*/
+			totalWeight += memberTracker.getWeight();
+		}		
+		
+		for (FamilyMember familyMember: familyMembers) {
+			MemberTracker memberTracker = familyTracker.getMemberTracker(familyMember.getName());
+			Integer allocationScore = (int) Math.round(memberTracker.getWeight()/totalWeight * breakfastCapacity);
+			// if statement to handle capacity limit
+			memberAllocations.put(familyMember.getName(),  allocationScore);
+		}
+		
+		//Checker method for capacity
 		return memberAllocations;
 	}
 
-	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry) {
-		// TODO Adaeze:
-		return null;
+	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry, Integer numFamilyMembers) {
+		// ** TODO Adaeze: not to sure about this function sorry! we should talk about this
+		//, by default, assigning all remainders to Breakfast>>
+		// added new arguement Integer numFamilyMembers
+		if(mealType == MealType.BREAKFAST){
+			//subtract lunch and dinner needed meals to eat 14p for both
+			return capacity - numFamilyMembers*14;
+		}
+		//pantry.getNumEmptySlots();
+		//pantry.getNumAvailableFoodTypes(mealType);
+		return 0;
 	}
 
 	private void shopDinner(ShoppingList shoppingList) {
@@ -209,6 +244,7 @@ public class Player extends menu.sim.Player {
 							 MealHistory mealHistory) {
 
 		Pantry originalPantry = pantry.clone();
+		
 
 		List<MemberName> memberNames = new ArrayList<>();
 		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
@@ -221,6 +257,7 @@ public class Player extends menu.sim.Player {
 			memberNames.add(familyMember.getName());
 
 		Planner planner = new Planner(memberNames);
+		
 
 		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
 		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
