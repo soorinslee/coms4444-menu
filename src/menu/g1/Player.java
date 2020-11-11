@@ -75,15 +75,32 @@ public class Player extends menu.sim.Player {
 	}
 
 	private void shopBreakfast(ShoppingList shoppingList, Pantry pantry) {
-		Integer breakfastCapacity = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
-		Map<MemberName, Integer> memberAllocations = getMemberAllocations(breakfastCapacity);
-
+		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
+		Map<MemberName, Integer> memberAllocations = getMemberAllocations(spotsForBreakfast);
 		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry);
-		if (minBreakfastsNeeded == 0) {
-			// shopping list that only includes first choice meals
+
+		shoppingList.addLimit(MealType.BREAKFAST, spotsForBreakfast);
+		addFirstChoiceBreakfasts(shoppingList, memberAllocations);
+		if (minBreakfastsNeeded > 0) {
+			addBackupBreakfasts(shoppingList, spotsForBreakfast);
 		}
-		else {
-			// shopping list that includes all the foods
+	}
+
+	private void addFirstChoiceBreakfasts(ShoppingList shoppingList, Map<MemberName, Integer> memberAllocations) {
+		PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		while (!memberTrackers.isEmpty()) {
+			MemberTracker memberTracker = memberTrackers.poll();
+			FoodType firstChoice = memberTracker.getFirstChoice(MealType.BREAKFAST);
+			Integer quantity = memberAllocations.get(memberTracker.getName());
+			addFoodToOrder(shoppingList, firstChoice, quantity);
+		}
+	}
+
+	private void addBackupBreakfasts(ShoppingList shoppingList, Integer spotsOpen) {
+		PriorityQueue<FoodScore> breakfasts = familyTracker.getBreakfastsByCompositeScore();
+		while (!breakfasts.isEmpty()) {
+			FoodType breakfast = breakfasts.poll().getFoodType();
+			addFoodToOrder(shoppingList, breakfast, spotsOpen);
 		}
 	}
 
@@ -115,7 +132,7 @@ public class Player extends menu.sim.Player {
 	private void shopDinner(ShoppingList shoppingList) {
 		// TODO: Pick based on each day
 		shoppingList.addLimit(MealType.DINNER, DAYS_PER_WEEK * numFamilyMembers);
-		PriorityQueue<FoodScore> dinners = familyTracker.getDinnersByCompositeScore(6);
+		PriorityQueue<FoodScore> dinners = familyTracker.getFoodsByCompositeScore(MealType.DINNER, 6);
 		simPrinter.println("DINNERS SIZE: " + Integer.toString(dinners.size()));
 		while (!dinners.isEmpty()) {
 			FoodType dinner = dinners.poll().getFoodType();
