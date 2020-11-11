@@ -672,25 +672,13 @@ public class Player extends menu.sim.Player {
                     l++;
                 }
 
-                simPrinter.println("Day: " + day);
-
+                // Dinner
                 FoodType dinner = dinnerCycle.get(d);
                 if (pantryCopy.containsMeal(dinner)) {
                     planner.addMeal(day, name, MealType.DINNER, dinner);
                     pantryCopy.removeMealFromInventory(dinner);
                 }
                 d++;
-                    //    break;
-                    //}
-
-                // Dinner
-                //FoodType dinner = this.allMemberDinner.get(d);
-                //if (pantryCopy.containsMeal(dinner)) {
-                //    planner.addMeal(day, name, MealType.DINNER, dinner);
-                //    pantryCopy.removeMealFromInventory(dinner);
-                //    break;
-                //}
-                //d++;
             }
         }
         return planner;
