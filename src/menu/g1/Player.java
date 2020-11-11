@@ -24,6 +24,7 @@ public class Player extends menu.sim.Player {
 	private Map<MealType, Map<FamilyMember, ArrayList<FoodType>>> optimisticPlanner;
 	private FamilyTracker familyTracker;
 	private Map<MealType, Integer> maxCapacities;
+	private Integer totalWeeks;
 
 	
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
@@ -32,16 +33,10 @@ public class Player extends menu.sim.Player {
 		this.weighter = new Weighter(numFamilyMembers);
 		this.familyTracker = new FamilyTracker();
 		this.maxCapacities = getMaxCapacitiesForMealTypes(capacity, numFamilyMembers);
+		this.totalWeeks = weeks;
 	}
 
 	private Map<MealType, Integer> getMaxCapacitiesForMealTypes(Integer capacity, Integer numFamilyMembers) {
-		// TODO Adaeze:
-		// for now lunch and dinner allocation will just be 7 * numFamilyMembers
-		/* ex: capacity = 105, numFamilyMembers = 3
-		* BF: 105 - (L + D) => 105 - 42 => 63
-		* L: 7p => 21
-		* D: 7p => 21
-		* */
 		Map<MealType, Integer> maxCapForMealTypes = new HashMap<>();
 		maxCapForMealTypes.put(MealType.BREAKFAST, capacity - 14*numFamilyMembers);
 		maxCapForMealTypes.put(MealType.LUNCH, 7*numFamilyMembers);
@@ -72,23 +67,30 @@ public class Player extends menu.sim.Player {
 		resetOptimisticPlanner(familyMembers);
 
 		ShoppingList shoppingList = new ShoppingList();
-		addMeals(MealType.BREAKFAST, familyMembers, shoppingList);
+		shopBreakfast(week, shoppingList, pantry, familyMembers);
+		//addMeals(MealType.BREAKFAST, familyMembers, shoppingList);
 		addMeals(MealType.LUNCH, familyMembers, shoppingList);
 		shopDinner(shoppingList);
 
 		return shoppingList;
 	}
 
-	private void shopBreakfast(ShoppingList shoppingList, Pantry pantry, List<FamilyMember> familyMembers) {
-		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry, numFamilyMembers);
-		Map<MemberName, Integer> memberAllocations = getMemberAllocations(familyMembers, spotsForBreakfast);
+	private void shopBreakfast(Integer week,
+							   ShoppingList shoppingList,
+							   Pantry pantry,
+							   List<FamilyMember> familyMembers) {
+		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
 		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry, numFamilyMembers);
+		Map<MemberName, Integer> memberAllocations = getMemberAllocations(familyMembers, spotsForBreakfast);
 
 		shoppingList.addLimit(MealType.BREAKFAST, spotsForBreakfast);
 		addFirstChoiceBreakfasts(shoppingList, memberAllocations);
 		if (minBreakfastsNeeded > 0) {
 			addBackupBreakfasts(shoppingList, spotsForBreakfast);
 		}
+		simPrinter.println("Current pantry size: " + pantry.getNumAvailableMeals(MealType.BREAKFAST));
+		simPrinter.println("Breakfast shopping list: ");
+		simPrinter.println(shoppingList.getMealOrder(MealType.BREAKFAST).toString());
 	}
 
 	private void addFirstChoiceBreakfasts(ShoppingList shoppingList, Map<MemberName, Integer> memberAllocations) {
@@ -110,30 +112,23 @@ public class Player extends menu.sim.Player {
 	}
 
 	private Integer getMinBreakfastsNeeded(Pantry pantry, Integer numFamilyMembers) {
-		// TODO Adaeze:
-		// returns the minimum amount of breakfast meals that we need to get in order for everyone
-		// to be fed based on what is in the pantry currently
-		// how many meals would we have to get this round to ensure everyone is fed
-
+		Integer breakfastsServedPerWeek = numFamilyMembers * 7;
 		Integer breakfastInPantry = 0;
 		for(FoodType foodType : Food.getFoodTypes(MealType.BREAKFAST)) {
 			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
 			breakfastInPantry += numAvailableMeals; 
 		}
-		if (breakfastInPantry > 21*numFamilyMembers) {
-			return 21*numFamilyMembers - breakfastInPantry; 
-		} else {
-			return 0;
+		if (breakfastsServedPerWeek > breakfastInPantry) {
+			return breakfastsServedPerWeek - breakfastInPantry;
 		}
-		
+		return 0;
 	}
 
 	private Map<MemberName, Integer> getMemberAllocations(List<FamilyMember> familyMembers, Integer breakfastCapacity) {
-		// TODO Adaeze: returns map of how much space we give for each member based on their weight
-		// each members allocation = (weight/(sum of all weights)) * breakfastCapacity
 		Map<MemberName, Integer> memberAllocations = new HashMap<>();
 		PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
-		Double totalWeight = 0.0; 
+		Double totalWeight = 0.0;
+		Integer totalAllocations = 0;
 
 		while (!memberTrackers.isEmpty()) {
 			MemberTracker memberTracker = memberTrackers.poll();
@@ -143,25 +138,23 @@ public class Player extends menu.sim.Player {
 		for (FamilyMember familyMember: familyMembers) {
 			MemberTracker memberTracker = familyTracker.getMemberTracker(familyMember.getName());
 			Integer allocationScore = (int) Math.round(memberTracker.getWeight()/totalWeight * breakfastCapacity);
-			// if statement to handle capacity limit
+			while ((totalAllocations + allocationScore > breakfastCapacity) && allocationScore > 0) {
+				allocationScore--;
+			}
 			memberAllocations.put(familyMember.getName(),  allocationScore);
 		}
-		
-		//Checker method for capacity
+
 		return memberAllocations;
 	}
 
-	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry, Integer numFamilyMembers) {
-		// ** TODO Adaeze: not to sure about this function sorry! we should talk about this
-		//, by default, assigning all remainders to Breakfast>>
-		// added new arguement Integer numFamilyMembers
-		if(mealType == MealType.BREAKFAST){
-			//subtract lunch and dinner needed meals to eat 14p for both
-			return capacity - numFamilyMembers*14;
+	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry) {
+		Integer maxCapacity = maxCapacities.get(mealType);
+		Integer breakfastInPantry = 0;
+		for(FoodType foodType : Food.getFoodTypes(MealType.BREAKFAST)) {
+			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
+			breakfastInPantry += numAvailableMeals;
 		}
-		//pantry.getNumEmptySlots();
-		//pantry.getNumAvailableFoodTypes(mealType);
-		return 0;
+		return maxCapacity - breakfastInPantry;
 	}
 
 	private void shopDinner(ShoppingList shoppingList) {
