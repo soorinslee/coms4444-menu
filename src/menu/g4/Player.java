@@ -173,21 +173,18 @@ public class Player extends menu.sim.Player {
         }
 
         // Add breakfast to shopping list
-        // 14 of first choice
-        // 7 of second choice
-        // 7 of third choice
         for (FoodType firstFood : firstBreakfast) {
-            for (int count = 0; count < Math.round(numBreakfastFoods/3); count++) {
+            for (int count = 0; count < Math.round(numBreakfastFoods/familyMembers.size()); count++) {
                 shoppingList.addToOrder(firstFood);
             }
         }
         for (FoodType secondFood : secondBreakfast) {
-            for (int count = 0; count < 7; count++) {
+            for (int count = 0; count < familyMembers.size()*4; count++) {
                 shoppingList.addToOrder(secondFood);
             }
         }
         for (FoodType thirdFood : thirdBreakfast) {
-            for (int count = 0; count < 7; count++) {
+            for (int count = 0; count < familyMembers.size()*4; count++) {
                 shoppingList.addToOrder(thirdFood);
             }
         }
@@ -221,6 +218,7 @@ public class Player extends menu.sim.Player {
             }
         }
 
+        /*
         int count = 0; 
         while (numDinnerFoods - numIncluded > familyMembers.size()) {
             for (Map.Entry<Double, FoodType> f: this.allMemberRewardToFood.entrySet()) {
@@ -230,6 +228,17 @@ public class Player extends menu.sim.Player {
                 }
             }
         }
+        */
+        
+        // Add extra dinner foods
+        for (int count = 0; count < familyMembers.size()*3; count++) {
+            for (FoodType foodType: dinnerCycle) {
+                for (FamilyMember member : familyMembers) {
+                    shoppingList.addToOrder(foodType);
+                }
+            }
+        }
+        
 
         // simPrinter.println(optimalDinnerCycle);
         // TODO: Add 7 dinner cycle
