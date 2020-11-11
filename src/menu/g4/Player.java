@@ -747,7 +747,6 @@ public class Player extends menu.sim.Player {
         Planner planner = new Planner();
         Pantry pantryCopy = pantry.clone();
 
-        System.out.println(pantryCopy.getMealsMap().get(MealType.BREAKFAST));
         Map<MemberName, Double> averageSatisfactionMap = mealHistory.getAllAverageSatisfactions().get(week-1);
         List<FamilyMember> sortedFamilyMembers = familyMembers;
         // Sort from least average satisfaction to most
@@ -762,7 +761,6 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        simPrinter.println("Hello");
         List<FoodType> dinnerCycle;
         if (week == 0) {
             dinnerCycle = getOptimalDinnerCycleWithConstraints(this.allMemberRewardToFood,this.allMemberFoodToRewards, availableMap, 3);
