@@ -231,10 +231,7 @@ public class Player extends menu.sim.Player {
 	 *
 	 */
 
-	public Planner planMeals(Integer week,
-							 List<FamilyMember> familyMembers,
-							 Pantry pantry,
-							 MealHistory mealHistory) {
+	public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
 		Pantry originalPantry = pantry.clone();
 		
@@ -255,64 +252,98 @@ public class Player extends menu.sim.Player {
 		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
 		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 
-
-		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
+		//simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
 		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.LUNCH));
-		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.DINNER));
+		//simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.DINNER));
 
 		
-		simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
+		//simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
 		for (MemberName member : orderedFamilyPreferences.keySet()){
-			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.BREAKFAST));
+			//simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.BREAKFAST));
+			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.LUNCH));
 		}
 		
-		for(MealType meal : Food.getAllMealTypes()){
-			for(Day day : Day.values()){
-				for(MemberName memberName : memberPriorityList.get(meal)){
-					if (pantry.getNumAvailableMeals(meal) > 0){
-						FoodType food;
-						switch(meal){
-
-							case BREAKFAST:
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case LUNCH:
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case DINNER:
-								
-								break;
-						}
-					}
+		for(Day day : Day.values()){
+			for(MemberName memberName : memberPriorityList.get(MealType.BREAKFAST)){
+				if (pantry.getNumAvailableMeals(MealType.BREAKFAST) > 0){
+					FoodType food = getBestFood(MealType.BREAKFAST, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.BREAKFAST, food);
+					pantry.removeMealFromInventory(food);
 				}
+				if (pantry.getNumAvailableMeals(MealType.LUNCH) > 0){
+					updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
+					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.LUNCH, food);
+					pantry.removeMealFromInventory(food);
+				}
+				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
+			
 		}
 
 		planDinners(planner, pantry, familyMembers);
 
 		simPrinter.println("\n\n\n********* PLANNER ********\n");
-		for(MealType meal : Food.getAllMealTypes()){
-			simPrinter.println("MEAL: " + meal);
+		//for(MealType meal : Food.getAllMealTypes()){
+			simPrinter.println("LUNCH: ");
 			for(Day day : Day.values()){
 				simPrinter.println("\tDAY: " + day); 
 				for(MemberName memberName : memberNames){
-					simPrinter.println("\t\t"+ memberName + ": " + planner.getPlan().get(day).get(memberName).get(meal));
+					simPrinter.println("\t\t"+ memberName + ": " + planner.getPlan().get(day).get(memberName).get(MealType.LUNCH));
 				}
 			}
-		}
+		//}
 
 		if(Player.hasValidPlanner(planner, originalPantry))
 			return planner;
 		return new Planner();
+	}
+	
+	private void updateLunchPreferences(Integer week, Day thisDay, MemberName name, Planner planner, MealHistory mealHistory, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
+		int todayNumber = (week - 1) * 7 + new ArrayList<>(Arrays.asList(Day.values())).indexOf(thisDay) + 1;
+
+		MealHistory weightedMealHistory = mealHistory;
+
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> plan = planner.getPlan();
+		Map<FoodType, Double> sortedLunchPreferences = new LinkedHashMap<>();
+
+		simPrinter.println("\n\nOLD \t\t" + name + ": " + orderedFamilyPreferences.get(name).get(MealType.LUNCH));
+
+		for (Day day : plan.keySet())
+			weightedMealHistory.addDailyFamilyMeal(week, day, name, plan.get(day).get(name));
+
+		Map<Integer, Map<MemberName, Map<MealType, FoodType>>> dailyMealsMap = weightedMealHistory.getDailyFamilyMeals();
+
+		for(FoodType food : orderedFamilyPreferences.get(name).get(MealType.LUNCH).keySet()){
+
+			Integer lastServedDay = 0;
+			for (Integer dayNumber : dailyMealsMap.keySet())
+				if (dailyMealsMap.get(dayNumber).get(name).get(MealType.LUNCH) == food && dayNumber > lastServedDay)
+					lastServedDay = dayNumber;	
+
+			if (lastServedDay > 0){
+				
+				Integer daysAgo = (todayNumber - lastServedDay);
+				Double scale = (double) daysAgo / (daysAgo + 1);
+
+				//simPrinter.println("daysAgo:  " + daysAgo + "\nlastServedDay: " + lastServedDay + "\nTodaynumber: " + todayNumber + "\nThisDay: " + thisDay + "\nThisWeek:" +week+ "\nScale: " + scale);
+				orderedFamilyPreferences.get(name)
+							.get(MealType.LUNCH)
+							.replace(food, orderedFamilyPreferences.get(name)
+										 	       .get(MealType.LUNCH)
+										               .get(food) * scale);
+
+				
+			}
+		}
+		orderedFamilyPreferences.get(name).get(MealType.LUNCH)
+					.entrySet()
+					.stream()
+					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+		  			.forEachOrdered(x -> sortedLunchPreferences.put(x.getKey(), x.getValue()));
+		orderedFamilyPreferences.get(name).replace(MealType.LUNCH, sortedLunchPreferences);
+		simPrinter.println("NEW \t\t" + name + ": " + orderedFamilyPreferences.get(name).get(MealType.LUNCH));
 	}
 
 	private void planDinners(Planner planner, Pantry pantry, List<FamilyMember> familyMembers) {
