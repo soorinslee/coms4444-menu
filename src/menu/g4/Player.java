@@ -646,10 +646,15 @@ public class Player extends menu.sim.Player {
         for (Map.Entry<FoodType, Double> entry: availableFoodsToReward.entrySet()) {
             availableRewardToFood.put(entry.getValue(), entry.getKey());
         }
+        simPrinter.println("Checkpoint");
+        simPrinter.println(availableRewardToFood.keySet().size());
 
         List<FoodType> cycle = new LinkedList<FoodType>();
         List<FoodType> result = new LinkedList<FoodType>();
+
         if (!availableRewardToFood.isEmpty()) {
+            simPrinter.println("Checkpoint 2");
+
             double greatestValue = -availableRewardToFood.firstKey();
             for (Map.Entry<Double, FoodType> entry : availableRewardToFood.entrySet()) {
                 FoodType food = entry.getValue();
@@ -699,7 +704,8 @@ public class Player extends menu.sim.Player {
             for (FoodType food: availableFoodsCopy.keySet()) {
                 sum += availableFoodsCopy.get(food); 
             }
-            
+            simPrinter.println("Checkpoint");
+            simPrinter.println(result);
             if (result.size() + sum < 7) {
                 for (FoodType food: availableFoodsCopy.keySet()) {
                     if (result.size() == 7) {
@@ -727,7 +733,8 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-
+            simPrinter.println("Checkpoint");
+            simPrinter.println(result);
             return result;
         }
         return result;
@@ -757,12 +764,11 @@ public class Player extends menu.sim.Player {
         HashMap<FoodType, Integer> availableMap = new HashMap<FoodType, Integer>();
         List<FoodType> availableFoods = pantry.getAvailableFoodTypes(MealType.DINNER);
         for (FoodType availableFood: availableFoods) {
-            if (food.isDinnerType(availableFood) && pantry.getNumAvailableMeals(availableFood) > familyMembers.size()) {
+            if (food.isDinnerType(availableFood) && pantry.getNumAvailableMeals(availableFood) >= familyMembers.size()) {
                 availableMap.put(availableFood, pantry.getNumAvailableMeals(availableFood)/familyMembers.size());
             }
         }
 
-        simPrinter.println("Hello");
         List<FoodType> dinnerCycle;
         if (week == 0) {
             dinnerCycle = getOptimalDinnerCycleWithConstraints(this.allMemberRewardToFood,this.allMemberFoodToRewards, availableMap, 3);
