@@ -56,8 +56,8 @@ public class Player extends menu.sim.Player {
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
         // 1/4 capacity to breakfast and lunch and rest to dinner
-        int numBreakfastFoods = Math.round(super.capacity/4) - numInPantry(MealType.BREAKFAST, pantry);
-    	int numLunchFoods = Math.round(super.capacity/4) - numInPantry(MealType.LUNCH, pantry);
+        int numBreakfastFoods = Math.round(super.capacity/3) - numInPantry(MealType.BREAKFAST, pantry);
+    	int numLunchFoods = Math.round(super.capacity/3) - numInPantry(MealType.LUNCH, pantry);
     	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
 
         ShoppingList shoppingList = new ShoppingList();
