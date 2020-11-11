@@ -513,11 +513,11 @@ public class Player extends menu.sim.Player {
 				// System.out.println(element);
 
 				int daysAgo = lastEaten(foodType, familyMember, MealType.DINNER);
-				int factor = 1;
+				double factor = 1.0;
 
 				if(daysAgo > 0) {
 					//System.out.println("days ago is " + daysAgo);
-					factor = daysAgo/(daysAgo+1);
+					factor = (double) daysAgo/ (double)(daysAgo+1);
 				}
 
 				double globalPreference = familyMember.getFoodPreference(foodType);
