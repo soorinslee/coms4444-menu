@@ -495,6 +495,53 @@ public class Player extends menu.sim.Player {
 
 	private void updateDinnerAlloc() {
 
+		// this.dinnerAllocRanks = new ArrayList<>();
+
+		for(FamilyMember familyMember : familyMembers) {
+
+			//for each family member, calculate their current preferences
+			HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+
+
+			Iterator it = dinnerRanks.iterator(); 
+
+			while (it.hasNext()) {
+
+				// System.out.println(it.next());
+
+				FoodType foodType = (FoodType) it.next();
+				// System.out.println(element);
+
+				int daysAgo = lastEaten(foodType, familyMember, MealType.DINNER);
+				int factor = 1;
+
+				if(daysAgo > 0) {
+					//System.out.println("days ago is " + daysAgo);
+					factor = daysAgo/(daysAgo+1);
+				}
+
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor*globalPreference;
+
+				currentPreferences.put(foodType, currentPreference);
+
+
+			}
+
+			//sort dinners by current preference
+
+			this.dinnerAllocRanks = new ArrayList<>(lunchRanks.get(familyMember));
+			dinnerAllocRanks.sort((dinner1, dinner2) -> (int) (100*currentPreferences.get(dinner2)) - (int) (100*currentPreferences.get(dinner1)));
+
+			/*for(FoodType lunch : dinners) {
+				System.out.println(lunch + ", " + currentPreferences.get(lunch));
+			}*/
+
+
+			break;
+
+		}
+
 	}
 
 }
