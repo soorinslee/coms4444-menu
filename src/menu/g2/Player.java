@@ -24,6 +24,10 @@ public class Player extends menu.sim.Player {
 	private Map<FamilyMember, List<FoodType>> lunchAllocRanks;
 	private List<FoodType> dinnerAllocRanks;
 
+	private Map<FamilyMember, List<FoodType>> breakfastShopRanks;
+	private Map<FamilyMember, List<FoodType>> lunchShopRanks;
+	private List<FoodType> dinnerShopRanks;	
+
 	private Planner currentPlanner;
 
 	private List<FamilyMember> squeakyFamilyMembers;
@@ -42,6 +46,14 @@ public class Player extends menu.sim.Player {
 	//todo: new squeakyFamilyMembers
 	//how far should meal history go back?
 	//pantry partitioning dynamic (small, medium, large pantry sizes)
+
+	//actual todo list for friday:
+	//shopping list which foods
+	//shopping list, stocking up more for person who is least satisfied
+	//guarantee that everyone will always be fed, guarentee pantry will have at least #people*21
+
+	//plan ahead week
+	//plan ahead 
 
 	/**
 	 * Player constructor
@@ -78,12 +90,26 @@ public class Player extends menu.sim.Player {
 		this.familyMembers = familyMembers;
 		this.mealHistory = mealHistory;
 		this.pantry = pantry;
+		this.breakfastShopRanks = this.breakfastRanks;
+		this.lunchShopRanks = this.lunchRanks;
+		this.dinnerShopRanks = this.dinnerRanks;
+
+		Planner sim = runSimulation();
+
+		if(this.week == 1){
+			this.squeakyFamilyMembers = this.familyMembers;
+		}
 
 		calculateQuantities();
 
-		return calculateShoppingList();
+		return calculateShoppingList(sim);
 	}
 
+	private Planner runSimulation(){
+		return new Planner();
+	}
+
+	///////maybe at end?
 	//TODO add dynamic partitioning
 	private void calculateQuantities() {
 		this.shoppingQuantities = new ArrayList<>();
@@ -93,7 +119,8 @@ public class Player extends menu.sim.Player {
 		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
 	}
 
-	private ShoppingList calculateShoppingList() {
+
+	private ShoppingList calculateShoppingList(Planner sim) {
 		this.shoppingList = new ShoppingList();
 		this.shoppingList.addLimit(MealType.BREAKFAST, this.shoppingQuantities.get(0));
 		this.shoppingList.addLimit(MealType.LUNCH, this.shoppingQuantities.get(1));
@@ -104,6 +131,9 @@ public class Player extends menu.sim.Player {
 		calculateDinnerRanks();
 
 		calculateBreakfastShoppingList();
+
+		// System.out.println("HERE");
+
 		calculateLunchShoppingList();
 		calculateDinnerShoppingList();
 
@@ -114,11 +144,13 @@ public class Player extends menu.sim.Player {
 	}
 
 	
+	//////TODO: For Friday, Scott, Aum
 	private void calculateBreakfastShoppingList() {
 		for (FamilyMember member : this.familyMembers) {
 			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(0));
 		}
+
 		for (FamilyMember member : this.familyMembers) {
 			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(1));
@@ -126,12 +158,17 @@ public class Player extends menu.sim.Player {
 		for (FamilyMember member : this.familyMembers) {
 			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(2));
+
 		}
 	}
 
+	//////TODO: For Friday, Scott, Aum
 	private void calculateLunchShoppingList() {
 		int quantity = (int) Math.max(7, this.shoppingQuantities.get(1)/this.familyMembers.size());
 		for (FamilyMember member : this.familyMembers) {
+
+			//System.out.println(this.lunchRanks.get(member).toString());
+
 			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(0));
 		}
@@ -142,9 +179,20 @@ public class Player extends menu.sim.Player {
 		for (FamilyMember member : this.familyMembers) {
 			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(2));
+
+		}
+		for (FamilyMember member : this.familyMembers) {
+			for (int i = 0; i < quantity; i++)
+				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(3));
+		}
+		for (FamilyMember member : this.familyMembers) {
+			for (int i = 0; i < quantity; i++)
+				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(4));
+
 		}
 	}
 
+	//////TODO: For Friday, Scott, Aum
 	private void calculateDinnerShoppingList() {
 		int quantity = (int) Math.max(7*this.familyMembers.size(), this.shoppingQuantities.get(2)/1.6);
 		for (int i = 0; i < quantity; i++)
@@ -155,6 +203,10 @@ public class Player extends menu.sim.Player {
 			shoppingList.addToOrder(this.dinnerRanks.get(2));
 		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(3));
+
+		for (int i = 0; i < quantity; i++)
+			shoppingList.addToOrder(this.dinnerRanks.get(4));
+
 	}
 
 	private void calculateBreakfastRanks() {
@@ -217,6 +269,42 @@ public class Player extends menu.sim.Player {
 		return new ArrayList(temp.keySet());
 	}
 
+	public void updateSqueakyMembers(){
+		this.squeakyFamilyMembers = new ArrayList<>();
+		Map<MemberName, Double> satisfactions = this.mealHistory.getAllSatisfactions().get(this.week-1);
+		List<MemberName> squeakyNames = sortBySatisfaction(satisfactions);
+		for(MemberName memberName: squeakyNames){
+			for(FamilyMember f: this.familyMembers){
+				if(f.getName().equals(memberName)){
+					this.squeakyFamilyMembers.add(f);
+				}
+			}
+		}
+		//System.out.println(this.squeakyFamilyMembers.toString());
+	}
+
+	public static List<MemberName> sortBySatisfaction(Map<MemberName, Double> hm) {
+		// Create a list from elements of HashMap
+		List<Map.Entry<MemberName, Double>> list = new LinkedList<Map.Entry<MemberName, Double>>(hm.entrySet());
+
+		// Sort the list
+		Collections.sort(list, new Comparator<Map.Entry<MemberName, Double>>() {
+			public int compare(Map.Entry<MemberName, Double> o1, Map.Entry<MemberName, Double> o2) {
+				return (o1.getValue()).compareTo(o2.getValue());
+
+			}
+		});
+
+		// put data from sorted list to hashmap
+
+		HashMap<MemberName, Double> temp = new LinkedHashMap<MemberName, Double>();
+		for (Map.Entry<MemberName, Double> aa : list) {
+
+			temp.put(aa.getKey(), aa.getValue());
+		}
+		return new ArrayList(temp.keySet());
+	}
+
 	/**
 	 * Plan meals
 	 *
@@ -231,6 +319,10 @@ public class Player extends menu.sim.Player {
 		this.mealHistory = mealHistory;
 		this.week = week;
 
+		this.pantry = pantry;
+		//System.out.println(this.pantry.getAvailableFoodTypes(MealType.LUNCH).toString());
+		updateSqueakyMembers();
+
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
 			memberNames.add(familyMember.getName());
@@ -241,6 +333,7 @@ public class Player extends menu.sim.Player {
 		//System.out.println("sizeeee here is " + currentPlanner.getPlan().size());
 
 		for (FamilyMember member : this.familyMembers) {
+
 
 			for (Day day : Day.values()) {
 				FoodType maxAvailableBreakfastMeal = getMaximumAvailableBreakfast(pantry, MealType.BREAKFAST, member);
@@ -353,7 +446,8 @@ public class Player extends menu.sim.Player {
 			//for each family member, calculate their current preferences
 			HashMap<FoodType, Double> currentPreferences = new HashMap<>();
 
-			//System.out.println(lunchRanks.get(familyMember));
+
+		 	// System.out.println(lunchRanks.get(familyMember));
 
 			for(FoodType foodType : lunchRanks.get(familyMember)) {
 				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
@@ -382,6 +476,7 @@ public class Player extends menu.sim.Player {
 
 			//add currentPreference list to lunchAllocRanks
 			this.lunchAllocRanks.put(familyMember, lunches);
+
 		}
 	}
 
@@ -409,31 +504,6 @@ public class Player extends menu.sim.Player {
 
 			if(daysAgoLastWeek > 0) {
 				int daysAgo =  daysAgoThisWeek*-1 + daysAgoLastWeek;
-				/*System.out.println("TOTALLLLL with second week: " + daysAgo);
-
-				System.out.println("this week:");
-				for(int i = (Day.values().length-1); i >= 0; i--) {
-					Day day = Day.values()[i];
-					if(this.currentPlanner.getPlan().get(day).get(familyMember.getName()).containsKey(mealType)) {
-						System.out.println("Day: " + day + ", Food: " + this.currentPlanner.getPlan().get(day).get(familyMember.getName()).get(mealType));
-					}
-					else {
-						System.out.println("Day not scheduled: " + day );
-					}
-				}
-
-				System.out.println();
-				System.out.println("last week:");
-
-				for(int i = (Day.values().length-1); i >= 0; i--) {
-					Day day = Day.values()[i];
-					if(lastPlanner.getPlan().get(day).get(familyMember.getName()).containsKey(mealType)) {
-						System.out.println("Day: " + day + ", Food: " + lastPlanner.getPlan().get(day).get(familyMember.getName()).get(mealType));
-					}
-					else {
-						System.out.println("Day not scheduled: " + day );
-					}
-				}*/
 				return daysAgo;
 			}
 		}
@@ -446,15 +516,6 @@ public class Player extends menu.sim.Player {
 		MemberName name = familyMember.getName();
 
 		Map<Day, Map<MemberName, Map<MealType, FoodType>>> plan = planner.getPlan();
-		/*for(int i = (Day.values().length-1); i >= 0; i--) {
-			Day day = Day.values()[i];
-			if(plan.get(day).get(name).containsKey(mealType)) {
-				System.out.println("Day: " + day + ", Food: " + plan.get(day).get(name).get(mealType));
-			}
-			else {
-				System.out.println("Day not scheduled: " + day );
-			}
-		}*/
 		int end = 7;
 
 		if(plan.keySet().size() > 0) {
@@ -506,7 +567,8 @@ public class Player extends menu.sim.Player {
 			}
 
 			//calculate sum by adding all preferences*factor
-			double sum = 0;
+			double sum = 2.0;
+
 			for(FamilyMember familyMember : this.familyMembers) {
 				double globalPreference = familyMember.getFoodPreference(foodType);
 				double currentPreference = factor*globalPreference;
@@ -514,9 +576,8 @@ public class Player extends menu.sim.Player {
 				sum += currentPreference;
 			}
 
-			double avg = sum/this.familyMembers.size();
+			currentPrefAverages.put(foodType, sum);
 
-			currentPrefAverages.put(foodType, avg);
 			//double 
 		}
 
