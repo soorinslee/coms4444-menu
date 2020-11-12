@@ -43,6 +43,14 @@ public class Player extends menu.sim.Player {
 	//how far should meal history go back?
 	//pantry partitioning dynamic (small, medium, large pantry sizes)
 
+	//actual todo list for friday:
+	//shopping list which foods
+	//shopping list, stocking up more for person who is least satisfied
+	//guarantee that everyone will always be fed, guarentee pantry will have at least #people*21
+
+	//plan ahead week
+	//plan ahead 
+
 	/**
 	 * Player constructor
 	 *
@@ -89,6 +97,7 @@ public class Player extends menu.sim.Player {
 		return calculateShoppingList();
 	}
 
+	///////maybe at end?
 	//TODO add dynamic partitioning
 	private void calculateQuantities() {
 		this.shoppingQuantities = new ArrayList<>();
@@ -97,6 +106,7 @@ public class Player extends menu.sim.Player {
 		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
 		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
 	}
+
 
 	private ShoppingList calculateShoppingList() {
 		this.shoppingList = new ShoppingList();
@@ -123,6 +133,7 @@ public class Player extends menu.sim.Player {
 	}
 
 	
+	//////TODO: For Friday, Scott
 	private void calculateBreakfastShoppingList() {
 		System.out.println("HERE");
 		for (FamilyMember member : this.familyMembers) {
@@ -149,6 +160,7 @@ public class Player extends menu.sim.Player {
 		}
 	}
 
+	//////TODO: For Friday, Scott
 	private void calculateLunchShoppingList() {
 		int quantity = (int) Math.max(7, this.shoppingQuantities.get(1)/this.familyMembers.size());
 		for (FamilyMember member : this.familyMembers) {
@@ -178,6 +190,7 @@ public class Player extends menu.sim.Player {
 		}
 	}
 
+	//////TODO: For Friday, Scott
 	private void calculateDinnerShoppingList() {
 		int quantity = (int) Math.max(7*this.familyMembers.size(), this.shoppingQuantities.get(2)/1.6);
 		for (int i = 0; i < quantity; i++)
