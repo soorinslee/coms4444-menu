@@ -210,7 +210,7 @@ public class Player extends menu.sim.Player {
 	 * Sort a map of a member's food preferences by their satisfaction in descending
 	 * order.
 	 */
-	public static List<FoodType> sortByValue(Map<FoodType, Double> hm) {
+	private List<FoodType> sortByValue(Map<FoodType, Double> hm) {
 		List<Map.Entry<FoodType, Double>> list = new LinkedList<Map.Entry<FoodType, Double>>(hm.entrySet());
 
 		Collections.sort(list, new Comparator<Map.Entry<FoodType, Double>>() {
@@ -512,7 +512,7 @@ public class Player extends menu.sim.Player {
 	 * Update the order of the squekiest members based on current mean
 	 * satisfactions.
 	 */
-	public void updateSqueakyMembers() {
+	private void updateSqueakyMembers() {
 		if (week == 1) {
 			return;
 		}
@@ -531,7 +531,7 @@ public class Player extends menu.sim.Player {
 	/*
 	 * Sort a map of the members and the average satisfaction in ascending order.
 	 */
-	public static List<MemberName> sortBySatisfaction(Map<MemberName, Double> hm) {
+	private List<MemberName> sortBySatisfaction(Map<MemberName, Double> hm) {
 		// Create a list from elements of HashMap
 		List<Map.Entry<MemberName, Double>> list = new LinkedList<Map.Entry<MemberName, Double>>(hm.entrySet());
 
