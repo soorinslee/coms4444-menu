@@ -63,6 +63,9 @@ public class Player extends menu.sim.Player {
 	 */
 
 	public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+		
+		int capacitySwitch = (int) Math.floor(numFamilyMembers * 21 * 1.5);
+
 		if (week == 1) {
 			familyTracker.init(familyMembers);
 		}
@@ -70,8 +73,11 @@ public class Player extends menu.sim.Player {
 
 		ShoppingList shoppingList = new ShoppingList();
 		shopBreakfast(week, shoppingList, pantry, familyMembers);
-		//shopLunch(shoppingList, pantry);
-		shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
+
+		if (capacity < capacitySwitch)
+			shopLunch(shoppingList, pantry);
+		else
+			shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
 		shopDinner(shoppingList, pantry);
 
 		return shoppingList;
