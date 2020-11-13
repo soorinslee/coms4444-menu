@@ -12,7 +12,7 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
-	private final boolean PRINT_STATEMENTS = false;
+	private final boolean PRINT_STATEMENTS = true ;
 
 	private final int BREAKFAST_TYPES = 10;
 	private final int LUNCH_TYPES = 10;
@@ -141,22 +141,22 @@ public class Player extends menu.sim.Player {
 											Pantry pantry,
 											MealHistory mealHistory) {
 
-		// TODO: for now only add 21 * N_members breakfasts and lunches, and remaining - dinners
 		int numBreakfastFoods = 7 * familyMembers.size();
 		int numLunchFoods = 7 * familyMembers.size();
-		int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+		int numDinnerFoods = 7 * familyMembers.size();
+		int theoreticalNumLeft = numEmptySlots - numBreakfastFoods - numLunchFoods - numDinnerFoods;
 
 		ShoppingList shoppingList = new ShoppingList();
-    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
-    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
-		shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
+    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods + theoreticalNumLeft/4);
+    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods + theoreticalNumLeft/4);
+		shoppingList.addLimit(MealType.DINNER, numDinnerFoods + theoreticalNumLeft/2);
 
 		HashMap<MemberName, Double> satisfactionByMember = new HashMap<>();
 
 		for (FamilyMember member : familyMembers) {
 			satisfactionByMember.put(member.getName(), member.getSatisfaction());
 		}
-		
+
 		// Add breakfasts
 
 		for (int i = 0; i < BREAKFAST_TYPES; i++) {
@@ -173,7 +173,6 @@ public class Player extends menu.sim.Player {
 		HashMap<MemberName, List<FoodSatisfaction>> tempSortedDinnerPreferences = cloneMap(sortedDinnerPreferences);
 
 
-
 		// Initialize hashMap with predicted 'lastUsed'
 		HashMap<MemberName, HashMap<FoodType, Integer>> tempLastUsed = cloneLastUsedMap(lastUsed);
 
@@ -182,12 +181,10 @@ public class Player extends menu.sim.Player {
 				
 				MemberName name = member.getName();
 				
-				// TODO: increment lastUsed by 1
 				for (FoodType foodKey : Food.getAllFoodTypes()) {
 					tempLastUsed.get(name).put(foodKey, tempLastUsed.get(name).get(foodKey) + 1);
 				}
 				
-				// TODO: update preference with last used
 				for (FoodSatisfaction satisfaction : tempSortedLunchPreferences.get(name)) {
 					int lastTimeUsed = tempLastUsed.get(name).get(satisfaction.food);
 					satisfaction.currentSatisfcation = member.getFoodPreference(satisfaction.food) * lastTimeUsed / (lastTimeUsed + 1);
@@ -243,7 +240,23 @@ public class Player extends menu.sim.Player {
 
 		}
 
-		// Add more lunch and dinner items to the list to avoid missing items
+		// Add more items to the list to avoid missing meals
+		double memberVariance = 0.0;
+		double memberMean = 0.0;
+		double memberStd = 0.0;
+
+		for (FamilyMember member : familyMembers) {
+			memberMean += satisfactionByMember.get(member.getName());
+		}
+		memberMean = memberMean/familyMembers.size();
+
+		for (FamilyMember member : familyMembers) {
+			memberVariance += Math.pow(satisfactionByMember.get(member.getName())-memberMean, 2);
+		}
+		memberVariance = memberVariance/(familyMembers.size());
+		memberStd = Math.sqrt(memberVariance);
+
+
 		MemberName leastHappy = familyMembers.get(0).getName();
 
 		double lowestSatisfaction = Double.MAX_VALUE;
@@ -251,6 +264,45 @@ public class Player extends menu.sim.Player {
 			if (satisfactionByMember.get(member.getName()) < lowestSatisfaction) {
 				leastHappy = member.getName();
 				lowestSatisfaction = satisfactionByMember.get(leastHappy);
+			}
+		}
+
+		List<MemberName> leastSatisfiedList = new ArrayList<>();
+
+		print(leastHappy.name());
+		for (FamilyMember member : familyMembers) {
+			if (Math.abs(satisfactionByMember.get(member.getName())-lowestSatisfaction) < memberStd) leastSatisfiedList.add(member.getName());
+		}
+
+		Comparator<MemberName> bySatisfaction = (MemberName m1, MemberName m2) -> Double.compare(satisfactionByMember.get(m1), satisfactionByMember.get(m2));
+
+		Collections.sort(leastSatisfiedList, bySatisfaction);
+
+		for (MemberName m : leastSatisfiedList) {
+			print(m.name());
+			print(String.valueOf(satisfactionByMember.get(m)));
+		}
+
+		for (MemberName m : leastSatisfiedList) {
+			for (int i = 0; i < BREAKFAST_TYPES; i++) {
+				FoodType foodType = sortedBreakfastPreferences.get(m).get(i).food;
+				shoppingList.addToOrder(foodType);
+			}
+		}
+
+		for (MemberName m : leastSatisfiedList) {
+			for (int i = 0; i < LUNCH_TYPES; i++) {
+				FoodType foodType = sortedLunchPreferences.get(m).get(i).food;
+				shoppingList.addToOrder(foodType);
+			}
+		}
+
+		for (MemberName m : leastSatisfiedList) {
+			for (int i = 0; i < DINNER_TYPES; i++) {
+				FoodType foodType = sortedDinnerPreferences.get(m).get(i).food;
+				for (int j = 0; j < familyMembers.size(); j++) {
+					shoppingList.addToOrder(foodType);
+				}
 			}
 		}
 
