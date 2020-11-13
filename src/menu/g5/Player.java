@@ -12,7 +12,7 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
-	private final boolean PRINT_STATEMENTS = true ;
+	private final boolean PRINT_STATEMENTS = false;
 
 	private final int BREAKFAST_TYPES = 10;
 	private final int LUNCH_TYPES = 10;
