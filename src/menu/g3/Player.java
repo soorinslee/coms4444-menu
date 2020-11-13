@@ -753,7 +753,8 @@ public class Player extends menu.sim.Player {
             frequencyArray.put(p, frequency);
 
             //initialize satisfaction
-            familySatisfaction.put(p, (preference/40));
+            familySatisfaction.put(p, (preference/40)); // new one 
+            // familySatisfaction.put(p, 0.0); // old one
         }
     }
 
