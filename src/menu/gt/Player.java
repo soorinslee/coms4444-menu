@@ -35,9 +35,14 @@ public class Player extends menu.sim.Player {
 	private Map<MealType, Integer> getMaxCapacitiesForMealTypes(Integer capacity, Integer numFamilyMembers) {
 		Map<MealType, Integer> maxCapForMealTypes = new HashMap<>();
 		Integer extraCap = capacity - (21 * numFamilyMembers);
-		Integer bfCap = (7 * numFamilyMembers) + (int) Math.round(extraCap * 0.25);
-		Integer lunchCap = (7 * numFamilyMembers) + (int) Math.round(extraCap * 0.75);
-		Integer dinCap = (7 * numFamilyMembers) + (int) Math.round(extraCap * 0);
+		Integer bfCap = (7 * numFamilyMembers) + (int) Math.floor(extraCap * 0.25);
+		Integer lunchCap = (7 * numFamilyMembers) + (int) Math.floor(extraCap * 0.75);
+		Integer dinCap = (7 * numFamilyMembers) + (int) Math.floor(extraCap * 0);
+		Integer allocated = bfCap +lunchCap + bfCap;
+		while (allocated < capacity){
+			lunchCap++;
+			allocated++;
+		}
 		maxCapForMealTypes.put(MealType.BREAKFAST, bfCap);
 		maxCapForMealTypes.put(MealType.LUNCH, lunchCap);
 		maxCapForMealTypes.put(MealType.DINNER, dinCap);
@@ -170,7 +175,7 @@ public class Player extends menu.sim.Player {
 				storageFactor = (int) Math.ceil((i/20.0) * storageScale);
 			}
 			FoodType dinner = dinners2.poll().getFoodType();
-			Integer quantityNeeded = (storageFactor * numFamilyMembers) - pantry.getNumAvailableMeals(dinner);
+			Integer quantityNeeded = (storageFactor * numFamilyMembers);// - pantry.getNumAvailableMeals(dinner);
 			if (quantityNeeded > 0) {
 				addFoodToOrder(shoppingList, dinner, quantityNeeded);
 				totalQuantity += quantityNeeded;
