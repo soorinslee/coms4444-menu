@@ -1,6 +1,9 @@
 package menu.g5;
 
+import java.time.temporal.WeekFields;
 import java.util.*;
+
+import javax.sound.midi.MetaMessage;
 
 import menu.sim.*;
 import menu.sim.Food.FoodType;
@@ -8,16 +11,54 @@ import menu.sim.Food.MealType;
 
 
 public class Player extends menu.sim.Player {
-	
-	private HashMap<MemberName, Map<FoodType, Integer>> lunchServedDaysBefore;
-	private HashMap<FoodType, Integer> dinnerServedDaysBefore;
-	private Map<MemberName, Map<MealType, List<memberFoodSatis>>> memberMap;
-	private Map<MemberName, Map<MealType, List<memberFoodSatis>>> originMemberMap;
-	private Map<MealType, Map<FoodType, Integer>> idealPantry;
-	private Map<MealType, Map<FoodType, Integer>> backupPantry;
-	private Map<MealType, Map<FoodType, Integer>> backupPantry2;
-	private Map<MealType, Map<FoodType, Integer>> backupPantry3;
-	private Map<MealType, Map<FoodType, Integer>> backupPantry4;
+
+	private final boolean PRINT_STATEMENTS = false;
+
+	private final int BREAKFAST_TYPES = 10;
+	private final int LUNCH_TYPES = 10;
+	private final int DINNER_TYPES = 20;
+	private final int WEEK_DAYS = 7;
+
+	private HashMap<MemberName, List<FoodSatisfaction>> sortedBreakfastPreferences;
+	private HashMap<MemberName, List<FoodSatisfaction>> sortedLunchPreferences;
+	private HashMap<MemberName, List<FoodSatisfaction>> sortedDinnerPreferences;
+
+	private HashMap<MemberName, HashMap<FoodType, Integer>> lastUsed;
+
+
+	private HashMap<MemberName, List<FoodSatisfaction>> cloneMap(HashMap<MemberName, List<FoodSatisfaction>> inMap) {
+		HashMap<MemberName, List<FoodSatisfaction>> outMap = new HashMap<>();
+
+		for (MemberName key : inMap.keySet()) {
+			ArrayList<FoodSatisfaction> satisfactionList = new ArrayList<>();
+			for (FoodSatisfaction satisfaction : inMap.get(key)) {
+				FoodSatisfaction newSatisfaction = new FoodSatisfaction(satisfaction.food, satisfaction.currentSatisfcation);
+				satisfactionList.add(newSatisfaction);
+			}
+			outMap.put(key, satisfactionList);
+		}
+		return outMap;
+	}
+
+	private HashMap<MemberName, HashMap<FoodType, Integer>> cloneLastUsedMap(HashMap<MemberName, HashMap<FoodType, Integer>> inMap) {
+		HashMap<MemberName, HashMap<FoodType, Integer>> outMap = new HashMap<>();
+
+		for (MemberName key : inMap.keySet()) {
+			HashMap<FoodType, Integer> tempMap = new HashMap<>();
+
+			for (FoodType foodKey : Food.getAllFoodTypes()) {
+				tempMap.put(foodKey, inMap.get(key).get(foodKey));
+			}
+			outMap.put(key, tempMap);
+		}
+		return outMap;
+	}
+
+	private void print(String s) {
+		if (PRINT_STATEMENTS) {
+			System.out.println(s);
+		}
+	}
 
     /**
      * Player constructor
@@ -31,111 +72,6 @@ public class Player extends menu.sim.Player {
      */
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
-	}
-	
-	private void initializeMap(List<FamilyMember> familyMembers) {
-		lunchServedDaysBefore = new HashMap<MemberName, Map<FoodType, Integer>>();
-		for (FamilyMember fm: familyMembers) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(MealType.LUNCH)) {
-				m.put(f, 0);
-			}
-			lunchServedDaysBefore.put(fm.getName(), m);
-		}
-
-		dinnerServedDaysBefore = new HashMap<FoodType, Integer>();
-		for (FoodType f: Food.getFoodTypes(MealType.DINNER)) {
-			dinnerServedDaysBefore.put(f, 0);
-		}
-		
-		memberMap = new HashMap<MemberName, Map<MealType, List<memberFoodSatis>>>();
-		for (FamilyMember fm: familyMembers) {
-			Map<MealType, List<memberFoodSatis>> memberFavorite = getFavorite(fm);
-			memberMap.put(fm.getName(), memberFavorite);
-		}
-		
-		originMemberMap = new HashMap<MemberName, Map<MealType, List<memberFoodSatis>>>();
-		for (FamilyMember fm: familyMembers) {
-			Map<MealType, List<memberFoodSatis>> memberFavorite = getFavorite(fm);
-			originMemberMap.put(fm.getName(), memberFavorite);
-		}
-		
-		idealPantry = new HashMap<MealType, Map<FoodType, Integer>>();
-		int eachMember = capacity / familyMembers.size();
-		for (MealType mt: MealType.values()) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(mt)) {
-				m.put(f, 0);
-			}
-			idealPantry.put(mt, m);
-		}
-
-		backupPantry = new HashMap<MealType, Map<FoodType, Integer>>();
-		for (MealType mt: MealType.values()) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(mt)) {
-				m.put(f, 0);
-			}
-			backupPantry.put(mt, m);
-		}
-
-		backupPantry2 = new HashMap<MealType, Map<FoodType, Integer>>();
-		for (MealType mt: MealType.values()) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(mt)) {
-				m.put(f, 0);
-			}
-			backupPantry2.put(mt, m);
-		}
-
-		backupPantry3 = new HashMap<MealType, Map<FoodType, Integer>>();
-		for (MealType mt: MealType.values()) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(mt)) {
-				m.put(f, 0);
-			}
-			backupPantry3.put(mt, m);
-		}
-
-		backupPantry4 = new HashMap<MealType, Map<FoodType, Integer>>();
-		for (MealType mt: MealType.values()) {
-			Map<FoodType, Integer> m = new HashMap<FoodType, Integer>();
-			for (FoodType f: Food.getFoodTypes(mt)) {
-				m.put(f, 0);
-			}
-			backupPantry4.put(mt, m);
-		}
-
-		for (FamilyMember fm: familyMembers) {
-			for (MealType mt: MealType.values()) {
-				int cap = (mt == MealType.DINNER ? eachMember/2 : eachMember/4);
-				updateBackupPantry(mt, fm.getName(), cap);
-			}
-		}
-
-		//System.out.println(idealPantry);
-
-		for (FamilyMember fm: familyMembers) {
-			for (MealType mt: MealType.values()) {
-				int cap = (mt == MealType.DINNER ? eachMember/2 : eachMember/4);
-				addEachFoodWeighted(mt, fm.getName(), cap);
-			}
-		}
-
-		//System.out.println(idealPantry);
-	}
-	
-	private void incrementDay() {
-		for (MemberName mn: lunchServedDaysBefore.keySet()) {
-			Map<FoodType, Integer> m = lunchServedDaysBefore.get(mn);
-			for (FoodType f : m.keySet()) {
-				m.put(f, m.get(f)+1);
-			}
-		}
-		
-		for (FoodType f : dinnerServedDaysBefore.keySet()) {
-			dinnerServedDaysBefore.put(f, dinnerServedDaysBefore.get(f)+1);
-		}
 	}
 
     /**
@@ -154,544 +90,196 @@ public class Player extends menu.sim.Player {
     								List<FamilyMember> familyMembers,
     								Pantry pantry,
     								MealHistory mealHistory) {
-    	//System.out.println("Week: "+ week+"; shop");
-    	if (week == 1) {
-    		initializeMap(familyMembers);
-    	}
-    	ShoppingList shoppingList = new ShoppingList();
-    	int space = numEmptySlots;
-    	Map<MealType, Integer> limits = new HashMap<MealType, Integer>();
-    	ArrayList<FoodType> addList = new ArrayList<FoodType>();
-    	
-    	for (MealType mt: MealType.values()) {
-    		int before = space;
-    		
-    		Map<FoodType, Integer> m = idealPantry.get(mt);
-    		//System.out.println(m);
-    		for (FoodType f: m.keySet()) {
-    			List<FoodType> left = pantry.getAvailableFoodTypes(mt);
-    			int need = m.get(f);
-    			if (left.contains(f)) {
-    				need = pantry.getNumAvailableMeals() - m.get(f);	
-    			}
-    			if (need <= 0) {
-					continue;
-				} else {
-					if (space >= need) {
-						space -= need;
-						for (int i=0; i< need; i++) {
-							shoppingList.addToOrder(f);
-							addList.add(f);
-						}
-					} else {
-						for (int i=0; i< space; i++) {
-							shoppingList.addToOrder(f);
-							addList.add(f);
-						}
-						space = 0;
-						break;
-					}
-				}
-    		}
-    		
-    		limits.put(mt, before-space);
-    	}
 
-    	//System.out.println("ShoppingList map before: ");
-    	//System.out.println(shoppingList.getFullOrderMap());
-
-		for (MealType mt: MealType.values()) {
-			int before = space;
-
-			Map<FoodType, Integer> m = backupPantry.get(mt);
-			for (FoodType f: m.keySet()) {
-				List<FoodType> left = pantry.getAvailableFoodTypes(mt);
-				int need = m.get(f);
-				if (left.contains(f)) {
-					need = pantry.getNumAvailableMeals() - m.get(f);
-				}
-				if (need <= 0) {
-					continue;
-				} else {
-					if (space >= need) {
-						space -= need;
-						for (int i=0; i< need; i++) {
-							shoppingList.addToOrder(f);
-							addList.add(f);
-						}
-					} else {
-						for (int i=0; i< space; i++) {
-							shoppingList.addToOrder(f);
-							addList.add(f);
-						}
-						space = 0;
-						break;
-					}
-				}
-			}
+		if (week == 1) {
+			initialize(familyMembers);
 		}
-
-    	if (space > 0) {
-    		//System.out.println("Space left: " + space);
-    		limits.put(MealType.DINNER, limits.get(MealType.DINNER)+space);
-    	}
-
-    	for (MealType mt: limits.keySet()) {
-    		shoppingList.addLimit(mt, limits.get(mt));
-    	}
-
-		for (int j=0; j< addList.size(); j++) {
-			shoppingList.addToOrder(addList.get(j));
-		}
-
-		//System.out.println("ShoppingList map after: ");
-		//System.out.println(shoppingList.getFullOrderMap());
-
-    	//System.out.println("ShoppingList limits: ");
-    	//System.out.println(shoppingList.getAllLimitsMap());
     	
-    	
-    	
-    	if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) {
-    		return shoppingList;
-    	}
-    	//System.out.println("Not valid shopping list");
-    	return new ShoppingList();
-    }
-
-    private List<FoodType> getSecondaryList(List<FamilyMember> familyMembers) {
-		List<FoodType> addList = new ArrayList<FoodType>();
-
-
-		return addList;
+		return stockInitialPantry(week, numEmptySlots, familyMembers, pantry, mealHistory);
 	}
-    
-    
-    /**
-     * 
-     * @param mt
-     * @param mn
-     * @param cap	capacity for family member fm for meal type mt
-     * @return
-     */
-    public Map<FoodType, Integer> addEachFoodWeighted(MealType mt, MemberName mn, int cap) {
-    	List<memberFoodSatis> l = originMemberMap.get(mn).get(mt);
-    	Map<FoodType, Integer> m = idealPantry.get(mt);
-    	if (cap >= 20) {
-    		int eachFood = cap/(5+4+3+2+1*6);
-    		int position = 0;
-    		for (memberFoodSatis mfs: l) {
-    			if (position == 0) {
-    				m.put(mfs.f, m.get(mfs.f)+eachFood*5);
-    			} else if (position == 1) {
-    				m.put(mfs.f, m.get(mfs.f)+eachFood*4);
-    			} else if (position == 2) {
-    				m.put(mfs.f, m.get(mfs.f)+eachFood*3);
-    			} else if (position == 3) {
-    				m.put(mfs.f, m.get(mfs.f)+eachFood*2);
-    			} else {
-    				m.put(mfs.f, m.get(mfs.f)+eachFood);
-    			}
-    			position++;
-    		}
-    		
-    	} else {
-    		int capleft = cap;
-    		int position = 0;
-    		for (memberFoodSatis mfs: l) {
-    			if (position == 0) {
-    				if (capleft >= 5) {
-    					m.put(mfs.f, m.get(mfs.f)+5);
-    					capleft -= 5;
-    				} else {
-    					m.put(mfs.f, m.get(mfs.f)+capleft);
-    					break;
-    				}
-    			} else if (position == 1) {
-    				if (capleft >= 4) {
-    					m.put(mfs.f, m.get(mfs.f)+4);
-    					capleft -= 4;
-    				} else {
-    					m.put(mfs.f, m.get(mfs.f)+capleft);
-    					break;
-    				}
-    			} else if (position == 2) {
-    				if (capleft >= 3) {
-    					m.put(mfs.f, m.get(mfs.f)+3);
-    					capleft -= 3;
-    				} else {
-    					m.put(mfs.f, m.get(mfs.f)+capleft);
-    					break;
-    				}
-    			} else if (position == 3) {
-    				if (capleft >= 2) {
-    					m.put(mfs.f, m.get(mfs.f)+2);
-    					capleft -= 2;
-    				} else {
-    					m.put(mfs.f, m.get(mfs.f)+capleft);
-    					break;
-    				}
-    			} else {
-    				if (capleft >= 1) {
-    					m.put(mfs.f, m.get(mfs.f)+1);
-    					capleft -= 1;
-    				} else {
-    					break;
-    				}
-    			}
-    		}
-    	}
-    	
-    	return m;
-    }
 
-	public Map<FoodType, Integer> updateBackupPantry(MealType mt, MemberName mn, int cap) {
-		List<memberFoodSatis> l = originMemberMap.get(mn).get(mt);
-		Map<FoodType, Integer> m = backupPantry.get(mt);
-		if (cap >= 20) {
-			int eachFood = cap/(5+4+3+2+1*6);
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood);
-				} else if (position == 1) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
-				} else if (position == 2) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
-				} else if (position == 3) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
-				} else {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
-				}
-				position++;
-			}
+	private void initialize(List<FamilyMember> familyMembers) {
 
-		} else {
-			int capleft = cap;
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					if (capleft >= 5) {
-						m.put(mfs.f, m.get(mfs.f));
-						capleft -= 5;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 1) {
-					if (capleft >= 4) {
-						m.put(mfs.f, m.get(mfs.f)+5);
-						capleft -= 4;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 2) {
-					if (capleft >= 3) {
-						m.put(mfs.f, m.get(mfs.f)+4);
-						capleft -= 3;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 3) {
-					if (capleft >= 2) {
-						m.put(mfs.f, m.get(mfs.f)+3);
-						capleft -= 2;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else {
-					if (capleft >= 1) {
-						m.put(mfs.f, m.get(mfs.f)+2);
-						capleft -= 1;
-					} else {
-						break;
-					}
-				}
-			}
+		sortedBreakfastPreferences = new HashMap<>();
+		sortedLunchPreferences = new HashMap<>();
+		sortedDinnerPreferences = new HashMap<>();
+
+		// Add sorted meal preferences
+		for (FamilyMember member : familyMembers) {
+			sortedBreakfastPreferences.put(member.getName(), getSortedMealPreferences(MealType.BREAKFAST, member));
+			sortedLunchPreferences.put(member.getName(), getSortedMealPreferences(MealType.LUNCH, member));
+			sortedDinnerPreferences.put(member.getName(), getSortedMealPreferences(MealType.DINNER, member));
 		}
 
-		m = backupPantry2.get(mt);
-		if (cap >= 20) {
-			int eachFood = cap/(5+4+3+2+1*6);
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood);
-				} else if (position == 1) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
-				} else if (position == 2) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
-				} else if (position == 3) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
-				} else {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
-				}
-				position++;
-			}
+		// Initialize hashMap with predicted 'lastUsed'
+		lastUsed = new HashMap<>();
+		for (FamilyMember member : familyMembers) {
+			HashMap<FoodType, Integer> lastUsedByMember = new HashMap<>();
 
-		} else {
-			int capleft = cap;
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					if (capleft >= 5) {
-						m.put(mfs.f, m.get(mfs.f));
-						capleft -= 5;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 1) {
-					if (capleft >= 4) {
-						m.put(mfs.f, m.get(mfs.f)+2);
-						capleft -= 4;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 2) {
-					if (capleft >= 3) {
-						m.put(mfs.f, m.get(mfs.f)+5);
-						capleft -= 3;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 3) {
-					if (capleft >= 2) {
-						m.put(mfs.f, m.get(mfs.f)+4);
-						capleft -= 2;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else {
-					if (capleft >= 1) {
-						m.put(mfs.f, m.get(mfs.f)+3);
-						capleft -= 1;
-					} else {
-						break;
-					}
-				}
+			for (FoodType type : Food.getAllFoodTypes()) {
+				lastUsedByMember.put(type, Integer.MAX_VALUE - 1000); //1000 buffer to prevent int overflow
 			}
+			lastUsed.put(member.getName(), lastUsedByMember);
 		}
 
-		m = backupPantry3.get(mt);
-		if (cap >= 20) {
-			int eachFood = cap/(5+4+3+2+1*6);
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood);
-				} else if (position == 1) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
-				} else if (position == 2) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
-				} else if (position == 3) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
-				} else {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
-				}
-				position++;
-			}
-
-		} else {
-			int capleft = cap;
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					if (capleft >= 5) {
-						m.put(mfs.f, m.get(mfs.f));
-						capleft -= 5;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 1) {
-					if (capleft >= 4) {
-						m.put(mfs.f, m.get(mfs.f)+2);
-						capleft -= 4;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 2) {
-					if (capleft >= 3) {
-						m.put(mfs.f, m.get(mfs.f)+3);
-						capleft -= 3;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 3) {
-					if (capleft >= 2) {
-						m.put(mfs.f, m.get(mfs.f)+5);
-						capleft -= 2;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else {
-					if (capleft >= 1) {
-						m.put(mfs.f, m.get(mfs.f)+4);
-						capleft -= 1;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-
-		m = backupPantry4.get(mt);
-		if (cap >= 20) {
-			int eachFood = cap/(5+4+3+2+1*6);
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood);
-				} else if (position == 1) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*2);
-				} else if (position == 2) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*3);
-				} else if (position == 3) {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*4);
-				} else {
-					m.put(mfs.f, m.get(mfs.f)+eachFood*5);
-				}
-				position++;
-			}
-
-		} else {
-			int capleft = cap;
-			int position = 0;
-			for (memberFoodSatis mfs: l) {
-				if (position == 0) {
-					if (capleft >= 5) {
-						m.put(mfs.f, m.get(mfs.f));
-						capleft -= 5;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 1) {
-					if (capleft >= 4) {
-						m.put(mfs.f, m.get(mfs.f)+2);
-						capleft -= 4;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 2) {
-					if (capleft >= 3) {
-						m.put(mfs.f, m.get(mfs.f)+3);
-						capleft -= 3;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else if (position == 3) {
-					if (capleft >= 2) {
-						m.put(mfs.f, m.get(mfs.f)+4);
-						capleft -= 2;
-					} else {
-						m.put(mfs.f, m.get(mfs.f)+capleft);
-						break;
-					}
-				} else {
-					if (capleft >= 1) {
-						m.put(mfs.f, m.get(mfs.f)+5);
-						capleft -= 1;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-
-		return m;
 	}
-    
-    private class memberFoodSatis {
-    	FoodType f;
-    	double s;
-    	double cs;
-    	
-    	memberFoodSatis(FoodType f, double s) {
-    		this.f = f;
-    		this.s = s;
-    		this.cs = s;
-    	}
-    }
 
-    private void updateMemberFavorite(FamilyMember fm) {
-    	MemberName mn = fm.getName();
-    	Map<MealType, List<memberFoodSatis>> m = memberMap.get(mn);
-		for (MealType mt: m.keySet()) {
-			if (mt == MealType.BREAKFAST) {
-	    		continue;
-	    	}
-			List<memberFoodSatis> l = m.get(mt);
-			for (memberFoodSatis mfs: l) {
-	    		FoodType f = mfs.f;
-	    		int days = (mt == MealType.LUNCH ? lunchServedDaysBefore.get(mn).get(f):dinnerServedDaysBefore.get(f));
-	    		mfs.cs = mfs.s * days/(days+1);
-	    	}
-	    	Collections.sort(l, new sortmfs());
-			Collections.reverse(l);
+	private List<FoodSatisfaction> getSortedMealPreferences(MealType mealType, FamilyMember member) {
+		ArrayList<FoodSatisfaction> mealSatisfactions = new ArrayList<>();
+
+		for (FoodType foodType : Food.getFoodTypes(mealType)) {
+			FoodSatisfaction foodSatisfaction = new FoodSatisfaction(foodType, member.getFoodPreference(foodType));
+			mealSatisfactions.add(foodSatisfaction);
 		}
-    }
-    
-    private Map<MealType, List<memberFoodSatis>> getFavorite(FamilyMember m) {
-    	Map<FoodType, Double> foodPreferenceMap = m.getFoodPreferenceMap();
-    	Map<MealType, List<memberFoodSatis>> memberFavorite = new HashMap<MealType, List<memberFoodSatis>>();
-    	for (MealType mt: MealType.values()) {
-    		memberFavorite.put(mt, new ArrayList<memberFoodSatis>());
-    	}
-    	
-    	for (FoodType f: foodPreferenceMap.keySet()) {
-    		memberFavorite.get(Food.getMealType(f)).add(new memberFoodSatis(f, foodPreferenceMap.get(f)));
-    	}
-    	for (MealType mt: memberFavorite.keySet()) {
-    		List<memberFoodSatis> l = memberFavorite.get(mt);
-    		Collections.sort(l, new sortmfs());
-    		Collections.reverse(l);
-    	}
-    	return memberFavorite;
-    }
-    
-    private class sortmfs implements Comparator<memberFoodSatis> {
-    	public int compare(memberFoodSatis mfs1, memberFoodSatis mfs2) {
-        	double diff = mfs1.cs - mfs2.cs;
-        	if (diff < 0) {
-        		return -1;
-        	}
-        	if (diff > 0) {
-        		return 1;
-        	}
-        	return 0;
-        }
-    }
-    
-    public void printMemberMap() {
-    	for (MemberName mn: memberMap.keySet()) {
-    		System.out.println(mn+": ");
-    		for (MealType mt: MealType.values()) {
-    			System.out.println(mt+": ");
-    			List<memberFoodSatis> l = memberMap.get(mn).get(mt);
-    			for (memberFoodSatis mfs: l) {
-    				double b = mfs.cs * 100;
-    				double c = (int)b;
-    				double a = c/100;
-    				System.out.print(mfs.f+" "+a+"; ");
-    			}
-    			System.out.print("\n");
-    		}
-    		System.out.println();
-    	}
-    }
+		Collections.sort(mealSatisfactions);
+		return mealSatisfactions;
+	}
+	
+	// Stock pantry at week 1
+	private ShoppingList stockInitialPantry(int week, int numEmptySlots,
+											List<FamilyMember> familyMembers,
+											Pantry pantry,
+											MealHistory mealHistory) {
+
+		// TODO: for now only add 21 * N_members breakfasts and lunches, and remaining - dinners
+		int numBreakfastFoods = 7 * familyMembers.size();
+		int numLunchFoods = 7 * familyMembers.size();
+		int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
+
+		ShoppingList shoppingList = new ShoppingList();
+    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
+    	shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
+		shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
+
+		HashMap<MemberName, Double> satisfactionByMember = new HashMap<>();
+
+		for (FamilyMember member : familyMembers) {
+			satisfactionByMember.put(member.getName(), member.getSatisfaction());
+		}
+		
+		// Add breakfasts
+
+		for (int i = 0; i < BREAKFAST_TYPES; i++) {
+			for (FamilyMember member : familyMembers) {
+				FoodType foodType = sortedBreakfastPreferences.get(member.getName()).get(i).food;
+				for (int j = 0; j < WEEK_DAYS; j++) {
+					shoppingList.addToOrder(foodType);
+					satisfactionByMember.put(member.getName(), satisfactionByMember.get(member.getName()) + member.getFoodPreference(foodType));
+				}
+			}
+		}
+
+		HashMap<MemberName, List<FoodSatisfaction>> tempSortedLunchPreferences = cloneMap(sortedLunchPreferences);
+		HashMap<MemberName, List<FoodSatisfaction>> tempSortedDinnerPreferences = cloneMap(sortedDinnerPreferences);
+
+
+
+		// Initialize hashMap with predicted 'lastUsed'
+		HashMap<MemberName, HashMap<FoodType, Integer>> tempLastUsed = cloneLastUsedMap(lastUsed);
+
+		for (int i = 0; i < WEEK_DAYS; i++) {
+			for (FamilyMember member : familyMembers) {
+				
+				MemberName name = member.getName();
+				
+				// TODO: increment lastUsed by 1
+				for (FoodType foodKey : Food.getAllFoodTypes()) {
+					tempLastUsed.get(name).put(foodKey, tempLastUsed.get(name).get(foodKey) + 1);
+				}
+				
+				// TODO: update preference with last used
+				for (FoodSatisfaction satisfaction : tempSortedLunchPreferences.get(name)) {
+					int lastTimeUsed = tempLastUsed.get(name).get(satisfaction.food);
+					satisfaction.currentSatisfcation = member.getFoodPreference(satisfaction.food) * lastTimeUsed / (lastTimeUsed + 1);
+				}
+
+				for (FoodSatisfaction satisfaction : tempSortedDinnerPreferences.get(name)) {
+					int lastTimeUsed = tempLastUsed.get(name).get(satisfaction.food);
+					satisfaction.currentSatisfcation = member.getFoodPreference(satisfaction.food) * lastTimeUsed / (lastTimeUsed + 1);
+				}
+
+				Collections.sort(tempSortedLunchPreferences.get(name));
+				Collections.sort(tempSortedDinnerPreferences.get(name));
+			}
+
+			// Add lunches
+
+			for (FamilyMember member : familyMembers) {
+				MemberName name = member.getName();
+
+				FoodType favoriteFood = tempSortedLunchPreferences.get(member.getName()).get(0).food;
+				int lastTimeUsed = tempLastUsed.get(member.getName()).get(favoriteFood);
+				satisfactionByMember.put(name, satisfactionByMember.get(name) + member.getFoodPreference(favoriteFood) * lastTimeUsed / (lastTimeUsed + 1));
+				tempLastUsed.get(member.getName()).put(favoriteFood, 0);
+
+				shoppingList.addToOrder(favoriteFood);
+			}
+
+			// Add dinners
+
+			MemberName leastHappy = familyMembers.get(0).getName();
+
+			double lowestSatisfaction = Double.MAX_VALUE;
+			for (FamilyMember member : familyMembers) {
+				if (satisfactionByMember.get(member.getName()) < lowestSatisfaction) {
+					leastHappy = member.getName();
+					lowestSatisfaction = satisfactionByMember.get(leastHappy);
+				}
+			}
+
+			FoodType favoriteDinner = tempSortedDinnerPreferences.get(leastHappy).get(0).food;
+			
+			for (int j = 0; j < familyMembers.size(); j++) {
+				shoppingList.addToOrder(favoriteDinner);
+			}
+
+			for (FamilyMember member : familyMembers) {
+				MemberName name = member.getName();
+				int lastTimeUsed = tempLastUsed.get(member.getName()).get(favoriteDinner);
+				satisfactionByMember.put(name, satisfactionByMember.get(name) + member.getFoodPreference(favoriteDinner) * lastTimeUsed / (lastTimeUsed + 1));
+				tempLastUsed.get(member.getName()).put(favoriteDinner, 0);
+			}
+
+
+		}
+
+		// Add more lunch and dinner items to the list to avoid missing items
+		MemberName leastHappy = familyMembers.get(0).getName();
+
+		double lowestSatisfaction = Double.MAX_VALUE;
+		for (FamilyMember member : familyMembers) {
+			if (satisfactionByMember.get(member.getName()) < lowestSatisfaction) {
+				leastHappy = member.getName();
+				lowestSatisfaction = satisfactionByMember.get(leastHappy);
+			}
+		}
+
+		for (int i = 0; i < BREAKFAST_TYPES; i++) {
+			FoodType foodType = sortedBreakfastPreferences.get(leastHappy).get(i).food;
+			for (int j = 0; j < familyMembers.size(); j++) {
+				shoppingList.addToOrder(foodType);
+			}
+		}
+
+		for (int i = 0; i < LUNCH_TYPES; i++) {
+			FoodType foodType = sortedLunchPreferences.get(leastHappy).get(i).food;
+			for (int j = 0; j < familyMembers.size(); j++) {
+				shoppingList.addToOrder(foodType);
+			}
+		}
+
+		for (int i = 0; i < DINNER_TYPES; i++) {
+			FoodType foodType = sortedDinnerPreferences.get(leastHappy).get(i).food;
+			for (int j = 0; j < familyMembers.size(); j++) {
+				shoppingList.addToOrder(foodType);
+			}
+		}
+
+		if(Player.hasValidShoppingList(shoppingList, numEmptySlots))
+			return shoppingList;
+		print("Invalid initial shopping list!");
+		return new ShoppingList();
+	}
 
     /**
      * Plan meals
@@ -708,92 +296,143 @@ public class Player extends menu.sim.Player {
     						 Pantry pantry,
     						 MealHistory mealHistory) {
 
-    	//System.out.println("Week: "+week+"; plan");
-//    	for (MealType mt: MealType.values()) {
-//    		System.out.println("mt: "+ mt);
-//    		System.out.println(pantry.getNumAvailableMeals(mt));
-//    	}
-    	
-    	//printMemberMap();
-    	List<MemberName> memberNames = new ArrayList<>();
-    	for(FamilyMember familyMember : familyMembers)
-    		memberNames.add(familyMember.getName());
-    	Planner planner = new Planner(memberNames);
-    	
-    	Pantry originalPantry = pantry.clone();
-    	
-    	
-    	for (Day d: Day.values()) {
-    		incrementDay();
-    		for (FamilyMember fm: familyMembers) {
-    			updateMemberFavorite(fm);
-    		}
-    		Map<FoodType, Double> bestTotalSatisfaction = new HashMap<FoodType, Double>();
-    		for (FoodType f: Food.getFoodTypes(MealType.DINNER)) {
-    			bestTotalSatisfaction.put(f, 0.0);
-    		}
-    		for (FamilyMember fm: familyMembers) {
-    			MemberName mn = fm.getName();
-    			for (MealType mt: MealType.values()) {
-    				List<FoodType> avaliable = pantry.getAvailableFoodTypes(mt);
-    				List<memberFoodSatis> l = memberMap.get(mn).get(mt);
-    				if (mt == MealType.DINNER) {
-    					for (memberFoodSatis mfs: l) {
-    						if  (avaliable.contains(mfs.f)) {
-    							double value = bestTotalSatisfaction.get(mfs.f);
-    							double newValue = mfs.cs;
-    							int num = pantry.getNumAvailableMeals(mfs.f);
-    							if (num < familyMembers.size()) {
-    								newValue *= num/familyMembers.size();
-    							}
-    							bestTotalSatisfaction.put(mfs.f, value+newValue);
-    						}
-    					}
-    				} else {
-    					for (memberFoodSatis mfs: l) {
-    						if  (avaliable.contains(mfs.f)) {
-    							int num = pantry.getNumAvailableMeals(mfs.f);
-        						if (num > 0) {
-        							planner.addMeal(d, fm.getName(), mt, mfs.f);
-        							pantry.removeMealFromInventory(mfs.f);
-        							if (mt == MealType.LUNCH) {
-        								lunchServedDaysBefore.get(mn).put(mfs.f, 0);
-        							}
-        							break;
-        						}
-    						}
-    					}
-    				}
-    			}
-    		}
-    		double highest = 0;
-    		FoodType hf = null;
-    		for (FoodType f: bestTotalSatisfaction.keySet()) {
-    			if (bestTotalSatisfaction.get(f)>highest) {
-    				highest = bestTotalSatisfaction.get(f);
-    				hf = f;
-    			}
-    		}
-    		if (highest > 0) {
-    			for (FamilyMember fm: familyMembers) {
-        			MemberName mn = fm.getName();
-        			planner.addMeal(d, mn, MealType.DINNER, hf);
-        			pantry.removeMealFromInventory(hf);
-        		}
-    		}
-    		
-    	}
-    	
-    	//printPlan(planner);
-    	
-    	if(Player.hasValidPlanner(planner, originalPantry)) {
-    		return planner;
-    	}
-    	System.out.println("Not valid planner");
+								
+			List<MemberName> memberNames = new ArrayList<>();
+			for(FamilyMember familyMember : familyMembers)
+				memberNames.add(familyMember.getName());
+			Planner planner = new Planner(memberNames);
+
+			Pantry originalPantry = pantry.clone();
+
+			ArrayList<MemberSatisfaction> membersSatisfaction = new ArrayList<>();
+			
+			for (FamilyMember member : familyMembers) {
+				MemberSatisfaction currentMember = new MemberSatisfaction(member.getName(), member.getSatisfaction(), member);
+				membersSatisfaction.add(currentMember);
+			}
+
+
+
+			for (Day day : Day.values()) {
+
+				for (FamilyMember member : familyMembers) {
+				
+					MemberName name = member.getName();
+					
+					for (FoodType foodKey : Food.getAllFoodTypes()) {
+						lastUsed.get(name).put(foodKey, lastUsed.get(name).get(foodKey) + 1);
+					}
+					
+					for (FoodSatisfaction satisfaction : sortedLunchPreferences.get(name)) {
+						int lastTimeUsed = lastUsed.get(name).get(satisfaction.food);
+						satisfaction.currentSatisfcation = member.getFoodPreference(satisfaction.food) * lastTimeUsed / (lastTimeUsed + 1);
+					}
+	
+					for (FoodSatisfaction satisfaction : sortedDinnerPreferences.get(name)) {
+						int lastTimeUsed = lastUsed.get(name).get(satisfaction.food);
+						satisfaction.currentSatisfcation = member.getFoodPreference(satisfaction.food) * lastTimeUsed / (lastTimeUsed + 1);
+					}
+	
+					Collections.sort(sortedLunchPreferences.get(name));
+					Collections.sort(sortedDinnerPreferences.get(name));
+				}
+
+
+				// Sort in increasing order
+				Collections.sort(membersSatisfaction);
+
+
+				// Breakfast
+				for (MemberSatisfaction satisfaction : membersSatisfaction) {
+					boolean hadBreakfast = false;
+					int i = 0;
+
+					while (!hadBreakfast && i < BREAKFAST_TYPES) {
+						FoodType favoriteBreakfast = sortedBreakfastPreferences.get(satisfaction.name).get(i).food;
+												
+						if (pantry.containsMeal(favoriteBreakfast)) {
+							pantry.removeMealFromInventory(favoriteBreakfast);
+							planner.addMeal(day, satisfaction.name, MealType.BREAKFAST, favoriteBreakfast);
+							hadBreakfast = true;
+							satisfaction.satisfaction += satisfaction.member.getFoodPreference(favoriteBreakfast);
+						}
+						i++;
+					}
+					if (!hadBreakfast) {
+						print("Error while allocating breakfast!");
+					}
+				}
+
+				Collections.sort(membersSatisfaction);
+
+
+				// Lunch
+				for (MemberSatisfaction satisfaction : membersSatisfaction) {
+					boolean hadLunch = false;
+					int i = 0;
+
+					while (!hadLunch && i < LUNCH_TYPES) {
+						FoodType favoriteLunch = sortedLunchPreferences.get(satisfaction.name).get(i).food;
+						
+						if (pantry.containsMeal(favoriteLunch)) {
+							pantry.removeMealFromInventory(favoriteLunch);
+							planner.addMeal(day, satisfaction.name, MealType.LUNCH, favoriteLunch);
+							hadLunch = true;
+							int lastTimeUsed = lastUsed.get(satisfaction.name).get(favoriteLunch);
+							satisfaction.satisfaction += satisfaction.member.getFoodPreference(favoriteLunch) * lastTimeUsed / (lastTimeUsed + 1);
+							lastUsed.get(satisfaction.name).put(favoriteLunch, 0);
+						}
+						i++;
+					}
+					if (!hadLunch) {
+						print("Error while allocating lunch!");
+					}
+				}
+				Collections.sort(membersSatisfaction);
+
+
+				// Dinner
+				MemberSatisfaction leastSatisfication = membersSatisfaction.get(0);
+				
+				boolean hadDinner = false;
+				int i = 0;
+
+				while (!hadDinner && i < DINNER_TYPES) {
+					FoodType favoriteDinner = sortedDinnerPreferences.get(leastSatisfication.name).get(i).food;
+					
+					// TODO: allow dinners lower than # of people
+					if (pantry.getNumAvailableMeals(favoriteDinner) >= familyMembers.size()) {
+						hadDinner = true;
+
+						for (MemberSatisfaction satisfaction : membersSatisfaction) {
+							planner.addMeal(day, satisfaction.name, MealType.DINNER, favoriteDinner);
+							pantry.removeMealFromInventory(favoriteDinner);
+							int lastTimeUsed = lastUsed.get(satisfaction.name).get(favoriteDinner);
+							satisfaction.satisfaction += satisfaction.member.getFoodPreference(favoriteDinner) * lastTimeUsed / (lastTimeUsed + 1);
+							lastUsed.get(satisfaction.name).put(favoriteDinner, 0);
+						}
+					}
+					i++;
+				}
+				if (!hadDinner) {
+					print("Error while allocating dinner!");
+				}
+			}
+
+			
+
+    	if(Player.hasValidPlanner(planner, originalPantry))
+			return planner;
+		print("Invalid planner!");
     	return new Planner();
-    }
-    
-    public void printPlan(Planner p) {
+	}
+
+	public void printPlan(Planner p) {
+
+		if (!PRINT_STATEMENTS) {
+			return;
+		}
+
     	Map<Day, Map<MemberName, Map<MealType, FoodType>>> m = p.getPlan();
     	for (Day d: m.keySet()) {
     		System.out.println("Day: "+d);
@@ -806,6 +445,44 @@ public class Player extends menu.sim.Player {
     		System.out.println();
     	}
     }
+	
+	private class FoodSatisfaction implements Comparable<FoodSatisfaction> {
+		FoodType food;
+		double currentSatisfcation;
+
+		FoodSatisfaction(FoodType foodType, double satisfaction) {
+			this.food = foodType;
+			this.currentSatisfcation = satisfaction;
+		}
+		
+		// Foods will be sorted in DECREASING order
+		@Override
+		public int compareTo(FoodSatisfaction other) {
+			return Double.compare(other.currentSatisfcation, this.currentSatisfcation);
+		}
+
+		public String toString() {
+			return this.food + ": " + this.currentSatisfcation;
+		}
+	}
+
+	private class MemberSatisfaction implements Comparable<MemberSatisfaction> {
+		MemberName name;
+		double satisfaction;
+		FamilyMember member;
+
+		MemberSatisfaction(MemberName name, double satisfaction, FamilyMember member) {
+			this.name = name;
+			this.satisfaction = satisfaction;
+			this.member = member;
+		}
+
+		@Override
+		public int compareTo(MemberSatisfaction other) {
+			return Double.compare(this.satisfaction, other.satisfaction);
+		}
+
+	}
     
     private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
     	FoodType maximumAvailableMeal = null;

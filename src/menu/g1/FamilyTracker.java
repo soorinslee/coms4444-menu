@@ -43,9 +43,9 @@ public class FamilyTracker {
         }
     }
 
-    public PriorityQueue<FoodScore> getDinnersByCompositeScore(int day) {
+    public PriorityQueue<FoodScore> getFoodsByCompositeScore(Food.MealType mealType, int day) {
         PriorityQueue<FoodScore> dinners = new PriorityQueue<>(20, Collections.reverseOrder());
-        for (Food.FoodType dinner: Food.getFoodTypes(Food.MealType.DINNER)) {
+        for (Food.FoodType dinner: Food.getFoodTypes(mealType)) {
             Double compositeScore = 0.0;
             for (MemberTracker mt: members.values()) {
                 compositeScore += mt.getWeightedPreference(dinner, day);
@@ -54,6 +54,19 @@ public class FamilyTracker {
             dinners.add(dinnerScore);
         }
         return dinners;
+    }
+
+    public PriorityQueue<FoodScore> getBreakfastsByCompositeScore() {
+        PriorityQueue<FoodScore> breakfasts = new PriorityQueue<>(20, Collections.reverseOrder());
+        for (Food.FoodType breakfast: Food.getFoodTypes(Food.MealType.BREAKFAST)) {
+            Double compositeScore = 0.0;
+            for (MemberTracker mt: members.values()) {
+                compositeScore += mt.getWeightedPreference(breakfast);
+            }
+            FoodScore dinnerScore = new FoodScore(breakfast, compositeScore);
+            breakfasts.add(dinnerScore);
+        }
+        return breakfasts;
     }
 
     public PriorityQueue<FoodScore> getDinnersByCompositeScore(int day, Map<Food.FoodType, Integer> inventory) {

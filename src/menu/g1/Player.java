@@ -1,5 +1,6 @@
 package menu.g1;
 
+import java.text.BreakIterator;
 import java.util.*;
 
 import menu.sim.*;
@@ -22,6 +23,8 @@ public class Player extends menu.sim.Player {
 	private Weighter weighter;
 	private Map<MealType, Map<FamilyMember, ArrayList<FoodType>>> optimisticPlanner;
 	private FamilyTracker familyTracker;
+	private Map<MealType, Integer> maxCapacities;
+	private Integer totalWeeks;
 
 	
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
@@ -29,6 +32,17 @@ public class Player extends menu.sim.Player {
 		this.optimisticPlanner = new HashMap<>();
 		this.weighter = new Weighter(numFamilyMembers);
 		this.familyTracker = new FamilyTracker();
+		this.maxCapacities = getMaxCapacitiesForMealTypes(capacity, numFamilyMembers);
+		this.totalWeeks = weeks;
+	}
+
+	private Map<MealType, Integer> getMaxCapacitiesForMealTypes(Integer capacity, Integer numFamilyMembers) {
+		Map<MealType, Integer> maxCapForMealTypes = new HashMap<>();
+		maxCapForMealTypes.put(MealType.BREAKFAST, capacity - 14*numFamilyMembers);
+		maxCapForMealTypes.put(MealType.LUNCH, 7*numFamilyMembers);
+		maxCapForMealTypes.put(MealType.DINNER, 7*numFamilyMembers);
+
+		return maxCapForMealTypes;
 	}
 
 	/**
@@ -53,17 +67,100 @@ public class Player extends menu.sim.Player {
 		resetOptimisticPlanner(familyMembers);
 
 		ShoppingList shoppingList = new ShoppingList();
-		addMeals(MealType.BREAKFAST, familyMembers, shoppingList);
+		shopBreakfast(week, shoppingList, pantry, familyMembers);
+		//addMeals(MealType.BREAKFAST, familyMembers, shoppingList);
 		addMeals(MealType.LUNCH, familyMembers, shoppingList);
 		shopDinner(shoppingList);
 
 		return shoppingList;
 	}
 
+	private void shopBreakfast(Integer week,
+							   ShoppingList shoppingList,
+							   Pantry pantry,
+							   List<FamilyMember> familyMembers) {
+		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
+		Integer minBreakfastsNeeded = getMinBreakfastsNeeded(pantry, numFamilyMembers);
+		Map<MemberName, Integer> memberAllocations = getMemberAllocations(familyMembers, spotsForBreakfast);
+
+		shoppingList.addLimit(MealType.BREAKFAST, spotsForBreakfast);
+		addFirstChoiceBreakfasts(shoppingList, memberAllocations);
+		if (minBreakfastsNeeded > 0) {
+			addBackupBreakfasts(shoppingList, spotsForBreakfast);
+		}
+		simPrinter.println("Current pantry size: " + pantry.getNumAvailableMeals(MealType.BREAKFAST));
+		simPrinter.println("Breakfast shopping list: ");
+		simPrinter.println(shoppingList.getMealOrder(MealType.BREAKFAST).toString());
+	}
+
+	private void addFirstChoiceBreakfasts(ShoppingList shoppingList, Map<MemberName, Integer> memberAllocations) {
+		PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		while (!memberTrackers.isEmpty()) {
+			MemberTracker memberTracker = memberTrackers.poll();
+			FoodType firstChoice = memberTracker.getFirstChoice(MealType.BREAKFAST);
+			Integer quantity = memberAllocations.get(memberTracker.getName());
+			addFoodToOrder(shoppingList, firstChoice, quantity);
+		}
+	}
+
+	private void addBackupBreakfasts(ShoppingList shoppingList, Integer spotsOpen) {
+		PriorityQueue<FoodScore> breakfasts = familyTracker.getBreakfastsByCompositeScore();
+		while (!breakfasts.isEmpty()) {
+			FoodType breakfast = breakfasts.poll().getFoodType();
+			addFoodToOrder(shoppingList, breakfast, spotsOpen);
+		}
+	}
+
+	private Integer getMinBreakfastsNeeded(Pantry pantry, Integer numFamilyMembers) {
+		Integer breakfastsServedPerWeek = numFamilyMembers * 7;
+		Integer breakfastInPantry = 0;
+		for(FoodType foodType : Food.getFoodTypes(MealType.BREAKFAST)) {
+			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
+			breakfastInPantry += numAvailableMeals; 
+		}
+		if (breakfastsServedPerWeek > breakfastInPantry) {
+			return breakfastsServedPerWeek - breakfastInPantry;
+		}
+		return 0;
+	}
+
+	private Map<MemberName, Integer> getMemberAllocations(List<FamilyMember> familyMembers, Integer breakfastCapacity) {
+		Map<MemberName, Integer> memberAllocations = new HashMap<>();
+		PriorityQueue<MemberTracker> memberTrackers = familyTracker.getMembersByAvgSatisfaction();
+		Double totalWeight = 0.0;
+		Integer totalAllocations = 0;
+
+		while (!memberTrackers.isEmpty()) {
+			MemberTracker memberTracker = memberTrackers.poll();
+			totalWeight += memberTracker.getWeight();
+		}		
+		
+		for (FamilyMember familyMember: familyMembers) {
+			MemberTracker memberTracker = familyTracker.getMemberTracker(familyMember.getName());
+			Integer allocationScore = (int) Math.round(memberTracker.getWeight()/totalWeight * breakfastCapacity);
+			while ((totalAllocations + allocationScore > breakfastCapacity) && allocationScore > 0) {
+				allocationScore--;
+			}
+			memberAllocations.put(familyMember.getName(),  allocationScore);
+		}
+
+		return memberAllocations;
+	}
+
+	private Integer calculateNewCapacityFor(MealType mealType, Pantry pantry) {
+		Integer maxCapacity = maxCapacities.get(mealType);
+		Integer breakfastInPantry = 0;
+		for(FoodType foodType : Food.getFoodTypes(MealType.BREAKFAST)) {
+			int numAvailableMeals = pantry.getNumAvailableMeals(foodType);
+			breakfastInPantry += numAvailableMeals;
+		}
+		return maxCapacity - breakfastInPantry;
+	}
+
 	private void shopDinner(ShoppingList shoppingList) {
 		// TODO: Pick based on each day
 		shoppingList.addLimit(MealType.DINNER, DAYS_PER_WEEK * numFamilyMembers);
-		PriorityQueue<FoodScore> dinners = familyTracker.getDinnersByCompositeScore(6);
+		PriorityQueue<FoodScore> dinners = familyTracker.getFoodsByCompositeScore(MealType.DINNER, 6);
 		simPrinter.println("DINNERS SIZE: " + Integer.toString(dinners.size()));
 		while (!dinners.isEmpty()) {
 			FoodType dinner = dinners.poll().getFoodType();
@@ -134,12 +231,10 @@ public class Player extends menu.sim.Player {
 	 *
 	 */
 
-	public Planner planMeals(Integer week,
-							 List<FamilyMember> familyMembers,
-							 Pantry pantry,
-							 MealHistory mealHistory) {
+	public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
 		Pantry originalPantry = pantry.clone();
+		
 
 		List<MemberName> memberNames = new ArrayList<>();
 		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
@@ -152,68 +247,103 @@ public class Player extends menu.sim.Player {
 			memberNames.add(familyMember.getName());
 
 		Planner planner = new Planner(memberNames);
+		
 
 		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
 		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 
-
-		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
+		//simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
 		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.LUNCH));
-		simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.DINNER));
+		//simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.DINNER));
 
 		
-		simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
+		//simPrinter.println("Order: " + memberPriorityList.get(MealType.BREAKFAST));
 		for (MemberName member : orderedFamilyPreferences.keySet()){
-			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.BREAKFAST));
+			//simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.BREAKFAST));
+			simPrinter.println("\t\t" + member + ": " + orderedFamilyPreferences.get(member).get(MealType.LUNCH));
 		}
 		
-		for(MealType meal : Food.getAllMealTypes()){
-			for(Day day : Day.values()){
-				for(MemberName memberName : memberPriorityList.get(meal)){
-					if (pantry.getNumAvailableMeals(meal) > 0){
-						FoodType food;
-						switch(meal){
-
-							case BREAKFAST:
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case LUNCH:
-								food = getBestFood(meal, memberName, orderedFamilyPreferences);
-								planner.addMeal(day, memberName, meal, food);
-								pantry.removeMealFromInventory(food);
-								updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-								break;
-
-							case DINNER:
-								
-								break;
-						}
-					}
+		for(Day day : Day.values()){
+			for(MemberName memberName : memberPriorityList.get(MealType.BREAKFAST)){
+				if (pantry.getNumAvailableMeals(MealType.BREAKFAST) > 0){
+					FoodType food = getBestFood(MealType.BREAKFAST, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.BREAKFAST, food);
+					pantry.removeMealFromInventory(food);
 				}
+				if (pantry.getNumAvailableMeals(MealType.LUNCH) > 0){
+					updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
+					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+					planner.addMeal(day, memberName, MealType.LUNCH, food);
+					pantry.removeMealFromInventory(food);
+				}
+				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
+			
 		}
 
 		planDinners(planner, pantry, familyMembers);
 
 		simPrinter.println("\n\n\n********* PLANNER ********\n");
-		for(MealType meal : Food.getAllMealTypes()){
-			simPrinter.println("MEAL: " + meal);
+		//for(MealType meal : Food.getAllMealTypes()){
+			simPrinter.println("LUNCH: ");
 			for(Day day : Day.values()){
 				simPrinter.println("\tDAY: " + day); 
 				for(MemberName memberName : memberNames){
-					simPrinter.println("\t\t"+ memberName + ": " + planner.getPlan().get(day).get(memberName).get(meal));
+					simPrinter.println("\t\t"+ memberName + ": " + planner.getPlan().get(day).get(memberName).get(MealType.LUNCH));
 				}
 			}
-		}
+		//}
 
 		if(Player.hasValidPlanner(planner, originalPantry))
 			return planner;
 		return new Planner();
+	}
+	
+	private void updateLunchPreferences(Integer week, Day thisDay, MemberName name, Planner planner, MealHistory mealHistory, Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences){
+		int todayNumber = (week - 1) * 7 + new ArrayList<>(Arrays.asList(Day.values())).indexOf(thisDay) + 1;
+
+		MealHistory weightedMealHistory = mealHistory;
+
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> plan = planner.getPlan();
+		Map<FoodType, Double> sortedLunchPreferences = new LinkedHashMap<>();
+
+		simPrinter.println("\n\nOLD \t\t" + name + ": " + orderedFamilyPreferences.get(name).get(MealType.LUNCH));
+
+		for (Day day : plan.keySet())
+			weightedMealHistory.addDailyFamilyMeal(week, day, name, plan.get(day).get(name));
+
+		Map<Integer, Map<MemberName, Map<MealType, FoodType>>> dailyMealsMap = weightedMealHistory.getDailyFamilyMeals();
+
+		for(FoodType food : orderedFamilyPreferences.get(name).get(MealType.LUNCH).keySet()){
+
+			Integer lastServedDay = 0;
+			for (Integer dayNumber : dailyMealsMap.keySet())
+				if (dailyMealsMap.get(dayNumber).get(name).get(MealType.LUNCH) == food && dayNumber > lastServedDay)
+					lastServedDay = dayNumber;	
+
+			if (lastServedDay > 0){
+				
+				Integer daysAgo = (todayNumber - lastServedDay);
+				Double scale = (double) daysAgo / (daysAgo + 1);
+
+				//simPrinter.println("daysAgo:  " + daysAgo + "\nlastServedDay: " + lastServedDay + "\nTodaynumber: " + todayNumber + "\nThisDay: " + thisDay + "\nThisWeek:" +week+ "\nScale: " + scale);
+				orderedFamilyPreferences.get(name)
+							.get(MealType.LUNCH)
+							.replace(food, orderedFamilyPreferences.get(name)
+										 	       .get(MealType.LUNCH)
+										               .get(food) * scale);
+
+				
+			}
+		}
+		orderedFamilyPreferences.get(name).get(MealType.LUNCH)
+					.entrySet()
+					.stream()
+					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+		  			.forEachOrdered(x -> sortedLunchPreferences.put(x.getKey(), x.getValue()));
+		orderedFamilyPreferences.get(name).replace(MealType.LUNCH, sortedLunchPreferences);
+		simPrinter.println("NEW \t\t" + name + ": " + orderedFamilyPreferences.get(name).get(MealType.LUNCH));
 	}
 
 	private void planDinners(Planner planner, Pantry pantry, List<FamilyMember> familyMembers) {

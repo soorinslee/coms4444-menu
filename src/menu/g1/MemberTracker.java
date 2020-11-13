@@ -3,9 +3,12 @@ package menu.g1;
 import menu.sim.FamilyMember;
 import menu.sim.Food;
 import menu.sim.MealHistory;
+import menu.sim.MemberName;
+
+import java.util.List;
 
 public class MemberTracker implements Comparable<MemberTracker> {
-    private FamilyMember member;
+    public FamilyMember member;
     public PreferenceTracker prefTracker;
     private Double avgSatisfaction;
     private Double weight;
@@ -25,6 +28,10 @@ public class MemberTracker implements Comparable<MemberTracker> {
 
     public Double getWeightedPreference(Food.FoodType foodType, int day) {
         return prefTracker.satisfactionsForWeek.get(foodType)[day] * weight;
+    }
+
+    public Double getWeightedPreference(Food.FoodType foodType) {
+        return member.getFoodPreference(foodType) * weight;
     }
 
     public Double getAvgSatisfaction() {
@@ -65,5 +72,24 @@ public class MemberTracker implements Comparable<MemberTracker> {
     @Override
     public int compareTo(MemberTracker otherMember) {
         return this.avgSatisfaction.compareTo(otherMember.getAvgSatisfaction());
+    }
+
+    public Food.FoodType getFirstChoice(Food.MealType mealType) {
+        List<Food.FoodType> foods = Food.getFoodTypes(mealType);
+        Food.FoodType firstChoice = foods.get(0);
+        Double maxPref = member.getFoodPreference(firstChoice);
+
+        for (Food.FoodType food: foods) {
+            Double pref = member.getFoodPreference(food);
+            if (pref > maxPref) {
+                firstChoice = food;
+                maxPref = pref;
+            }
+        }
+        return firstChoice;
+    }
+
+    public MemberName getName() {
+        return member.getName();
     }
 }
