@@ -66,6 +66,7 @@ public class Player extends menu.sim.Player {
 		ShoppingList shoppingList = new ShoppingList();
 		shopBreakfast(week, shoppingList, pantry, familyMembers);
 		shopLunch(shoppingList, pantry);
+		//shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
 		shopDinner(shoppingList, pantry);
 
 		return shoppingList;
@@ -107,10 +108,12 @@ public class Player extends menu.sim.Player {
 			}
 		}
 	}
-/*
+
 	private void shopLunch2(Integer week, List<FamilyMember> familyMembers, ShoppingList shoppingList, Pantry pantry, MealHistory mealHistory){
 
-		int numLunches = Food.getFoodTypes(MealType.LUNCH).length
+		Integer openSpots = calculateNewCapacityFor(MealType.LUNCH, pantry);
+		Integer lunchListLength = 0;
+		Integer numLunches = Food.getFoodTypes(MealType.LUNCH).size();
 
 		List<MemberName> memberNames = new ArrayList<>();
 		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
@@ -121,25 +124,32 @@ public class Player extends menu.sim.Player {
 		for(FamilyMember familyMember : familyMembers)
 			memberNames.add(familyMember.getName());
 
+		shoppingList.addLimit(MealType.LUNCH, openSpots);
+
 		Planner shoppingPlanner = new Planner(memberNames);
 		Pantry allLunchPantry = new Pantry(numLunches);
 
 		for (FoodType food : Food.getFoodTypes(MealType.LUNCH))
 			allLunchPantry.addMealToInventory(food);
 
-		for (Day day : Day.values())
-			for (MemberName memberName : ))
 		updateFamilyPreferenceMap(allLunchPantry, weightedPreferences, orderedFamilyPreferences);
-		updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
-
-		FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
-	
-		updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
 		updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 
-
+		while (lunchListLength < openSpots) {
+			for (Day day : Day.values()){
+				for (MemberName memberName : memberPriorityList.get(MealType.LUNCH)){
+					updateLunchPreferences(week, day, memberName, shoppingPlanner, mealHistory, orderedFamilyPreferences);
+					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+					shoppingPlanner.addMeal(day, memberName, MealType.LUNCH, food);
+					addFoodToOrder(shoppingList, food, 1);
+					lunchListLength++;
+				}
+				updateFamilyPreferenceMap(allLunchPantry, weightedPreferences, orderedFamilyPreferences);
+				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
+			}
+		}
 	}
-	*/
+	
 
 	private void shopDinner(ShoppingList shoppingList, Pantry pantry) {
 		Integer spotsOpen = calculateNewCapacityFor(MealType.DINNER, pantry);
