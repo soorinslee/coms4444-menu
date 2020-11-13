@@ -303,7 +303,7 @@ public class Simulator {
 		    
 		    if(!Player.hasValidPlanner(finalPlanner, pantry)) {
 		    	Log.writeToLogFile("The planner from week " + currentWeek + " is invalid! Family members starve this week.");
-	    		finalPlanner = new Planner();
+	    		finalPlanner = new Planner(memberNames);
 		    }
 
 		    updateAssignedMeals(finalPlanner);

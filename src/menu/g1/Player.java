@@ -63,6 +63,9 @@ public class Player extends menu.sim.Player {
 	 */
 
 	public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+		
+		int capacitySwitch = (int) Math.floor(numFamilyMembers * 21 * 1.5);
+
 		if (week == 1) {
 			familyTracker.init(familyMembers);
 		}
@@ -70,16 +73,17 @@ public class Player extends menu.sim.Player {
 
 		ShoppingList shoppingList = new ShoppingList();
 		shopBreakfast(week, shoppingList, pantry, familyMembers);
-		shopLunch(shoppingList, pantry);
+
+		if (capacity < capacitySwitch)
+			shopLunch(shoppingList, pantry);
+		else
+			shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
 		shopDinner(shoppingList, pantry);
 
 		return shoppingList;
 	}
 
-	private void shopBreakfast(Integer week,
-							   ShoppingList shoppingList,
-							   Pantry pantry,
-							   List<FamilyMember> familyMembers) {
+	private void shopBreakfast(Integer week, ShoppingList shoppingList, Pantry pantry, List<FamilyMember> familyMembers) {
 		Integer spotsForBreakfast = calculateNewCapacityFor(MealType.BREAKFAST, pantry);
 		Integer minBreakfastsNeeded = getMinFoodsNeeded(MealType.BREAKFAST, pantry, numFamilyMembers);
 		Map<MemberName, Integer> memberAllocations = getMemberAllocations(familyMembers, spotsForBreakfast);
@@ -109,6 +113,47 @@ public class Player extends menu.sim.Player {
 					addFoodToOrder(shoppingList, lunches.poll().getFoodType(), quantPerLunch);
 					lunchListLength += quantPerLunch;
 				}
+			}
+		}
+	}
+
+	private void shopLunch2(Integer week, List<FamilyMember> familyMembers, ShoppingList shoppingList, Pantry pantry, MealHistory mealHistory){
+
+		Integer openSpots = calculateNewCapacityFor(MealType.LUNCH, pantry);
+		Integer lunchListLength = 0;
+		Integer numLunches = Food.getFoodTypes(MealType.LUNCH).size();
+
+		List<MemberName> memberNames = new ArrayList<>();
+		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
+
+		Map<MealType, List<MemberName>> memberPriorityList = new LinkedHashMap<>();
+		Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences = new HashMap<>();
+
+		for(FamilyMember familyMember : familyMembers)
+			memberNames.add(familyMember.getName());
+
+		shoppingList.addLimit(MealType.LUNCH, openSpots);
+
+		Planner shoppingPlanner = new Planner(memberNames);
+		Pantry allLunchPantry = new Pantry(numLunches);
+
+		for (FoodType food : Food.getFoodTypes(MealType.LUNCH))
+			allLunchPantry.addMealToInventory(food);
+
+		updateFamilyPreferenceMap(allLunchPantry, weightedPreferences, orderedFamilyPreferences);
+		updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
+
+		while (lunchListLength < openSpots) {
+			for (Day day : Day.values()){
+				for (MemberName memberName : memberPriorityList.get(MealType.LUNCH)){
+					updateLunchPreferences(week, day, memberName, shoppingPlanner, mealHistory, orderedFamilyPreferences);
+					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+					shoppingPlanner.addMeal(day, memberName, MealType.LUNCH, food);
+					addFoodToOrder(shoppingList, food, 1);
+					lunchListLength++;
+				}
+				updateFamilyPreferenceMap(allLunchPantry, weightedPreferences, orderedFamilyPreferences);
+				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
 		}
 	}
@@ -247,6 +292,10 @@ public class Player extends menu.sim.Player {
 		
 
 		updateFamilyPreferenceMap(pantry, familyMembers, orderedFamilyPreferences);
+
+		for(MemberName memberName : memberNames)
+			updateLunchPreferences(week, Day.MONDAY, memberName, planner, mealHistory, orderedFamilyPreferences);
+
 		updateMemberPriorityList(familyMembers, memberPriorityList, orderedFamilyPreferences);
 
 		//simPrinter.println("PANTRY: " + pantry.getMealsMap().get(MealType.BREAKFAST));
@@ -267,6 +316,10 @@ public class Player extends menu.sim.Player {
 					planner.addMeal(day, memberName, MealType.BREAKFAST, food);
 					pantry.removeMealFromInventory(food);
 				}
+				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
+			}
+				
+			for(MemberName memberName : memberPriorityList.get(MealType.LUNCH)){
 				if (pantry.getNumAvailableMeals(MealType.LUNCH) > 0){
 					updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
 					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
@@ -274,8 +327,8 @@ public class Player extends menu.sim.Player {
 					pantry.removeMealFromInventory(food);
 				}
 				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
+			updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			
 		}
 
