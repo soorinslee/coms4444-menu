@@ -39,7 +39,8 @@ public class Player extends menu.sim.Player {
     HashMap<MealType, HashMap<MemberName, List<FoodType>>> bestCycles = new HashMap<>();
     HashMap<MealType, HashMap<MemberName, HashMap<Integer, List<FoodType>>>> allCycles = new HashMap<>();
     HashMap<Day, HashMap<MealType, List<MemberName>>> dailyRankings = new HashMap<>();
-    
+    Set<FoodType> topFoodsUsed = new HashSet<>();
+    HashMap<FoodType,Integer> numTopFoodsUsed = new HashMap<>();
 
     /**
     * Player constructor
@@ -89,7 +90,22 @@ public class Player extends menu.sim.Player {
         ShoppingList shoppingList = new ShoppingList();
         int numMeals = (int)(numEmptySlots / 3);
 
-        if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
+        // new greedy approach 
+        // LOOK: >= or >? 
+        if (numEmptySlots >= familyMembers.size()*105) {
+            shoppingList.addLimit(MealType.BREAKFAST, numMeals);
+            shoppingList.addLimit(MealType.LUNCH, numMeals);
+            shoppingList.addLimit(MealType.DINNER, numMeals);
+            
+            for (FoodType foo : topFoodsUsed) {
+                for (int i = 0; i < numTopFoodsUsed.get(foo); i ++) {
+                    shoppingList.addToOrder(foo);
+                }
+            }
+        }
+        
+        // old greedy approach, buying multiples of everything
+        else if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
             numMeals = familyMembers.size() * 52;
         
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
@@ -192,7 +208,7 @@ public class Player extends menu.sim.Player {
                     // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
                     // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already 
             boolean extra = true; 
-            if ((pantry.getNumEmptySlots()+pantry.getNumAvailableMeals()) == (familyMembers.size()*21)) {
+            if ((pantry.getNumEmptySlots()+pantry.getNumAvailableMeals()) < (familyMembers.size()* 21 + 21)) {
                 extra = false;
             }
 
@@ -283,6 +299,7 @@ public class Player extends menu.sim.Player {
 
         List<FoodType> lunchList = new ArrayList<>();
         List<MemberName> famMem = getFamilyMembers(familySatisfaction);
+        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
 
         for(MemberName fm : famMem){
             List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
@@ -292,6 +309,10 @@ public class Player extends menu.sim.Player {
         }
 
  /*       
+=======
+        
+
+>>>>>>> c4481e4f44c654839842a5af9d38ded3cf666c9f
         if(extra){
             for(MemberName fm : famMem){
                 List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
@@ -299,14 +320,17 @@ public class Player extends menu.sim.Player {
                     lunchList.add(ft);
                 }
             }
+<<<<<<< HEAD
         }*/
 
         //System.out.println("lun: " + bestCycles.get(MealType.LUNCH).get(famMem.get(0)).get(0).ordinal()-10);
 
         double threshold = lunchArray.get(famMem.get(0)).get(bestCycles.get(MealType.LUNCH).get(famMem.get(0)).get(0).ordinal()-10) * 0.25;
 
-        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        //List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         if(extra){
+
+        } else {
             for (int i=0; i<2; i++){
                 int cnt = 0;
                 for (FoodType food : covLunch){
@@ -349,7 +373,7 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-        } 
+        }
 /*
         List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         for (int i=0; i<6; i++) {
@@ -397,8 +421,8 @@ public class Player extends menu.sim.Player {
         double threshold = dinnerArray.get(famMem.get(0)).get(bestCycles.get(MealType.DINNER).get(famMem.get(0)).get(0).ordinal()-20) * 0.25;
 
         List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
-        extra = true;
-        if(extra){
+        
+        if(!extra){ //if minimum pantry size, try increase varieties
             int cnt = 0;
             for (FoodType food : covDinner){
                 List<FoodType> leastSatisfiedCycle = bestCycles.get(MealType.DINNER).get(famMem.get(0));
@@ -518,6 +542,11 @@ public class Player extends menu.sim.Player {
 
         int curr = 0;
 
+        topFoodsUsed = new HashSet<>();
+        for (FoodType foo : Food.getAllFoodTypes()) {
+            numTopFoodsUsed.put(foo, 0);
+        }
+
         HashMap<MemberName, List<Double>> breakfastArrayCopy = deepCopyMeals(breakfastArray); 
         HashMap<MemberName, List<Double>> lunchArrayCopy = deepCopyMeals(lunchArray); 
         HashMap<MemberName, List<Double>> dinnerArrayCopy = deepCopyMeals(dinnerArray); 
@@ -557,6 +586,7 @@ public class Player extends menu.sim.Player {
         HashMap<MemberName, FoodType> breakfastList = new HashMap<>();
         HashMap<MemberName, FoodType> lunchList = new HashMap<>();
         HashMap<MemberName, FoodType> dinnerList = new HashMap<>();
+        
 
         for(Day day : Day.values()) {
             familyMemberOrder = getFamilyMembers(familySatisfactionCopy); // --> returns orderded list of family members by satisfaction, utilize satisfaction array 
@@ -574,8 +604,12 @@ public class Player extends menu.sim.Player {
                         bestCycles.get(MealType.BREAKFAST).get(fam).add(Food.getAllFoodTypes().get(breakfastIndx));
                         breakfastList.put(fam, Food.getAllFoodTypes().get(breakfastIndx));
                     }
-                    if ((curr < 4) && !(uniqueFoods.get(MealType.BREAKFAST).get(fam).contains(Food.getAllFoodTypes().get(breakfastIndx))))
-                        uniqueFoods.get(MealType.BREAKFAST).get(fam).add(Food.getAllFoodTypes().get(breakfastIndx));
+                    if (curr < 6) { 
+                        if (!(uniqueFoods.get(MealType.BREAKFAST).get(fam).contains(Food.getAllFoodTypes().get(breakfastIndx))))
+                            uniqueFoods.get(MealType.BREAKFAST).get(fam).add(Food.getAllFoodTypes().get(breakfastIndx));
+                        topFoodsUsed.add(Food.getAllFoodTypes().get(breakfastIndx));
+                        numTopFoodsUsed.put(Food.getAllFoodTypes().get(breakfastIndx), numTopFoodsUsed.get(Food.getAllFoodTypes().get(breakfastIndx))+1);
+                    }
                     allCycles.get(MealType.BREAKFAST).get(fam).get(curr).add(Food.getAllFoodTypes().get(breakfastIndx));
                     curr++;
                 }
@@ -600,8 +634,12 @@ public class Player extends menu.sim.Player {
                         bestCycles.get(MealType.LUNCH).get(fam).add(Food.getAllFoodTypes().get(lunchcIndx + 10));
                         lunchList.put(fam, Food.getAllFoodTypes().get(lunchcIndx + 10));
                     }
-                    if ((curr < 4) && !(uniqueFoods.get(MealType.LUNCH).get(fam).contains(Food.getAllFoodTypes().get(lunchcIndx + 10))))
-                        uniqueFoods.get(MealType.LUNCH).get(fam).add(Food.getAllFoodTypes().get(lunchcIndx + 10));
+                    if (curr < 6) {
+                        if (!(uniqueFoods.get(MealType.LUNCH).get(fam).contains(Food.getAllFoodTypes().get(lunchcIndx + 10))))
+                            uniqueFoods.get(MealType.LUNCH).get(fam).add(Food.getAllFoodTypes().get(lunchcIndx + 10));
+                        topFoodsUsed.add(Food.getAllFoodTypes().get(lunchcIndx + 10));
+                        numTopFoodsUsed.put(Food.getAllFoodTypes().get(lunchcIndx + 10), numTopFoodsUsed.get(Food.getAllFoodTypes().get(lunchcIndx + 10))+1);
+                    }
                     allCycles.get(MealType.LUNCH).get(fam).get(curr).add(Food.getAllFoodTypes().get(lunchcIndx + 10));
                     curr++;
                 }
@@ -624,8 +662,12 @@ public class Player extends menu.sim.Player {
                 dinnerList.put(fam, Food.getAllFoodTypes().get(dinnerIndices[0] + 20));
                 curr = 0;
                 for (Integer dinnerIndx : dinnerIndices) {
-                    if ((curr < 4) && !(uniqueFoods.get(MealType.DINNER).get(fam).contains(Food.getAllFoodTypes().get(dinnerIndx + 20))))
-                        uniqueFoods.get(MealType.DINNER).get(fam).add(Food.getAllFoodTypes().get(dinnerIndx + 20));
+                    if (curr < 6) { 
+                        if (!(uniqueFoods.get(MealType.DINNER).get(fam).contains(Food.getAllFoodTypes().get(dinnerIndx + 20))))
+                            uniqueFoods.get(MealType.DINNER).get(fam).add(Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        topFoodsUsed.add(Food.getAllFoodTypes().get(dinnerIndx + 20));
+                        numTopFoodsUsed.put(Food.getAllFoodTypes().get(dinnerIndx + 20), numTopFoodsUsed.get(Food.getAllFoodTypes().get(dinnerIndx + 20))+1);
+                    }
                     allCycles.get(MealType.DINNER).get(fam).get(curr).add(Food.getAllFoodTypes().get(dinnerIndx + 20));
                     curr++;
                 }
@@ -639,6 +681,7 @@ public class Player extends menu.sim.Player {
             updatePreference(familyMembers, frequencyArrayCopy, lunchArrayCopy, dinnerArrayCopy);
         }
     }
+
 
     /**
     * Plan meals
@@ -875,7 +918,8 @@ public class Player extends menu.sim.Player {
             frequencyArray.put(p, frequency);
 
             //initialize satisfaction
-            familySatisfaction.put(p, (preference/40));
+            familySatisfaction.put(p, (preference/40)); // new one 
+            // familySatisfaction.put(p, 0.0); // old one
         }
     }
 
@@ -1158,6 +1202,8 @@ public class Player extends menu.sim.Player {
             numMeals = familyMembers.size() * 63;
         else if (numEmptySlots >= familyMembers.size() * 210)
             numMeals = familyMembers.size() * 70;
+        // LOOK: multiply by a factor to affect option 2
+        // return (int)(numMeals*0.5);
         return numMeals;
     }
 
