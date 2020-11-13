@@ -1,5 +1,6 @@
 package menu.g2;
 
+import java.lang.reflect.Member;
 import java.util.*;
 
 import menu.sim.*;
@@ -8,14 +9,29 @@ import menu.sim.Food.MealType;
 
 public class Player extends menu.sim.Player {
 
-	int size = 0;
-	List<FoodType> breakfastRanks; // weekly
-	List<FoodType> lunchRanks;
-	List<FoodType> dinnerRanks;
+	private int week;
+	private int numFamilyMembers;
+	private int pantrySize;
+	private List<FamilyMember> familyMembers;
+	private Pantry pantry;
+	private MealHistory mealHistory;
+	private Map<FamilyMember, List<FoodType>> breakfastRanks;
+	private Map<FamilyMember, List<FoodType>> lunchRanks;
+	private List<FoodType> dinnerRanks;
+	private List<Integer> shoppingQuantities;
+	private ShoppingList shoppingList;
 
-	int numBreakfasts = 0;
-	int numLunches = 0;
-	int numDinners = 0;
+	private Map<FamilyMember, List<FoodType>> breakfastAllocRanks;
+	private Map<FamilyMember, List<FoodType>> lunchAllocRanks;
+	private List<FoodType> dinnerAllocRanks;
+
+	private Map<FamilyMember, List<FoodType>> breakfastShopRanks;
+	private Map<FamilyMember, List<FoodType>> lunchShopRanks;
+	private List<FoodType> dinnerShopRanks;
+
+	private Planner currentPlanner;
+
+	private List<FamilyMember> squeakyFamilyMembers;
 
 	/**
 	 * Player constructor
@@ -29,34 +45,12 @@ public class Player extends menu.sim.Player {
 	 */
 	public Player(Integer weeks, Integer numFamilyMembers, Integer capacity, Integer seed, SimPrinter simPrinter) {
 		super(weeks, numFamilyMembers, capacity, seed, simPrinter);
-
-		ShoppingList finalSL = calcShoppingList(pantry, mealHistory, familyMembers);
-		if(Player.hasValidShoppingList(finalSL, numEmptySlots))
-    		return finalSL;
-    	return new ShoppingList();
-
+		this.numFamilyMembers = numFamilyMembers;
+		this.breakfastRanks = new HashMap<>();
+		this.lunchRanks = new HashMap<>();
+		this.dinnerRanks = new ArrayList<>();
+		this.pantrySize = capacity;
 	}
-
-	// option 1:
-	// to calculate static ideal pantry:
-	// 1.determine spread of how many dinners/lunches/breakfasts we should have
-	// based on preferences
-	// 2.rank breakfast, lunch, and dinner foods based on how much they are
-	// generally liked
-	// 3.calculate ideal shopping list based on this
-
-	// how we're gonna order in the future
-	// 4.order difference between current pantry and ideal list
-
-	// option 2:
-	// expected value
-	// simulate pantry being used
-	// simulate an expected value
-	// search space, choose the ideal pantry
-
-	// rankings based on history
-	// longterm: tree of rankings, tree static
-	// daily rankings for lunch, dinner
 
 	/**
 	 * Create shopping list of meals to stock pantry
@@ -71,284 +65,456 @@ public class Player extends menu.sim.Player {
 	 */
 	public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers,
 			Pantry pantry, MealHistory mealHistory) {
+		this.week = week;
+		this.familyMembers = familyMembers;
+		this.mealHistory = mealHistory;
+		this.pantry = pantry;
+		this.breakfastShopRanks = this.breakfastRanks;
+		this.lunchShopRanks = this.lunchRanks;
+		this.dinnerShopRanks = this.dinnerRanks;
 
-		// 1.) calculate how many breakfast, lunch, and dinner items we want based on
-		// preferences
-		List<Integer> cutoffs = calcFreqMeals(pantry, size, familyMembers);
-		numBreakfasts = cutoffs.get(0);
-		numLunches = cutoffs.get(1);
-		numDinners = cutoffs.get(2);
-
-		// 2.) rank breakfast, lunch, and dinner items
-		breakfastRanks = calcOrderRanksBreakfast(familyMembers);
-		lunchRanks = calcOrderRanksLunch(familyMembers);
-		dinnerRanks = calcOrderRanksDinner(familyMembers);
-
-		return calcShoppingList(pantry, mealHistory);
-
-		// TODO: Make these smart allocations
-		/*
-		 * int numBreakfastFoods = random.nextInt(numEmptySlots + 1); int numLunchFoods
-		 * = random.nextInt(numEmptySlots - numBreakfastFoods + 1); int numDinnerFoods =
-		 * numEmptySlots - numBreakfastFoods - numLunchFoods;
-		 * 
-		 * 
-		 * int numBreakfastFoods = random.nextInt(numEmptySlots + 1); int numLunchFoods
-		 * = random.nextInt(numEmptySlots - numBreakfastFoods + 1); int numDinnerFoods =
-		 * numEmptySlots - numBreakfastFoods - numLunchFoods;
-		 * 
-		 * 
-		 * ShoppingList shoppingList = new ShoppingList();
-		 * shoppingList.addLimit(MealType.BREAKFAST, numBreakfastFoods);
-		 * shoppingList.addLimit(MealType.LUNCH, numLunchFoods);
-		 * shoppingList.addLimit(MealType.DINNER, numDinnerFoods);
-		 * 
-		 * List<FoodType> breakfastFoods = Food.getFoodTypes(MealType.BREAKFAST);
-		 * List<FoodType> lunchFoods = Food.getFoodTypes(MealType.LUNCH); List<FoodType>
-		 * dinnerFoods = Food.getFoodTypes(MealType.DINNER);
-		 * 
-		 * for(int i = 0; i < 2 * capacity; i++)
-		 * shoppingList.addToOrder(MealType.BREAKFAST,
-		 * breakfastFoods.get(random.nextInt(breakfastFoods.size()))); for(int i = 0; i
-		 * < 2 * capacity; i++) shoppingList.addToOrder(MealType.LUNCH,
-		 * lunchFoods.get(random.nextInt(lunchFoods.size()))); for(int i = 0; i < 2 *
-		 * capacity; i++) shoppingList.addToOrder(MealType.DINNER,
-		 * dinnerFoods.get(random.nextInt(dinnerFoods.size())));
-		 * 
-		 * if(Player.hasValidShoppingList(shoppingList, numEmptySlots)) return
-		 * shoppingList;
-		 * 
-		 * return new ShoppingList();
-		 */
+		if (this.week == 1) {
+			this.squeakyFamilyMembers = this.familyMembers;
+			this.breakfastAllocRanks = this.breakfastRanks;
+			this.lunchAllocRanks = this.lunchRanks;
+			this.dinnerAllocRanks = this.dinnerRanks;
+		}
+		calculateQuantities();
+		return calculateShoppingList();
 	}
 
+	private Planner runSimulation() {
+		List<MemberName> memberNames = new ArrayList<>();
+		for (FamilyMember familyMember : familyMembers)
+			memberNames.add(familyMember.getName());
 
-	private ShoppingList calcShoppingList(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
-		//how many breakfast items
-		List<FoodType> breakfasts = calcBreakfast(pantry, mealHistory);
-		//how many lunch items
-		List<FoodType> lunches = calcLunch(pantry, mealHistory);
-		//how many dinner items
-		List<FoodType> dinners = calcDinner(pantry, mealHistory, familyMembers);
+		Pantry originalPantry = this.pantry.clone();
 
-		//combine lists?
-		return combineShoppingLists(breakfasts, lunches, dinners, pantry);
+		this.currentPlanner = new Planner(memberNames);
+		for (FamilyMember member : this.familyMembers) {
+			for (Day day : Day.values()) {
+				FoodType maxAvailableBreakfastMeal = getMaximumAvailableBreakfastSim(originalPantry, MealType.BREAKFAST,
+						member);
+				currentPlanner.addMeal(day, member.getName(), MealType.BREAKFAST, maxAvailableBreakfastMeal);
+				FoodType maxAvailableLunchMeal = getMaximumAvailableLunchSim(originalPantry, MealType.LUNCH, member);
+				currentPlanner.addMeal(day, member.getName(), MealType.LUNCH, maxAvailableLunchMeal);
+			}
+		}
+		for (Day day : Day.values()) {
+			FoodType maxAvailableDinnerMeal = getMaximumAvailableDinnerSim(originalPantry, MealType.DINNER);
+			for (int i = 0; i < this.familyMembers.size(); i++) {
+				MemberName memberName = memberNames.get(i);
+				currentPlanner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
+			}
+		}
+		// System.out.println(this.currentPlanner.getPlan().toString());
+		return currentPlanner;
 	}
 
-	// Aum
-	// TODO
-	// 1.) calculate how many breakfast, lunch, and dinner items we want based on
-	// preferences
-	List<Integer> calcFreqMeals(Pantry pantry, int size, List<FamilyMember> familyMembers) {
-		int breakfast = 7*familyMembers.size();
-		int lunch = 7*familyMembers.size();
-		int dinner = 7*familyMembers.size();
+	private FoodType getMaximumAvailableBreakfastSim(Pantry pantry, MealType mealType, FamilyMember member) {
+		return this.breakfastRanks.get(member).get(0);
+	}
 
-		double meanBreakfastSatisfaction = 0.0;
-		double meanLunchSatisfaction = 0.0;
-		double meanDinnerSatisfaction = 0.0;
-		for(FamilyMember member: familyMembers){
-			Map<FoodType, Double> foodPreferenceMap = member.getFoodPreferenceMap();
-			for(Food.FoodType key: foodPreferenceMap.keySet()){
-				Food f = new Food();
-				if(f.getMealType(key) == MealType.BREAKFAST){
-					meanBreakfastSatisfaction += foodPreferenceMap.get(key);
-				} else if(f.getMealType(key) == MealType.LUNCH){
-					meanLunchSatisfaction += foodPreferenceMap.get(key);
-				} else {
-					meanDinnerSatisfaction += foodPreferenceMap.get(key);
+	private FoodType getMaximumAvailableLunchSim(Pantry pantry, MealType mealType, FamilyMember member) {
+		this.lunchShopRanks = new HashMap<FamilyMember, List<FoodType>>();
+		updateShopSimLunch();
+		// System.out.println(this.lunchShopRanks.toString());
+		return this.lunchShopRanks.get(member).get(0);
+	}
+
+	private void updateShopSimLunch() {
+		this.lunchShopRanks = this.lunchAllocRanks;
+		for (FamilyMember familyMember : familyMembers) {
+			HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+			for (FoodType foodType : lunchRanks.get(familyMember)) {
+				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
+
+				double factor = 1;
+				if (daysAgo > 0) {
+					factor = (double) daysAgo / (double) (daysAgo + 1);
+				}
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor * globalPreference;
+				currentPreferences.put(foodType, currentPreference);
+			}
+			// sort lunches by current preference
+			List<FoodType> lunches = new ArrayList<>(lunchRanks.get(familyMember));
+			lunches.sort((lunch1, lunch2) -> (int) (100 * currentPreferences.get(lunch2))
+					- (int) (100 * currentPreferences.get(lunch1)));
+			// add currentPreference list to lunchAllocRanks
+			this.lunchShopRanks.put(familyMember, lunches);
+		}
+	}
+
+	private FoodType getMaximumAvailableDinnerSim(Pantry pantry, MealType mealType) {
+		HashMap<FoodType, Double> currentPrefAverages = new HashMap<>();
+		for (FoodType foodType : dinnerRanks) {
+			int daysAgo = lastEaten(foodType, this.familyMembers.get(0), MealType.DINNER);
+
+			double factor = 1;
+			// calculate factor based on last eaten
+			if (daysAgo > 0) {
+				factor = (double) daysAgo / (double) (daysAgo + 1);
+			}
+
+			// calculate sum by adding all preferences*factor
+			double sum = 2.0;
+
+			for (FamilyMember familyMember : this.familyMembers) {
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor * globalPreference;
+
+				sum += currentPreference;
+			}
+
+			currentPrefAverages.put(foodType, sum);
+
+			// double
+		}
+
+		this.dinnerShopRanks = new ArrayList<>(dinnerRanks);
+
+		this.dinnerShopRanks.sort((dinner1, dinner2) -> (int) (100 * currentPrefAverages.get(dinner2))
+				- (int) (100 * currentPrefAverages.get(dinner1)));
+		return this.dinnerShopRanks.get(0);
+	}
+
+	/////// maybe at end?
+	// TODO add dynamic partitioning
+	private void calculateQuantities() {
+		this.shoppingQuantities = new ArrayList<>();
+		int minQuantity = 7 * this.numFamilyMembers;
+		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
+		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
+		this.shoppingQuantities.add(this.pantry.getNumEmptySlots() / 3);
+	}
+
+	private ShoppingList calculateShoppingList() {
+		this.shoppingList = new ShoppingList();
+		this.shoppingList.addLimit(MealType.BREAKFAST, this.shoppingQuantities.get(0));
+		this.shoppingList.addLimit(MealType.LUNCH, this.shoppingQuantities.get(1));
+		this.shoppingList.addLimit(MealType.DINNER, this.shoppingQuantities.get(2));
+
+		calculateBreakfastRanks();
+		calculateLunchRanks();
+		calculateDinnerRanks();
+		Planner sim = runSimulation();
+
+		calculateBreakfastShoppingList(sim);
+
+		// System.out.println("HERE");
+
+		calculateLunchShoppingList(sim);
+		calculateDinnerShoppingList(sim);
+
+		if (Player.hasValidShoppingList(this.shoppingList, this.pantry.getNumEmptySlots())) {
+			return this.shoppingList;
+		}
+		return new ShoppingList();
+	}
+
+	/////// for low pantries should probably just load up on what squeakiest wants
+
+	//// to do: stocking up for lowest x% of people
+
+	/// still buy what everyone wants, only stock up on lowest x squeakiest people
+
+	//// order what everyone wants, then do repeats for squeakiest people a lot
+
+	////// TODO: For Friday, Scott, Aum
+	////// ideal planner week*# weeks pantry can fit - what's already in pantry
+	////// if we get everything we want, then pantry would be filled
+	private void calculateBreakfastShoppingList(Planner sim) {
+
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> idealPlan = sim.getPlan();
+		double pantryWeeksSize = (double) pantrySize / (double) (numFamilyMembers * 21);
+
+		double smallCaseCutoff = 2;
+		// how many in small case to focus on
+		double topNFoods = 3;
+		double topNFoodsFreqDivisor = 2;
+
+		//// small case: try to stockpile for pickiest eaters
+
+		//// Part 1: add what everyone wants once
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for (FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			// int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredFreqOneWeek - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+		// desired
+		for (FoodType foodType : totalFoodFreqs.keySet()) {
+			for (int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		/// Part 2: stock up the rest of the pantry with the bottom 30% of pickiest
+		/// people's preferences
+		double percentile = .3;
+		// repeat to fill pantry n-1 times
+		for (int repeats = 0; repeats < pantryWeeksSize; repeats++) {
+			for (int i = 0; i < Math.max(percentile * numFamilyMembers, 1); i++) {
+				MemberName memberName = this.squeakyFamilyMembers.get(i).getName();
+				for (Day day : idealPlan.keySet()) {
+					FoodType foodType = idealPlan.get(day).get(memberName).get(MealType.BREAKFAST);
+					this.shoppingList.addToOrder(foodType);
 				}
 			}
 		}
-		
-		meanBreakfastSatisfaction = meanBreakfastSatisfaction/(10.0 * (double)familyMembers.size());
-		meanLunchSatisfaction = meanLunchSatisfaction/(10.0 * (double)familyMembers.size());
-		meanDinnerSatisfaction = meanDinnerSatisfaction/(20.0 * (double)familyMembers.size());
 
-		int extraBreakfastAllocation = (int) ((size-breakfast)*(meanBreakfastSatisfaction/(meanBreakfastSatisfaction+meanLunchSatisfaction+meanDinnerSatisfaction)));
-		int extraLunchAllocation = (int) ((size-lunch)*(meanLunchSatisfaction/(meanBreakfastSatisfaction+meanLunchSatisfaction+meanDinnerSatisfaction)));
-		int extraDinnerAllocation = (int) ((size-dinner)*(meanDinnerSatisfaction/(meanBreakfastSatisfaction+meanLunchSatisfaction+meanDinnerSatisfaction)));
+		//// part 3: backups: loop through the pickiest person's preferences, add
+		//// .2*pantry/3 size for each value
+		for (FamilyMember member : this.squeakyFamilyMembers) {
+			for (int i = 1; i < 3; i++) {
+				FoodType foodType = this.breakfastAllocRanks.get(member).get(i);
+				for (int j = 0; j < 0.3 * this.shoppingQuantities.get(0); j++)
+					this.shoppingList.addToOrder(foodType);
+			}
+		}
 
-		breakfast+= extraBreakfastAllocation;
-		lunch += extraLunchAllocation;
-		dinner += extraDinnerAllocation;
+		// System.out.println("shopping list is " +
+		// this.shoppingList.getMealOrder(MealType.BREAKFAST));
+		// }
 
-		breakfast -= pantry.getNumAvailableMeals(MealType.BREAKFAST);
-		lunch -= pantry.getNumAvailableMeals(MealType.LUNCH);
-		dinner -= pantry.getNumAvailableMeals(MealType.DINNER);
-		ArrayList<Integer> cutoffs = new ArrayList<Integer>();
-		cutoffs.add(breakfast);
-		cutoffs.add(lunch);
-		cutoffs.add(dinner);
-		
-		return cutoffs;
-	}
+		////// backups:
 
-	// Ahad
-	// TODO
-	// 2.) rank breakfast items
-	// cereal, milk, oatmeal....
-	// highest minimum
-	// for each meal find lowest satisfaction
-	// use that value to rank all the foods
-	List<FoodType> calcOrderRanksBreakfast(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
+		// backups
 
 	}
 
-	// Ahad
-	// TODO
-	// 2.) rank lunch items
-	List<FoodType> calcOrderRanksLunch(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
+	////// TODO: For Friday, Scott, Aum
+	private void calculateLunchShoppingList(Planner sim) {
 
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> idealPlan = sim.getPlan();
+
+		// add what everyone wants once
+		double pantryWeeksSize = (double) pantrySize / (double) (numFamilyMembers * 21);
+
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.LUNCH);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for (FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			// int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredFreqOneWeek - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+		// desired
+		for (FoodType foodType : totalFoodFreqs.keySet()) {
+			for (int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		/// Part 2: stock up the rest of the pantry with the bottom 30% of pickiest
+		/// people's preferences
+		double percentile = .3;
+		// repeat to fill pantry n-1 times
+		for (int repeats = 0; repeats < pantryWeeksSize; repeats++) {
+			for (int i = 0; i < Math.max(percentile * numFamilyMembers, 1); i++) {
+				MemberName memberName = this.squeakyFamilyMembers.get(i).getName();
+				for (Day day : idealPlan.keySet()) {
+					FoodType foodType = idealPlan.get(day).get(memberName).get(MealType.LUNCH);
+					this.shoppingList.addToOrder(foodType);
+				}
+			}
+		}
+
+		//// part 3: backups: loop through the pickiest person's preferences, add
+		//// .2*pantry/3 size for each value
+		for (FamilyMember member : this.squeakyFamilyMembers) {
+			for (int i = 1; i < 3; i++) {
+				FoodType foodType = this.lunchAllocRanks.get(member).get(i);
+				for (int j = 0; j < 0.3 * this.shoppingQuantities.get(0); j++)
+					this.shoppingList.addToOrder(foodType);
+			}
+		}
 	}
 
-	// Ahad
-	// TODO
-	// 2.) rank dinner items
-	List<FoodType> calcOrderRanksDinner(List<FamilyMember> familyMembers) {
-		return new ArrayList<FoodType>();
+	////// TODO: For Friday, Scott, Aum
+	private void calculateDinnerShoppingList(Planner sim) {
+
+		double pantryWeeksSize = (double) pantrySize / (double) (numFamilyMembers * 21);
+
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.DINNER);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for (FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			int desiredTotal = (int) Math.ceil(pantryWeeksSize * desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredTotal - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+		// desired
+		for (FoodType foodType : totalFoodFreqs.keySet()) {
+			for (int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		// backups
+		for (FoodType foodType : totalFoodFreqs.keySet()) {
+			for (int j = 1; j < this.dinnerAllocRanks.size(); j++) {
+				for (int i = 0; i < 3 * this.shoppingQuantities.get(2) / this.dinnerRanks.size(); i++) {
+					this.shoppingList.addToOrder(this.dinnerAllocRanks.get(j));
+				}
+			}
+		}
 	}
 
+	HashMap<FoodType, Integer> findFreqsFromPlanner(Planner sim, MealType mealType) {
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> idealPlan = sim.getPlan();
 
+		HashMap<FoodType, Integer> foodFreqs = new HashMap<>();
 
-	//SCOTT
-	//TODO
-	//determine frequency for breakfast items
-	//based on cutoffs, rankings
-	//stick with highest ranking
-	List<FoodType> calcBreakfast(Pantry pantry, MealHistory mealHistory) {
-		//numBreakfasts
-		int difference = numBreakfasts -  pantry.getNumAvailableMeals(MealType.BREAKFAST);
+		for (Day day : idealPlan.keySet()) {
+			for (MemberName member : idealPlan.get(day).keySet()) {
+				FoodType meal = idealPlan.get(day).get(member).get(mealType);
 
-		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
+				// if food already encountered, add 1
+				if (foodFreqs.containsKey(meal)) {
+					int freq = foodFreqs.get(meal);
+					foodFreqs.put(meal, freq + 1);
+				}
 
-		List<FoodType> breakfasts = new ArrayList<>();
-
-		//target top 3 breakfasts
-		for(int i = 0; i < 3; i++) {
-			FoodType topFood = breakfastRanks.get(i);
-			int freqTop = map.get(MealType.BREAKFAST).get(topFood);
-
-			breakfasts = addFoods(breakfasts, topFood, (int) (difference/3*1.5));
+				// otherwise make it one
+				else {
+					foodFreqs.put(meal, 1);
+				}
+			}
 		}
 
-		for(int i = 4; i < breakfastRanks.size(); i++) {
-			FoodType badFood = breakfastRanks.get(i);
-			int freqBad = map.get(MealType.BREAKFAST).get(badFood);
-			breakfasts = addFoods(breakfasts, badFood, (int) (difference/5*1.5));
-		}
-
-		//System.out.println(breakfasts);
-		return breakfasts;
+		return foodFreqs;
 	}
 
+	private void calculateBreakfastRanks() {
+		this.breakfastRanks = new HashMap<>();
+		for (FamilyMember member : this.familyMembers) {
 
-	//SCOTT
-	//TODO
-	//determine frequency for lunch items
-	//balance between top couple
-	List<FoodType> calcLunch(Pantry pantry, MealHistory mealHistory) {
-		int difference = numLunches -  pantry.getNumAvailableMeals(MealType.LUNCH);
-
-		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
-
-		List<FoodType> lunches = new ArrayList<>();
-
-		//target top 5 top lunches
-		for(int i = 0; i < 5; i++) {
-			FoodType topFood = lunchRanks.get(i);
-			int freqTop = map.get(MealType.LUNCH).get(topFood);
-
-			lunches = addFoods(lunches, topFood, (int) (difference/5*1.3));
+			List<FoodType> allBreakfasts = Food.getFoodTypes(MealType.BREAKFAST);
+			Map<FoodType, Double> prefMap = new HashMap<>();
+			for (FoodType food : allBreakfasts) {
+				prefMap.put(food, member.getFoodPreference(food));
+			}
+			this.breakfastRanks.put(member, sortByValue(prefMap));
 		}
-
-		for(int i = 6; i < lunchRanks.size(); i++) {
-			FoodType badFood = lunchRanks.get(i);
-			int freqBad = map.get(MealType.LUNCH).get(badFood);
-
-			lunches = addFoods(lunches, badFood, (int) (difference/7*1.2));
-		}
-
-		//System.out.println(lunches);
-		return lunches;
-		
 	}
 
-	//SCOTT
-	//TODO
-	//determine frequency for dinner items
-	//multiples of the number of family members
-	List<FoodType> calcDinner(Pantry pantry, MealHistory mealHistory, List<FamilyMember> familyMembers) {
-		int numFamMembers = familyMembers.size();
-		int difference = numDinners -  pantry.getNumAvailableMeals(MealType.DINNER);
-		//System.out.println("difference is " + difference);
-		//System.out.println("size is " + size);
+	private void calculateLunchRanks() {
+		this.lunchRanks = new HashMap<>();
+		for (FamilyMember member : this.familyMembers) {
 
-		Map<MealType, Map<FoodType, Integer>> map = pantry.getMealsMap();
-
-		List<FoodType> dinners = new ArrayList<>();
-
-		//target top 5 top dinners
-		for(int i = 0; i < 5; i++) {
-			FoodType topFood = dinnerRanks.get(i);
-			int freqTop = map.get(MealType.DINNER).get(topFood);
-
-
-
-			dinners = addFoods(dinners, topFood, (int) (difference/5*1.3));
+			List<FoodType> allLunches = Food.getFoodTypes(MealType.LUNCH);
+			Map<FoodType, Double> prefMap = new HashMap<>();
+			for (FoodType food : allLunches) {
+				prefMap.put(food, member.getFoodPreference(food));
+			}
+			this.lunchRanks.put(member, sortByValue(prefMap));
 		}
-
-		for(int i = 6; i < dinnerRanks.size(); i++) {
-			FoodType badFood = dinnerRanks.get(i);
-			int freqBad = map.get(MealType.DINNER).get(badFood);
-
-			dinners = addFoods(dinners, badFood, (int) (difference/7*1.2));
-		}
-
-		//System.out.println(dinners);
-		return dinners;
-		
 	}
 
-	List<FoodType> addFoods(List<FoodType> li, FoodType food, int num) {
-		List<FoodType> foods = new ArrayList<>(li);
-		for(int i = 0; i < num; i++) {
-			foods.add(food);
+	private void calculateDinnerRanks() {
+		this.dinnerRanks = new ArrayList<>();
+		List<FoodType> allDinners = Food.getFoodTypes(MealType.DINNER);
+		HashMap<FoodType, Double> familyPreferences = new HashMap<>();
+		for (FoodType food : allDinners) {
+			double meanSatisfaction = 0.0;
+			for (FamilyMember member : this.familyMembers) {
+				meanSatisfaction += member.getFoodPreference(food);
+			}
+			meanSatisfaction /= this.numFamilyMembers;
+			familyPreferences.put(food, meanSatisfaction);
 		}
-		return foods;
+		this.dinnerRanks = (sortByValue(familyPreferences));
 	}
 
-	//SCOTT
-	//TODO
-	//combine breakfast, lunch, and dinner shopping lists into one
-	//take into account cutoffs -> generate shopping list
-	//backup ones total to 7*2 or 7*3 of everything (pantry size/n)
-	ShoppingList combineShoppingLists(List<FoodType> breakfasts, List<FoodType> lunches, List<FoodType> dinners, Pantry pantry) {
-		ShoppingList shoppingList = new ShoppingList();
+	public static List<FoodType> sortByValue(Map<FoodType, Double> hm) {
+		// Create a list from elements of HashMap
+		List<Map.Entry<FoodType, Double>> list = new LinkedList<Map.Entry<FoodType, Double>>(hm.entrySet());
 
-		//add cutoffs for how many of each meal type
-    	shoppingList.addLimit(MealType.BREAKFAST, numBreakfasts -  pantry.getNumAvailableMeals(MealType.BREAKFAST));
-    	shoppingList.addLimit(MealType.LUNCH, numLunches - pantry.getNumAvailableMeals(MealType.LUNCH));
-		shoppingList.addLimit(MealType.DINNER, numDinners - pantry.getNumAvailableMeals(MealType.DINNER));
-		
-		//add all breakfast foods
-		for(FoodType breakfast : breakfasts) {
-			shoppingList.addToOrder(MealType.BREAKFAST, breakfast);
+		// Sort the list
+		Collections.sort(list, new Comparator<Map.Entry<FoodType, Double>>() {
+			public int compare(Map.Entry<FoodType, Double> o1, Map.Entry<FoodType, Double> o2) {
+				return (o2.getValue()).compareTo(o1.getValue());
+			}
+		});
+
+		// put data from sorted list to hashmap
+		HashMap<FoodType, Double> temp = new LinkedHashMap<FoodType, Double>();
+		for (Map.Entry<FoodType, Double> aa : list) {
+			temp.put(aa.getKey(), aa.getValue());
+		}
+		return new ArrayList(temp.keySet());
+	}
+
+	public void updateSqueakyMembers() {
+		if (week == 1) {
+			return;
+		}
+		this.squeakyFamilyMembers = new ArrayList<>();
+		Map<MemberName, Double> satisfactions = this.mealHistory.getAllAverageSatisfactions().get(this.week - 1);
+		// System.out.println("SATS" + satisfactions.toString());
+		List<MemberName> squeakyNames = sortBySatisfaction(satisfactions);
+		// System.out.println("Here");
+		for (MemberName memberName : squeakyNames) {
+			for (FamilyMember f : this.familyMembers) {
+				if (f.getName().equals(memberName)) {
+					this.squeakyFamilyMembers.add(f);
+					// System.out.println(f.getSatisfaction());
+				}
+			}
 		}
 
-		//add all lunch foods
-		for(FoodType lunch : lunches) {
-			shoppingList.addToOrder(MealType.LUNCH, lunch);
-		}
+		// System.out.println(squeakyNames.toString());
+		// System.out.println(this.squeakyFamilyMembers.toString());
+	}
 
-		//add all dinner foods
-		for(FoodType dinner : dinners) {
-			shoppingList.addToOrder(MealType.DINNER, dinner);
-		}
+	public static List<MemberName> sortBySatisfaction(Map<MemberName, Double> hm) {
+		// Create a list from elements of HashMap
+		List<Map.Entry<MemberName, Double>> list = new LinkedList<Map.Entry<MemberName, Double>>(hm.entrySet());
 
-		return shoppingList;
+		// Sort the list
+		Collections.sort(list, new Comparator<Map.Entry<MemberName, Double>>() {
+			public int compare(Map.Entry<MemberName, Double> o1, Map.Entry<MemberName, Double> o2) {
+				return (o1.getValue()).compareTo(o2.getValue());
+
+			}
+		});
+
+		// put data from sorted list to hashmap
+
+		HashMap<MemberName, Double> temp = new LinkedHashMap<MemberName, Double>();
+		for (Map.Entry<MemberName, Double> aa : list) {
+
+			temp.put(aa.getKey(), aa.getValue());
+		}
+		return new ArrayList(temp.keySet());
 	}
 
 	/**
@@ -361,15 +527,13 @@ public class Player extends menu.sim.Player {
 	 * @return planner of assigned meals for the week
 	 *
 	 */
-
-	// TODOs
-	// AUM
-
 	public Planner planMeals(Integer week, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
+		this.mealHistory = mealHistory;
+		this.week = week;
 
-		// 1. randomly choose between top three meals only in lunch and dinner
-		// get max available or second max available, remove from inventory, add to
-		// planner
+		this.pantry = pantry;
+		// System.out.println(this.pantry.getAvailableFoodTypes(MealType.LUNCH).toString());
+		updateSqueakyMembers();
 
 		List<MemberName> memberNames = new ArrayList<>();
 		for (FamilyMember familyMember : familyMembers)
@@ -377,53 +541,303 @@ public class Player extends menu.sim.Player {
 
 		Pantry originalPantry = pantry.clone();
 
-		Planner planner = new Planner(memberNames);
-		for (MemberName memberName : memberNames) {
+		this.currentPlanner = new Planner(memberNames);
+		// System.out.println("sizeeee here is " + currentPlanner.getPlan().size());
+
+		for (FamilyMember member : this.squeakyFamilyMembers) {
+
 			for (Day day : Day.values()) {
-				FoodType maxAvailableBreakfastMeal = getMaximumAvailableMeal(pantry, MealType.BREAKFAST);
+				FoodType maxAvailableBreakfastMeal = getMaximumAvailableBreakfast(pantry, MealType.BREAKFAST, member);
 				if (pantry.getNumAvailableMeals(maxAvailableBreakfastMeal) > 0) {
-					planner.addMeal(day, memberName, MealType.BREAKFAST, maxAvailableBreakfastMeal);
+					this.currentPlanner.addMeal(day, member.getName(), MealType.BREAKFAST, maxAvailableBreakfastMeal);
 					pantry.removeMealFromInventory(maxAvailableBreakfastMeal);
 				}
-				FoodType maxAvailableLunchMeal = getRandomAvailableMeal(pantry, MealType.LUNCH);
+				FoodType maxAvailableLunchMeal = getMaximumAvailableLunch(pantry, MealType.LUNCH, member);
 				if (pantry.getNumAvailableMeals(maxAvailableLunchMeal) > 0) {
-					planner.addMeal(day, memberName, MealType.LUNCH, maxAvailableLunchMeal);
+					this.currentPlanner.addMeal(day, member.getName(), MealType.LUNCH, maxAvailableLunchMeal);
 					pantry.removeMealFromInventory(maxAvailableLunchMeal);
 				}
 			}
 		}
 		for (Day day : Day.values()) {
-			FoodType maxAvailableDinnerMeal = getRandomAvailableMeal(pantry, MealType.DINNER);
+			FoodType maxAvailableDinnerMeal = getMaximumAvailableDinner(pantry, MealType.DINNER);
+			// System.out.println(maxAvailableDinnerMeal + " " +
+			// pantry.getNumAvailableMeals(maxAvailableDinnerMeal));
 			Integer numDinners = Math.min(pantry.getNumAvailableMeals(maxAvailableDinnerMeal), familyMembers.size());
 			for (int i = 0; i < numDinners; i++) {
 				MemberName memberName = memberNames.get(i);
-				planner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
+				this.currentPlanner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
 				pantry.removeMealFromInventory(maxAvailableDinnerMeal);
 			}
 		}
 
-		if (Player.hasValidPlanner(planner, originalPantry))
-			return planner;
+		if (Player.hasValidPlanner(this.currentPlanner, originalPantry))
+			return this.currentPlanner;
 		return new Planner();
 	}
 
-	private FoodType getRandomAvailableMeal(Pantry pantry, MealType mealType){
-		Random rand = new Random();
-		int randomNum = rand.nextInt(pantry.getNumAvailableFoodTypes(mealType))+1;
-		FoodType randomAvailableMeal = pantry.getAvailableFoodTypes(mealType).get(randomNum);
-		return randomAvailableMeal;
+	private FoodType getMaximumAvailableBreakfast(Pantry pantry, MealType mealType, FamilyMember member) {
+		updateBreakfastAlloc();
+
+		int num = 0;
+		int max = 0;
+		FoodType maximumAvailableMealType = this.breakfastAllocRanks.get(member).get(num);
+		while (num < this.breakfastAllocRanks.get(member).size()) {
+			FoodType maximumAvailableMeal = this.breakfastAllocRanks.get(member).get(num);
+			if (pantry.getNumAvailableMeals(maximumAvailableMeal) >= 1) {
+				return maximumAvailableMeal;
+			} else {
+				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)) {
+					maximumAvailableMealType = this.breakfastAllocRanks.get(member).get(num);
+					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
+				}
+			}
+			num++;
+		}
+		return maximumAvailableMealType;
 	}
 
-	private FoodType getMaximumAvailableMeal(Pantry pantry, MealType mealType) {
-		FoodType maximumAvailableMeal = null;
-		int maxAvailableMeals = 21;
-		for (FoodType foodType : Food.getFoodTypes(mealType)) {
-			int ranking = this.breakfastRanks.indexOf(foodType);
-			if (maxAvailableMeals > ranking) {
-				maxAvailableMeals = ranking;
-				maximumAvailableMeal = foodType;
+	private FoodType getMaximumAvailableLunch(Pantry pantry, MealType mealType, FamilyMember member) {
+		updateLunchAlloc();
+
+		Random r = new Random();
+		int num = 0;
+		int max = 0;
+		FoodType maximumAvailableMealType = this.lunchAllocRanks.get(member).get(num);
+		while (num < this.lunchAllocRanks.get(member).size()) {
+			FoodType maximumAvailableMeal = this.lunchAllocRanks.get(member).get(num);
+			if (pantry.getNumAvailableMeals(maximumAvailableMeal) >= 1) {
+				return maximumAvailableMeal;
+			} else {
+				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)) {
+					maximumAvailableMealType = this.lunchAllocRanks.get(member).get(num);
+					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
+				}
+			}
+			num++;
+		}
+		return maximumAvailableMealType;
+	}
+
+	private FoodType getMaximumAvailableDinner(Pantry pantry, MealType mealType) {
+		updateDinnerAlloc();
+
+		int num = 0;
+		int max = 0;
+		FoodType maximumAvailableMealType = this.dinnerAllocRanks.get(num);
+		while (num < this.dinnerAllocRanks.size()) {
+			FoodType maximumAvailableMeal = this.dinnerAllocRanks.get(num);
+			if (pantry.getNumAvailableMeals(maximumAvailableMeal) >= this.numFamilyMembers) {
+				return maximumAvailableMeal;
+			} else {
+				if (max < pantry.getNumAvailableMeals(maximumAvailableMeal)) {
+					maximumAvailableMealType = this.dinnerAllocRanks.get(num);
+					max = pantry.getNumAvailableMeals(maximumAvailableMeal);
+				}
+			}
+			num++;
+		}
+		return maximumAvailableMealType;
+	}
+
+	// Scott
+	private void updateBreakfastAlloc() {
+		this.breakfastAllocRanks = this.breakfastRanks;
+	}
+
+	// Scott
+	// find most recent time in past week that food was eaten:
+	// look at this planner
+	// if not in it,
+	// look at last week
+	// calc new value
+	private void updateLunchAlloc() {
+		this.lunchAllocRanks = new HashMap<FamilyMember, List<FoodType>>();
+
+		for (FamilyMember familyMember : familyMembers) {
+			// for each family member, calculate their current preferences
+			HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+
+			// System.out.println(lunchRanks.get(familyMember));
+
+			for (FoodType foodType : lunchRanks.get(familyMember)) {
+				int daysAgo = lastEaten(foodType, familyMember, MealType.LUNCH);
+				double factor = 1;
+				// System.out.println("food type is " + foodType);
+
+				if (daysAgo > 0) {
+					// System.out.println("days ago is " + daysAgo);
+					factor = (double) daysAgo / (double) (daysAgo + 1);
+					// System.out.println("factor is " + factor);
+				}
+
+				double globalPreference = familyMember.getFoodPreference(foodType);
+				double currentPreference = factor * globalPreference;
+
+				currentPreferences.put(foodType, currentPreference);
+			}
+
+			// sort lunches by current preference
+			List<FoodType> lunches = new ArrayList<>(lunchRanks.get(familyMember));
+			lunches.sort((lunch1, lunch2) -> (int) (100 * currentPreferences.get(lunch2))
+					- (int) (100 * currentPreferences.get(lunch1)));
+
+			/*
+			 * for(FoodType lunch : lunches) { System.out.println(lunch + ", " +
+			 * currentPreferences.get(lunch)); }
+			 */
+
+			// add currentPreference list to lunchAllocRanks
+			this.lunchAllocRanks.put(familyMember, lunches);
+
+		}
+	}
+
+	// look in planner and last week
+	private int lastEaten(FoodType foodType, FamilyMember familyMember, MealType mealType) {
+		// System.out.println();
+		// System.out.println("WEEK: " + this.week + ", SEARCHING FOR MEAL: " +
+		// foodType);
+
+		// check in this planner
+		// System.out.println("this week:");
+		int daysAgoThisWeek = searchPlanner(foodType, familyMember, mealType, this.currentPlanner);
+
+		// found in this planner
+		if (daysAgoThisWeek > 0) {
+			// System.out.println("TOTALLLLL: " + daysAgoThisWeek);
+			return daysAgoThisWeek;
+		}
+		// System.out.println("HEREEEE");
+		// check last week
+		if (this.week > 1) {
+			// System.out.println("last week:");
+			Planner lastPlanner = this.mealHistory.getPlanner(week - 1);
+
+			int daysAgoLastWeek = searchPlanner(foodType, familyMember, mealType, lastPlanner);
+
+			if (daysAgoLastWeek > 0) {
+				int daysAgo = daysAgoThisWeek * -1 + daysAgoLastWeek;
+				return daysAgo;
 			}
 		}
-		return maximumAvailableMeal;
+
+		// System.out.println("TOTALLLL: NOT EITHER WEEKS");
+		return -1;
 	}
+
+	int searchPlanner(FoodType foodType, FamilyMember familyMember, MealType mealType, Planner planner) {
+		MemberName name = familyMember.getName();
+
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> plan = planner.getPlan();
+		int end = 7;
+
+		if (plan.keySet().size() > 0) {
+			// System.out.println("size is " + Day.values().length);
+
+			for (int i = (Day.values().length - 1); i >= 0; i--) {
+				// System.out.println("i is " + i);
+				Day day = Day.values()[i];
+				if (!plan.get(day).get(name).containsKey(mealType)) {
+					end--;
+					// System.out.println("not here");
+				}
+
+				// if the day has been planned and it is the sought after foodType
+				else if (plan.get(day).get(name).get(mealType) == foodType) {
+					// System.out.println("end is " + end);
+					int start = i;
+					// System.out.println("days ago is " + (end-start));
+					return end - start;
+				}
+			}
+		}
+		// System.out.println(foodType + " not found");
+		return -1 * end;
+	}
+
+	// Ahad
+	// find most recent time in past week that food was eaten:
+	// look at this planner
+	// look through list
+	// find how long ago food was eaten
+
+	// update mean:
+	// look through all people's preferences, multiply by factor, recalc mean
+
+	// sorting all the means:
+	// pass to sortByValue to sort dinners
+	// set dinnerallocranks to that
+
+	private void updateDinnerAlloc() {
+		this.dinnerAllocRanks = new ArrayList<FoodType>(dinnerRanks);
+
+		// HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+
+		// List<FoodType> pickiestPreferences = this.squeakyFamilyMembers.get(0);
+		FamilyMember pickiestFamMember = this.squeakyFamilyMembers.get(0);
+		// FamilyMember pickiestFamMember =
+		// this.squeakyFamilyMembers.get(squeakyFamilyMembers.size()-1);
+		HashMap<FoodType, Double> currentPreferences = new HashMap<>();
+
+		// System.out.println(lunchRanks.get(familyMember));
+
+		for (FoodType foodType : this.dinnerRanks) {
+			int daysAgo = lastEaten(foodType, pickiestFamMember, MealType.DINNER);
+			double factor = 1;
+			// System.out.println("food type is " + foodType);
+
+			if (daysAgo > 0) {
+				// System.out.println("days ago is " + daysAgo);
+				factor = (double) daysAgo / (double) (daysAgo + 1);
+				// System.out.println("factor is " + factor);
+			}
+
+			double globalPreference = pickiestFamMember.getFoodPreference(foodType);
+			double currentPreference = factor * globalPreference;
+
+			currentPreferences.put(foodType, currentPreference);
+		}
+
+		// sort dinners by current preference
+		List<FoodType> dinners = new ArrayList<>(dinnerRanks);
+		dinners.sort((dinner1, dinner2) -> (int) (100 * currentPreferences.get(dinner2))
+				- (int) (100 * currentPreferences.get(dinner1)));
+
+		/*
+		 * for(FoodType lunch : lunches) { System.out.println(lunch + ", " +
+		 * currentPreferences.get(lunch)); }
+		 */
+
+		// add currentPreference list to lunchAllocRanks
+		this.dinnerAllocRanks = dinners;
+	}
+
+	/*
+	 * HashMap<FoodType, Double> currentPrefAverages = new HashMap<>(); for
+	 * (FoodType foodType : dinnerRanks) { int daysAgo = lastEaten(foodType,
+	 * this.familyMembers.get(0), MealType.DINNER);
+	 * 
+	 * double factor = 1; // calculate factor based on last eaten if (daysAgo > 0) {
+	 * factor = (double) daysAgo / (double) (daysAgo + 1); }
+	 * 
+	 * // calculate sum by adding all preferences*factor double sum = 2.0;
+	 * 
+	 * for (FamilyMember familyMember : this.familyMembers) { double
+	 * globalPreference = familyMember.getFoodPreference(foodType); double
+	 * currentPreference = factor * globalPreference;
+	 * 
+	 * sum += currentPreference; }
+	 * 
+	 * currentPrefAverages.put(foodType, sum);
+	 * 
+	 * // double }
+	 * 
+	 * this.dinnerAllocRanks = new ArrayList<>(dinnerRanks);
+	 * 
+	 * this.dinnerAllocRanks.sort((dinner1, dinner2) -> (int) (100 *
+	 * currentPrefAverages.get(dinner2)) - (int) (100 *
+	 * currentPrefAverages.get(dinner1))); }
+	 */
+
 }
