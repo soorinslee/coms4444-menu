@@ -92,7 +92,7 @@ public class Player extends menu.sim.Player {
 
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
-        // 1/4 capacity to breakfast and lunch and rest to dinner
+        // 1/3 capacity to all
         int numBreakfastFoods = Math.round(super.capacity/3) - numInPantry(MealType.BREAKFAST, pantry);
     	int numLunchFoods = Math.round(super.capacity/3) - numInPantry(MealType.LUNCH, pantry);
     	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
@@ -129,7 +129,7 @@ public class Player extends menu.sim.Player {
             }
 
             HashMap<FoodType, Double> foodToRewards = new HashMap<>();
-            // handle dinner separately
+            // Handle dinner separately
             for (FamilyMember member : familyMembers) {
                 Map<FoodType, Double> foods = member.getFoodPreferenceMap();
                 for (Map.Entry<FoodType, Double> f: foods.entrySet()) {
@@ -163,7 +163,7 @@ public class Player extends menu.sim.Player {
         }
         simPrinter.println("Moving ahead to adding to pantry.");
 
-        // store top breakfast foods in lists
+        // Store top breakfast foods in lists
         List<FoodType> firstBreakfast = new ArrayList<FoodType>();
         List<FoodType> secondBreakfast = new ArrayList<FoodType>();
         List<FoodType> thirdBreakfast = new ArrayList<FoodType>();
@@ -207,7 +207,7 @@ public class Player extends menu.sim.Player {
                     simPrinter.println("Iterating through " + name + "'s lunch order and adding to pantry.");
             }
         }
-
+        
         // Add breakfast to shopping list
         for (FoodType firstFood : firstBreakfast) {
             for (int count = 0; count < Math.round(numBreakfastFoods/familyMembers.size()); count++) {
@@ -224,9 +224,8 @@ public class Player extends menu.sim.Player {
                 shoppingList.addToOrder(thirdFood);
             }
         }
-
-
-        // get the available from pantry
+        
+        // Get the available from pantry
         HashMap<FoodType, Integer> availableMap = new HashMap<FoodType, Integer>();
         List<FoodType> availableFoods = pantry.getAvailableFoodTypes(MealType.DINNER);
         for (FoodType availableFood: availableFoods) {
@@ -257,7 +256,6 @@ public class Player extends menu.sim.Player {
             }
         }
 
-       
         /*
         int count = 0; 
         while (numDinnerFoods - numIncluded > 0) {
