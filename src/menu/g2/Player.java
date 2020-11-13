@@ -227,12 +227,13 @@ public class Player extends menu.sim.Player {
 		calculateLunchRanks();
 		calculateDinnerRanks();
 		Planner sim = runSimulation();
-		calculateBreakfastShoppingList();
+
+		calculateBreakfastShoppingList(sim);
 
 		// System.out.println("HERE");
 
-		calculateLunchShoppingList();
-		calculateDinnerShoppingList();
+		calculateLunchShoppingList(sim);
+		calculateDinnerShoppingList(sim);
 
 		if (Player.hasValidShoppingList(this.shoppingList, this.pantry.getNumEmptySlots())) {
 			return this.shoppingList;
@@ -240,10 +241,43 @@ public class Player extends menu.sim.Player {
 		return new ShoppingList();
 	}
 
-	////// TODO: For Friday, Scott, Aum
-	private void calculateBreakfastShoppingList() {
-		for (FamilyMember member : this.familyMembers) {
-			for (int i = 0; i < this.shoppingQuantities.get(0) / this.familyMembers.size(); i++)
+	
+	//////TODO: For Friday, Scott, Aum
+	//////ideal pantry*# weeks pantry can fit - what's already in pantry
+	private void calculateBreakfastShoppingList(Planner sim) {
+
+		double pantryWeeksSize = (double) pantrySize/(double) (numFamilyMembers*21);
+
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for(FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredTotal - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+
+		//desired
+		for(FoodType foodType : totalFoodFreqs.keySet()) {
+			for(int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		//backups
+
+		
+		
+		/*for (FamilyMember member : this.familyMembers) {
+			for (int i = 0; i < this.shoppingQuantities.get(0)/this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(0));
 		}
 
@@ -255,12 +289,44 @@ public class Player extends menu.sim.Player {
 			for (int i = 0; i < this.shoppingQuantities.get(0) / this.familyMembers.size(); i++)
 				this.shoppingList.addToOrder(this.breakfastRanks.get(member).get(2));
 
-		}
+		}*/
 	}
+  
+	//////TODO: For Friday, Scott, Aum
+	private void calculateLunchShoppingList(Planner sim) {
 
-	////// TODO: For Friday, Scott, Aum
-	private void calculateLunchShoppingList() {
-		int quantity = (int) Math.max(7, this.shoppingQuantities.get(1) / this.familyMembers.size());
+		double pantryWeeksSize = (double) pantrySize/(double) (numFamilyMembers*21);
+
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for(FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredTotal - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+
+		//desired
+		for(FoodType foodType : totalFoodFreqs.keySet()) {
+			for(int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		//backups
+		//if pantry size is under a certain threshold, add backups
+		
+
+
+		/*int quantity = (int) Math.max(7, this.shoppingQuantities.get(1)/this.familyMembers.size());
 		for (FamilyMember member : this.familyMembers) {
 
 			// System.out.println(this.lunchRanks.get(member).toString());
@@ -285,12 +351,41 @@ public class Player extends menu.sim.Player {
 			for (int i = 0; i < quantity; i++)
 				this.shoppingList.addToOrder(this.lunchRanks.get(member).get(4));
 
-		}
+		}*/
 	}
 
-	////// TODO: For Friday, Scott, Aum
-	private void calculateDinnerShoppingList() {
-		int quantity = (int) Math.max(7 * this.familyMembers.size(), this.shoppingQuantities.get(2) / 1.6);
+	//////TODO: For Friday, Scott, Aum
+	private void calculateDinnerShoppingList(Planner sim) {
+
+		double pantryWeeksSize = (double) pantrySize/(double) (numFamilyMembers*21);
+
+		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
+
+		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+		for(FoodType foodType : foodFreqs.keySet()) {
+			int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+			int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+			int difference = desiredTotal - currentAmount;
+
+			totalFoodFreqs.put(foodType, difference);
+		}
+
+
+		//desired
+		for(FoodType foodType : totalFoodFreqs.keySet()) {
+			for(int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+				this.shoppingList.addToOrder(foodType);
+			}
+		}
+
+		//backups
+		
+		/*int quantity = (int) Math.max(7*this.familyMembers.size(), this.shoppingQuantities.get(2)/1.6);
 		for (int i = 0; i < quantity; i++)
 			shoppingList.addToOrder(this.dinnerRanks.get(0));
 		for (int i = 0; i < quantity; i++)
@@ -301,8 +396,33 @@ public class Player extends menu.sim.Player {
 			shoppingList.addToOrder(this.dinnerRanks.get(3));
 
 		for (int i = 0; i < quantity; i++)
-			shoppingList.addToOrder(this.dinnerRanks.get(4));
+			shoppingList.addToOrder(this.dinnerRanks.get(4));*/
 
+	}
+
+	HashMap<FoodType, Integer> findFreqsFromPlanner(Planner sim, MealType mealType) {
+		Map<Day, Map<MemberName, Map<MealType, FoodType>>> idealPlan = sim.getPlan();
+
+		HashMap<FoodType, Integer> foodFreqs = new HashMap<>();
+
+		for(Day day : idealPlan.keySet()) {
+			for(MemberName member : idealPlan.get(day).keySet()) {
+				FoodType meal = idealPlan.get(day).get(member).get(mealType);
+
+				//if food already encountered, add 1
+				if(foodFreqs.containsKey(meal)) {
+					int freq = foodFreqs.get(meal);
+					foodFreqs.put(meal, freq+1);
+				}
+
+				//otherwise make it one
+				else {
+					foodFreqs.put(meal, 1);
+				}
+			}
+		}
+
+		return foodFreqs;
 	}
 
 	private void calculateBreakfastRanks() {
