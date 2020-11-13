@@ -1,4 +1,4 @@
-package menu.g1;
+package menu.gt;
 
 import java.text.BreakIterator;
 import java.util.*;
@@ -65,8 +65,8 @@ public class Player extends menu.sim.Player {
 
 		ShoppingList shoppingList = new ShoppingList();
 		shopBreakfast(week, shoppingList, pantry, familyMembers);
-		//shopLunch(shoppingList, pantry);
-		shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
+		shopLunch(shoppingList, pantry);
+		//shopLunch2(week, familyMembers, shoppingList, pantry, mealHistory);
 		shopDinner(shoppingList, pantry);
 
 		return shoppingList;
