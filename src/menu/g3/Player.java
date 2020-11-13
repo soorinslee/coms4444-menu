@@ -91,8 +91,8 @@ public class Player extends menu.sim.Player {
         int numMeals = (int)(numEmptySlots / 3);
 
         // new greedy approach 
-        // LOOK: >= or >? 
-        if (numEmptySlots >= familyMembers.size()*105) {
+        // LOOK: >= or > ? 
+        /*if (numEmptySlots >= familyMembers.size()*105) {
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
             shoppingList.addLimit(MealType.LUNCH, numMeals);
             shoppingList.addLimit(MealType.DINNER, numMeals);
@@ -102,10 +102,10 @@ public class Player extends menu.sim.Player {
                     shoppingList.addToOrder(foo);
                 }
             }
-        }
+        }*/
         
         // old greedy approach, buying multiples of everything
-        else if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
+        if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
             numMeals = familyMembers.size() * 52;
         
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
