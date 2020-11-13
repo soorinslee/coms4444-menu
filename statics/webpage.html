@@ -235,6 +235,8 @@
       var allResultsMap = {};
       var discreteCurrentWeek = "week_1";
 
+      var alerted = false;
+
       var days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 
       var memberImageMap = {
@@ -244,7 +246,7 @@
           "PAM": "pam.jpg",
           "ANDY": "andy.jpg",
           "RYAN": "ryan.jpg",
-          "ANGELA": "anglea.jpg",
+          "ANGELA": "angela.jpg",
           "KEVIN": "kevin.jpg",
           "STANLEY": "stanley.jpg",
           "PHYLLIS": "phyllis.jpg",
@@ -672,25 +674,29 @@
           var currentWeek = result.currentWeek;
           var totalWeeks = result.totalWeeks;
 
-          createWeeklyMealsGrid(result);
-          createPantry(result.newPantry, "newBreakfastPantryGrid", "newLunchPantryGrid", "newDinnerPantryGrid");
-          createPantry(result.oldPantry, "oldBreakfastPantryGrid", "oldLunchPantryGrid", "oldDinnerPantryGrid");
-          createShop(result);
-          createLegend(result);
+          if(!alerted) {
+            createWeeklyMealsGrid(result);
+            createPantry(result.newPantry, "newBreakfastPantryGrid", "newLunchPantryGrid", "newDinnerPantryGrid");
+            createPantry(result.oldPantry, "oldBreakfastPantryGrid", "oldLunchPantryGrid", "oldDinnerPantryGrid");
+            createShop(result);
+            createLegend(result);
 
-          var weekElement = document.getElementById('week');
-          weekElement.innerHTML = `Week: ${currentWeek}/${totalWeeks}`;
+            var weekElement = document.getElementById('week');
+            weekElement.innerHTML = `Week: ${currentWeek}/${totalWeeks}`;
 
-          var leastAverageSatisfaction = result.leastAverageSatisfaction;
-          var leastSatisfiedMember = result.leastSatisfiedMember;
-          leastSatisfiedMember = leastSatisfiedMember.charAt(0) + leastSatisfiedMember.slice(1).toLowerCase();
+            var leastAverageSatisfaction = result.leastAverageSatisfaction;
+            var leastSatisfiedMember = result.leastSatisfiedMember;
+            leastSatisfiedMember = leastSatisfiedMember.charAt(0) + leastSatisfiedMember.slice(1).toLowerCase();
 
-          weekElement.innerHTML = `
-              Week: ${currentWeek}/${totalWeeks}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${leastAverageSatisfaction}</br>Least satisfied member: ${leastSatisfiedMember}
-          `;
+            weekElement.innerHTML = `
+                Week: ${currentWeek}/${totalWeeks}</br></br>Total pantry capacity: ${result.capacity}</br>Family members: ${result.numMembers}</br>Empty slots left in pantry: ${result.numEmptySlots}</br></br>Least average satisfaction: ${leastAverageSatisfaction}</br>Least satisfied member: ${leastSatisfiedMember}
+            `;
+          }
 
-          if(currentWeek == totalWeeks)
-              alert(`The average satisfaction of the least satisfied member, ${leastSatisfiedMember}, is ${leastAverageSatisfaction}!`);
+          if(currentWeek == totalWeeks && !alerted) {
+              alerted = true;
+              alert(`The average satisfaction of the least satisfied member, ${leastSatisfiedMember}, is ${leastAverageSatisfaction}!`)           
+          }
 
           return refresh;
       }
