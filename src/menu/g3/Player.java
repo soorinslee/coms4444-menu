@@ -444,7 +444,7 @@ public class Player extends menu.sim.Player {
                 }
                 else{
                     if (i>4) {
-                        if (dinnerArray.get(famMem.get(0)).get(covDinner.get(i+4).ordinal()-20) > threshold){
+                        if (dinnerArray.get(famMem.get(0)).get(covDinner.get(i+6).ordinal()-20) > threshold){
                             for(MemberName fm : famMem){
                                 dinnerList.add(covDinner.get(i+6));
                             }
