@@ -245,12 +245,19 @@ public class Player extends menu.sim.Player {
 
 		// Add more lunch and dinner items to the list to avoid missing items
 		MemberName leastHappy = familyMembers.get(0).getName();
-		
+
 		double lowestSatisfaction = Double.MAX_VALUE;
 		for (FamilyMember member : familyMembers) {
 			if (satisfactionByMember.get(member.getName()) < lowestSatisfaction) {
 				leastHappy = member.getName();
 				lowestSatisfaction = satisfactionByMember.get(leastHappy);
+			}
+		}
+
+		for (int i = 0; i < BREAKFAST_TYPES; i++) {
+			FoodType foodType = sortedBreakfastPreferences.get(leastHappy).get(i).food;
+			for (int j = 0; j < familyMembers.size(); j++) {
+				shoppingList.addToOrder(foodType);
 			}
 		}
 
