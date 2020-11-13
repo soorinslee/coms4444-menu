@@ -56,8 +56,8 @@ public class Player extends menu.sim.Player {
     public ShoppingList stockPantry(Integer week, Integer numEmptySlots, List<FamilyMember> familyMembers, Pantry pantry, MealHistory mealHistory) {
 
         // 1/4 capacity to breakfast and lunch and rest to dinner
-        int numBreakfastFoods = Math.round(super.capacity/4) - numInPantry(MealType.BREAKFAST, pantry);
-    	int numLunchFoods = Math.round(super.capacity/4) - numInPantry(MealType.LUNCH, pantry);
+        int numBreakfastFoods = Math.round(super.capacity/3) - numInPantry(MealType.BREAKFAST, pantry);
+    	int numLunchFoods = Math.round(super.capacity/3) - numInPantry(MealType.LUNCH, pantry);
     	int numDinnerFoods = numEmptySlots - numBreakfastFoods - numLunchFoods;
 
         ShoppingList shoppingList = new ShoppingList();
@@ -173,21 +173,18 @@ public class Player extends menu.sim.Player {
         }
 
         // Add breakfast to shopping list
-        // 14 of first choice
-        // 7 of second choice
-        // 7 of third choice
         for (FoodType firstFood : firstBreakfast) {
-            for (int count = 0; count < Math.round(numBreakfastFoods/3); count++) {
+            for (int count = 0; count < Math.round(numBreakfastFoods/familyMembers.size()); count++) {
                 shoppingList.addToOrder(firstFood);
             }
         }
         for (FoodType secondFood : secondBreakfast) {
-            for (int count = 0; count < 7; count++) {
+            for (int count = 0; count < familyMembers.size()*4; count++) {
                 shoppingList.addToOrder(secondFood);
             }
         }
         for (FoodType thirdFood : thirdBreakfast) {
-            for (int count = 0; count < 7; count++) {
+            for (int count = 0; count < familyMembers.size()*4; count++) {
                 shoppingList.addToOrder(thirdFood);
             }
         }
@@ -221,6 +218,7 @@ public class Player extends menu.sim.Player {
             }
         }
 
+        /*
         int count = 0; 
         while (numDinnerFoods - numIncluded > familyMembers.size()) {
             for (Map.Entry<Double, FoodType> f: this.allMemberRewardToFood.entrySet()) {
@@ -230,6 +228,17 @@ public class Player extends menu.sim.Player {
                 }
             }
         }
+        */
+        
+        // Add extra dinner foods
+        for (int count = 0; count < familyMembers.size()*3; count++) {
+            for (FoodType foodType: dinnerCycle) {
+                for (FamilyMember member : familyMembers) {
+                    shoppingList.addToOrder(foodType);
+                }
+            }
+        }
+        
 
         // simPrinter.println(optimalDinnerCycle);
         // TODO: Add 7 dinner cycle
@@ -646,10 +655,15 @@ public class Player extends menu.sim.Player {
         for (Map.Entry<FoodType, Double> entry: availableFoodsToReward.entrySet()) {
             availableRewardToFood.put(entry.getValue(), entry.getKey());
         }
+        simPrinter.println("Checkpoint");
+        simPrinter.println(availableRewardToFood.keySet().size());
 
         List<FoodType> cycle = new LinkedList<FoodType>();
         List<FoodType> result = new LinkedList<FoodType>();
+
         if (!availableRewardToFood.isEmpty()) {
+            simPrinter.println("Checkpoint 2");
+
             double greatestValue = -availableRewardToFood.firstKey();
             for (Map.Entry<Double, FoodType> entry : availableRewardToFood.entrySet()) {
                 FoodType food = entry.getValue();
@@ -699,7 +713,8 @@ public class Player extends menu.sim.Player {
             for (FoodType food: availableFoodsCopy.keySet()) {
                 sum += availableFoodsCopy.get(food); 
             }
-            
+            simPrinter.println("Checkpoint");
+            simPrinter.println(result);
             if (result.size() + sum < 7) {
                 for (FoodType food: availableFoodsCopy.keySet()) {
                     if (result.size() == 7) {
@@ -727,7 +742,8 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-
+            simPrinter.println("Checkpoint");
+            simPrinter.println(result);
             return result;
         }
         return result;
@@ -756,7 +772,7 @@ public class Player extends menu.sim.Player {
         HashMap<FoodType, Integer> availableMap = new HashMap<FoodType, Integer>();
         List<FoodType> availableFoods = pantry.getAvailableFoodTypes(MealType.DINNER);
         for (FoodType availableFood: availableFoods) {
-            if (food.isDinnerType(availableFood) && pantry.getNumAvailableMeals(availableFood) > familyMembers.size()) {
+            if (food.isDinnerType(availableFood) && pantry.getNumAvailableMeals(availableFood) >= familyMembers.size()) {
                 availableMap.put(availableFood, pantry.getNumAvailableMeals(availableFood)/familyMembers.size());
             }
         }
