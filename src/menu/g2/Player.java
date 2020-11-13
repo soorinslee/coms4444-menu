@@ -370,7 +370,7 @@ public class Player extends menu.sim.Player {
 			return;
 		}
 		this.squeakyFamilyMembers = new ArrayList<>();
-		Map<MemberName, Double> satisfactions = this.mealHistory.getAllSatisfactions().get(this.week - 1);
+		Map<MemberName, Double> satisfactions = this.mealHistory.getAllAverageSatisfactions().get(this.week - 1);
 		// System.out.println("SATS" + satisfactions.toString());
 		List<MemberName> squeakyNames = sortBySatisfaction(satisfactions);
 		// System.out.println("Here");
@@ -378,6 +378,7 @@ public class Player extends menu.sim.Player {
 			for (FamilyMember f : this.familyMembers) {
 				if (f.getName().equals(memberName)) {
 					this.squeakyFamilyMembers.add(f);
+					// System.out.println(f.getSatisfaction());
 				}
 			}
 		}
