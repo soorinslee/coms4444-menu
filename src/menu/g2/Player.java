@@ -33,42 +33,6 @@ public class Player extends menu.sim.Player {
 
 	private List<FamilyMember> squeakyFamilyMembers;
 
-	// for tomorrow:
-	// Aum
-	// todo: add more backups to shopping list (should always feed everyone)
-	// Scott
-	// lunch alloc ranks
-	// change alloc to reference the alloc ranks (shouldn't always repeat meals)
-
-	// Ahad
-	// dinner alloc ranks
-
-	// for friday:
-	// todo: new squeakyFamilyMembers
-	// how far should meal history go back?
-	// pantry partitioning dynamic (small, medium, large pantry sizes)
-
-	// actual todo list for friday:
-	// shopping list which foods
-	// shopping list, stocking up more for person who is least satisfied
-	// guarantee that everyone will always be fed, guarentee pantry will have at
-	// least #people*21
-
-	// plan ahead week
-	// plan ahead
-
-	//// todo: test ideal planner with targeting squeakiest
-	//// extremes: only look squeakiest for ideal planner
-	//// look at everyone's preferences
-
-	//// allocating first to lowest satisfied person
-
-	//// to do: stocking up for lowest x% of people
-
-	/// still buy what everyone wants, only stock up on lowest x squeakiest people
-
-	//// order what everyone wants, then do repeats for squeakiest people a lot
-
 	/**
 	 * Player constructor
 	 *
@@ -131,18 +95,13 @@ public class Player extends menu.sim.Player {
 			for (Day day : Day.values()) {
 				FoodType maxAvailableBreakfastMeal = getMaximumAvailableBreakfastSim(originalPantry, MealType.BREAKFAST,
 						member);
-				// System.out.println("sizeeee here is " +
-				// this.currentPlanner.getPlan().size());
 				currentPlanner.addMeal(day, member.getName(), MealType.BREAKFAST, maxAvailableBreakfastMeal);
 				FoodType maxAvailableLunchMeal = getMaximumAvailableLunchSim(originalPantry, MealType.LUNCH, member);
 				currentPlanner.addMeal(day, member.getName(), MealType.LUNCH, maxAvailableLunchMeal);
 			}
 		}
-		// System.out.println(this.currentPlanner.getPlan());
 		for (Day day : Day.values()) {
 			FoodType maxAvailableDinnerMeal = getMaximumAvailableDinnerSim(originalPantry, MealType.DINNER);
-			// System.out.println(maxAvailableDinnerMeal + " " +
-			// pantry.getNumAvailableMeals(maxAvailableDinnerMeal));
 			for (int i = 0; i < this.familyMembers.size(); i++) {
 				MemberName memberName = memberNames.get(i);
 				currentPlanner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
@@ -158,7 +117,6 @@ public class Player extends menu.sim.Player {
 
 	private FoodType getMaximumAvailableLunchSim(Pantry pantry, MealType mealType, FamilyMember member) {
 		this.lunchShopRanks = new HashMap<FamilyMember, List<FoodType>>();
-		// this.currentPlanner = new Planner();
 		updateShopSimLunch();
 		// System.out.println(this.lunchShopRanks.toString());
 		return this.lunchShopRanks.get(member).get(0);
