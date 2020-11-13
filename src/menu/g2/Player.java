@@ -134,7 +134,7 @@ public class Player extends menu.sim.Player {
 				currentPlanner.addMeal(day, memberName, MealType.DINNER, maxAvailableDinnerMeal);
 			}
 		}
-		System.out.println(this.currentPlanner.getPlan().toString());
+		//System.out.println(this.currentPlanner.getPlan().toString());
 		return currentPlanner;
 	}
 
