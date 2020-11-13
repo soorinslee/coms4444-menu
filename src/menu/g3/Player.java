@@ -278,6 +278,9 @@ public class Player extends menu.sim.Player {
 
     private List getLunchList(List<FamilyMember> familyMembers, boolean extra) {
         
+        /*1. things you want to keep repeating
+          2. dont repeat things you know, for those ones.*/
+
         List<FoodType> lunchList = new ArrayList<>();
         List<MemberName> famMem = getFamilyMembers(familySatisfaction);
 
@@ -297,6 +300,24 @@ public class Player extends menu.sim.Player {
             }
         }
 
+        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        for (int w=0; w<2; w++) {
+            for (int i=0; i<6; i++) {
+                for(MemberName fm : famMem){
+                    if (i==0){
+                        lunchList.add(covLunch.get(i));
+                        lunchList.add(covLunch.get(i+1));
+                        lunchList.add(covLunch.get(i+2));
+                        lunchList.add(covLunch.get(i+3));
+                        lunchList.add(covLunch.get(i+4));
+                    }
+                    else{
+                        lunchList.add(covLunch.get(i+4));
+                    }
+                }
+            }
+        } 
+/*
         List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         for (int i=0; i<6; i++) {
             for(MemberName fm : famMem){
@@ -318,13 +339,17 @@ public class Player extends menu.sim.Player {
                     lunchList.add(covLunch.get(i));
                 }
             }
-        }
+        }*/ 
 
         return lunchList;
 
     }
 
     private List getDinnerList(List<FamilyMember> familyMembers, boolean extra) {
+
+        /*1. things you want to keep repeating
+          2. dont repeat things you know, for those ones.
+          (should i always take out???) */
         
         List<FoodType> dinnerList = new ArrayList<>();
         List<MemberName> famMem = getFamilyMembers(familySatisfaction);
@@ -336,6 +361,40 @@ public class Player extends menu.sim.Player {
             }
         }
 
+        List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        for (int w=0; w<2; w++) {
+            for (int i=0; i<11; i++) {
+                if (i==0){
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+1));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+2));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+3));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+4));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+5));
+                    }
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+6));
+                    }
+                }
+                else{
+                    for(MemberName fm : famMem){
+                        dinnerList.add(covDinner.get(i+6));
+                    }
+                }
+            }
+        } 
+/*
         List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
         for (int i=0; i<11; i++) {
             if (i==0){
@@ -365,7 +424,7 @@ public class Player extends menu.sim.Player {
                     dinnerList.add(covDinner.get(i));
                 }
             }
-        }
+        }*/
 
         // simPrinter.println(dinnerList);
         
@@ -568,7 +627,6 @@ public class Player extends menu.sim.Player {
             Double minSatisfaction = familySatisfaction.get(familyMemberOrder.get(0));
             Double maxSatisfaction = familySatisfaction.get(familyMemberOrder.get(familyMemberOrder.size() - 1));
             Double threshold = (maxSatisfaction - minSatisfaction) * percentile + minSatisfaction;
-
             Set<FoodType> restricted = new HashSet();
             */
 
@@ -592,7 +650,6 @@ public class Player extends menu.sim.Player {
                             System.out.println(week + " " + day + " " + Food.getAllFoodTypes().get(breakfastIndx));
                             restricted.add(Food.getAllFoodTypes().get(breakfastIndx));            
                         }
-
                         if (familySatisfaction.get(fam) >= threshold) {
                             if(restricted.contains(Food.getAllFoodTypes().get(breakfastIndx))){
                                 int num = pantry.getNumAvailableMeals(Food.getAllFoodTypes().get(breakfastIndx));
@@ -607,7 +664,8 @@ public class Player extends menu.sim.Player {
                             else {
                                 planner.addMeal(day, fam, MealType.BREAKFAST, Food.getAllFoodTypes().get(breakfastIndx));
                                 pantry.removeMealFromInventory(Food.getAllFoodTypes().get(breakfastIndx));
-                                breakfastList.put(fam,Food.getAllFoodTypes().get(breakfastIndx));
+                                breakfastList.put(fa
+                                m,Food.getAllFoodTypes().get(breakfastIndx));
                                 break;
                             }
                         }
@@ -1076,7 +1134,6 @@ family:
     java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m family.dat -C 105 -p 4 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_family.csv planners_family.csv pantries_family.csv satisfactions_family.csv
 sharon:
     java -cp .:menu/org.json.jar menu.sim.Simulator --team g3 -m sharonConfig.dat -C 84 -p 5 -w 52 -s 42 -l log.txt --gui -c -f 120 --export meals_sharon.csv planners_sharon.csv pantries_sharon.csv satisfactions_sharon.csv
-
 results from class:
 family.dat, 200 pantry size
     g3 13.47 fm5 
@@ -1084,28 +1141,22 @@ family.dat, 200 pantry size
     g4 11.21 fm4 
     g2 8.779 fm4
     g5 7.18  fm5
-
 sharonconfig.data
     g3 - 1.8561 fm2
     g1 - 1.814 fm2
     g4 - 1.571 fm2
     g2 - 1.4101 fm2
     g5 - 1.1465 fm2
-
 100,000 slots
     new implementation -- andy least satisfied @ 16.2449
     old implementation -- andy leasy satisfied @ 16.4487
-
 1050 slots, family.dat
     saving for 10 weeks: Andy 15.7116
     buffer over minimum purchases: Andy 15.8812
-
 840 slots, sharonConfig.dat
     saving for 10 weeks: Dwight 2.0022
     buffer over minimum purchases: Dwight 1.9987
-
 500 slots, sharonConfig.dat
     saving for max number of weeks: Dwight 2.0005
     buffer over minimum purchases: Dwight 1.9954
-
 */
