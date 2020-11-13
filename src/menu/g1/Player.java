@@ -107,6 +107,39 @@ public class Player extends menu.sim.Player {
 			}
 		}
 	}
+/*
+	private void shopLunch2(Integer week, List<FamilyMember> familyMembers, ShoppingList shoppingList, Pantry pantry, MealHistory mealHistory){
+
+		int numLunches = Food.getFoodTypes(MealType.LUNCH).length
+
+		List<MemberName> memberNames = new ArrayList<>();
+		List<FamilyMember> weightedPreferences = new ArrayList<>(familyMembers);
+
+		Map<MealType, List<MemberName>> memberPriorityList = new LinkedHashMap<>();
+		Map<MemberName, Map<MealType, Map<FoodType, Double>>> orderedFamilyPreferences = new HashMap<>();
+
+		for(FamilyMember familyMember : familyMembers)
+			memberNames.add(familyMember.getName());
+
+		Planner shoppingPlanner = new Planner(memberNames);
+		Pantry allLunchPantry = new Pantry(numLunches);
+
+		for (FoodType food : Food.getFoodTypes(MealType.LUNCH))
+			allLunchPantry.addMealToInventory(food);
+
+		for (Day day : Day.values())
+			for (MemberName memberName : ))
+		updateFamilyPreferenceMap(allLunchPantry, weightedPreferences, orderedFamilyPreferences);
+		updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
+
+		FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
+	
+		updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
+		updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
+
+
+	}
+	*/
 
 	private void shopDinner(ShoppingList shoppingList, Pantry pantry) {
 		Integer spotsOpen = calculateNewCapacityFor(MealType.DINNER, pantry);
@@ -262,15 +295,17 @@ public class Player extends menu.sim.Player {
 					planner.addMeal(day, memberName, MealType.BREAKFAST, food);
 					pantry.removeMealFromInventory(food);
 				}
+			}
+			for(MemberName memberName : memberPriorityList.get(MealType.LUNCH)){
 				if (pantry.getNumAvailableMeals(MealType.LUNCH) > 0){
 					updateLunchPreferences(week, day, memberName, planner, mealHistory, orderedFamilyPreferences);
 					FoodType food = getBestFood(MealType.LUNCH, memberName, orderedFamilyPreferences);
 					planner.addMeal(day, memberName, MealType.LUNCH, food);
 					pantry.removeMealFromInventory(food);
 				}
-				updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
-				updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			}
+			updateFamilyPreferenceMap(pantry, weightedPreferences, orderedFamilyPreferences);
+			updateMemberPriorityList(weightedPreferences, memberPriorityList, orderedFamilyPreferences);
 			
 		}
 
