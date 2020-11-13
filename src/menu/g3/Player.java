@@ -192,7 +192,7 @@ public class Player extends menu.sim.Player {
                     // 7 * n * 2nd most coveted breakfast - (7 * 2nd most coveted * number of times it appeared in ^^) - # of breakfast we have already 
                     // . . . for the top 6 breakfasts (ensures we get at least one breakfast) - # of breakfast we have already 
             boolean extra = true; 
-            if ((pantry.getNumEmptySlots()+pantry.getNumAvailableMeals()) == (familyMembers.size()*21)) {
+            if ((pantry.getNumEmptySlots()+pantry.getNumAvailableMeals()) < (familyMembers.size()* 21 + 21)) {
                 extra = false;
             }
 
@@ -283,6 +283,7 @@ public class Player extends menu.sim.Player {
 
         List<FoodType> lunchList = new ArrayList<>();
         List<MemberName> famMem = getFamilyMembers(familySatisfaction);
+        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
 
         for(MemberName fm : famMem){
             List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
@@ -292,6 +293,7 @@ public class Player extends menu.sim.Player {
         }
 
         
+
         if(extra){
             for(MemberName fm : famMem){
                 List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
@@ -299,10 +301,7 @@ public class Player extends menu.sim.Player {
                     lunchList.add(ft);
                 }
             }
-        }
-
-        /*List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
-        if(extra){
+        } else {
             for (int i=0; i<2; i++){
                 int cnt = 0;
                 for (FoodType food : covLunch){
@@ -317,10 +316,10 @@ public class Player extends menu.sim.Player {
                 }                
             }
 
-        }*/
+        }
 
 
-        List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        //List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         for (int w=0; w<2; w++) {
             for (int i=0; i<6; i++) {
                 for(MemberName fm : famMem){
@@ -336,7 +335,7 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-        } 
+        }
 /*
         List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         for (int i=0; i<6; i++) {
@@ -381,9 +380,9 @@ public class Player extends menu.sim.Player {
             }
         }
 
-        /*List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
-        extra = true;
-        if(extra){
+        List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        
+        if(!extra){ //if minimum pantry size, try increase varieties
             int cnt = 0;
             for (FoodType food : covDinner){
                 List<FoodType> leastSatisfiedCycle = bestCycles.get(MealType.DINNER).get(famMem.get(0));
@@ -397,9 +396,9 @@ public class Player extends menu.sim.Player {
                     }
                 }
             }
-        }*/
+        }
 
-        List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        //List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
         for (int w=0; w<2; w++) {
             for (int i=0; i<11; i++) {
                 if (i==0){
