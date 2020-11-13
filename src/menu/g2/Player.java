@@ -272,52 +272,86 @@ public class Player extends menu.sim.Player {
 	private void calculateBreakfastShoppingList(Planner sim) {
 
 		Map<Day, Map<MemberName, Map<MealType, FoodType>>> idealPlan = sim.getPlan();
-
-		//add what everyone wants once
 		double pantryWeeksSize = (double) pantrySize/(double) (numFamilyMembers*21);
 
-		HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
-
-		HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
-
-		for(FoodType foodType : foodFreqs.keySet()) {
-			int desiredFreqOneWeek = foodFreqs.get(foodType);
-
-			//int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
-
-			int currentAmount = this.pantry.getNumAvailableMeals(foodType);
-
-			int difference = desiredFreqOneWeek - currentAmount;
-
-			totalFoodFreqs.put(foodType, difference);
-		}
+		double smallCaseCutoff = 2;
+		//how many in small case to focus on
+		double topNFoods = 3;
+		double topNFoodsFreqDivisor = 2;
 
 
-		//desired
-		for(FoodType foodType : totalFoodFreqs.keySet()) {
-			for(int i = 0; i < totalFoodFreqs.get(foodType); i++) {
-				this.shoppingList.addToOrder(foodType);
-			}
-		}
-
-		double percentile = .3;
-		//repeat to fill pantry n-1 times
-		for(int repeats = 0; repeats < pantryWeeksSize; repeats++) {
-			for(int i = 0; i < Math.max(percentile*numFamilyMembers,1); i++) {
-				MemberName memberName = this.squeakyFamilyMembers.get(i).getName();
-
-				for(Day day: idealPlan.keySet()) {
-					FoodType foodType = idealPlan.get(day).get(memberName).get(MealType.BREAKFAST);
+		////small case: try to stockpile for pickiest eaters
+		/*if(pantryWeeksSize < smallCaseCutoff) {
+			//get top n foods for breakfast
+			MemberName memberName = squeakyFamilyMembers.get(0).getName();
+			System.out.println("here");
+			for(int i = 0; i < topNFoods; i++) {
+				System.out.println("i is " + i);
+				for(int j = 0; j < pantrySize/topNFoodsFreqDivisor; i++) {
+					System.out.println("j is " + j);
+					System.out.println("rank is " + breakfastShopRanks.get(memberName));
+					FoodType foodType = breakfastRanks.get(memberName).get(i);
 					this.shoppingList.addToOrder(foodType);
-				}	
+				}
 			}
+			System.out.println("here2");
+
+			////backups
+
 		}
 
-		System.out.println("shopping list is " + this.shoppingList.getMealOrder(MealType.BREAKFAST));
+		/////large case try to satisfy everyone, stockpile for pickiest eaters
+		else {*/
+
+			////Part 1: add what everyone wants once
+			HashMap<FoodType, Integer> foodFreqs = findFreqsFromPlanner(sim, MealType.BREAKFAST);
+
+			HashMap<FoodType, Integer> totalFoodFreqs = new HashMap<>();
+
+			for(FoodType foodType : foodFreqs.keySet()) {
+				int desiredFreqOneWeek = foodFreqs.get(foodType);
+
+				//int desiredTotal = (int) Math.ceil(pantryWeeksSize*desiredFreqOneWeek);
+
+				int currentAmount = this.pantry.getNumAvailableMeals(foodType);
+
+				int difference = desiredFreqOneWeek - currentAmount;
+
+				totalFoodFreqs.put(foodType, difference);
+			}
+
+
+			//desired
+			for(FoodType foodType : totalFoodFreqs.keySet()) {
+				for(int i = 0; i < totalFoodFreqs.get(foodType); i++) {
+					this.shoppingList.addToOrder(foodType);
+				}
+			}
+
+			///Part 2: stock up the rest of the pantry with the bottom 30% of pickiest people's preferences
+			double percentile = .3;
+			//repeat to fill pantry n-1 times
+			for(int repeats = 0; repeats < pantryWeeksSize; repeats++) {
+				for(int i = 0; i < Math.max(percentile*numFamilyMembers,1); i++) {
+					MemberName memberName = this.squeakyFamilyMembers.get(i).getName();
+
+					for(Day day: idealPlan.keySet()) {
+						FoodType foodType = idealPlan.get(day).get(memberName).get(MealType.BREAKFAST);
+						this.shoppingList.addToOrder(foodType);
+					}	
+				}
+			}
+
+
+			////part 3: backups: loop through the pickiest person's preferences, add .2*pantry/3 size for each value
+
+
+			System.out.println("shopping list is " + this.shoppingList.getMealOrder(MealType.BREAKFAST));
+		//}
 
 
 
-		///backups:
+		//////backups:
 
 		//add what everyone wants once
 		/*double pantryWeeksSize = (double) pantrySize/(double) (numFamilyMembers*21);
