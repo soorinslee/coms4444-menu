@@ -90,8 +90,7 @@ public class Player extends menu.sim.Player {
         ShoppingList shoppingList = new ShoppingList();
         int numMeals = (int)(numEmptySlots / 3);
 
-        // Set<FoodType> topFoodsUsed = new HashSet<>();
-        // HashMap<FoodType,Integer> numTopFoodsUsed = new HashMap<>();
+        // new greedy approach 
         // LOOK: >= or >? 
         if (numEmptySlots >= familyMembers.size()*105) {
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
@@ -104,14 +103,9 @@ public class Player extends menu.sim.Player {
                 }
             }
         }
-
-
-
-
-
         
-
-        if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
+        // old greedy approach, buying multiples of everything
+        else if (numEmptySlots > familyMembers.size() * 210) { // if you can save > 10 weeks
             numMeals = familyMembers.size() * 52;
         
             shoppingList.addLimit(MealType.BREAKFAST, numMeals);
