@@ -291,6 +291,7 @@ public class Player extends menu.sim.Player {
             }
         }
 
+        
         if(extra){
             for(MemberName fm : famMem){
                 List<FoodType> fav = bestCycles.get(MealType.LUNCH).get(fm);
@@ -299,6 +300,25 @@ public class Player extends menu.sim.Player {
                 }
             }
         }
+
+        /*List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
+        if(extra){
+            for (int i=0; i<2; i++){
+                int cnt = 0;
+                for (FoodType food : covLunch){
+                    List<FoodType> leastSatisfiedCycle = bestCycles.get(MealType.LUNCH).get(famMem.get(0));
+                    if (!leastSatisfiedCycle.contains(food)){
+                        lunchList.add(food);
+                        cnt += 1;
+                    }
+                    if (cnt == 7){
+                        break;
+                    }
+                }                
+            }
+
+        }*/
+
 
         List<FoodType> covLunch = covetedFoods.get(MealType.LUNCH);
         for (int w=0; w<2; w++) {
@@ -360,6 +380,24 @@ public class Player extends menu.sim.Player {
                 dinnerList.add(ft);
             }
         }
+
+        /*List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
+        extra = true;
+        if(extra){
+            int cnt = 0;
+            for (FoodType food : covDinner){
+                List<FoodType> leastSatisfiedCycle = bestCycles.get(MealType.DINNER).get(famMem.get(0));
+                if (!leastSatisfiedCycle.contains(food)){
+                    for (int n=0; n<familyMembers.size(); n++){
+                        dinnerList.add(food);
+                    }
+                    cnt += 1;
+                    if (cnt == 7){
+                        break;
+                    }
+                }
+            }
+        }*/
 
         List<FoodType> covDinner = covetedFoods.get(MealType.DINNER);
         for (int w=0; w<2; w++) {
