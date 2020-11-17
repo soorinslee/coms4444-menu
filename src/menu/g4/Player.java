@@ -296,12 +296,18 @@ public class Player extends menu.sim.Player {
         if (map.containsKey(-reward)) {
             List<FoodType> temp = map.get(-reward);
             temp.add(foodType);
-            map.put(-reward, temp);   // using -reward since TreeMap orders smallest->largest
+            if (reward == 0)
+                map.put(reward, temp);   // using -reward since TreeMap orders smallest->largest
+            else
+                map.put(-reward, temp);
         }
         else {
             List<FoodType> temp = new ArrayList<>();
             temp.add(foodType);
-            map.put(-reward, temp);
+            if (reward == 0)
+                map.put(reward, temp);   // using -reward since TreeMap orders smallest->largest
+            else
+                map.put(-reward, temp);
         }
     }
 
@@ -515,7 +521,7 @@ public class Player extends menu.sim.Player {
             for (FoodType food : availableFoodsCopy.keySet()) {
                 int count = availableFoodsCopy.get(food);
                 boolean notZeroValuedFood = foods.containsKey(0.0) && !foods.get(0.0).contains(food);
-                if (!foods.containsKey(0.0) && count > 0) {     // if there is still food left in pantry and no foods,
+                if (!foods.containsKey(0.0) && count > 0) {     // if there is still food left in pantry and no foods
                     stayInLoop = true;                          // with zero value, stay in loop
                     break;
                 }
@@ -525,6 +531,16 @@ public class Player extends menu.sim.Player {
                 }
             }
             cycle.addAll(temp);         // add the food to the overall cycle
+        }
+        // add zero-valued food to cycle if there is still space - clears out pantry
+        for (FoodType food : availableFoodsCopy.keySet()) {
+            int count = availableFoodsCopy.get(food);
+            boolean isZeroValuedFood = foods.containsKey(0.0) && foods.get(0.0).contains(food);
+            while (isZeroValuedFood && count > 0 && cycle.size() < 7) {
+                cycle.add(food);
+                availableFoodsCopy.put(food, availableFoodsCopy.get(food) - 1);
+                count = availableFoodsCopy.get(food);
+            }
         }
 
         return redistribute(cycle);
@@ -865,6 +881,8 @@ public class Player extends menu.sim.Player {
         availableFoods.put(FoodType.LUNCH6, 3); // in pantry, there are three LUNCH6
 
         List<FoodType> cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
         System.out.println(cycle);
 
         // TEST TWO - should print "[LUNCH1, LUNCH5, LUNCH6, LUNCH2, LUNCH1, LUNCH5, LUNCH1]"
@@ -900,6 +918,8 @@ public class Player extends menu.sim.Player {
         availableFoods.put(FoodType.LUNCH6, 3); // in pantry, there are three LUNCH6
 
         cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
         System.out.println(cycle);
 
         // TEST THREE - should print "[]"
@@ -907,6 +927,8 @@ public class Player extends menu.sim.Player {
         System.out.println("TEST THREE - should print []");
         availableFoods = new HashMap<>();
         cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
         System.out.println(cycle);
 
         // TEST FOUR - should print "[LUNCH1, LUNCH1, LUNCH1]"
@@ -915,11 +937,13 @@ public class Player extends menu.sim.Player {
         availableFoods = new HashMap<>();
         availableFoods.put(FoodType.LUNCH1, 3); // in pantry, there are three LUNCH1
         cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
         System.out.println(cycle);
 
-        // TEST FIVE - should print "[LUNCH3, LUNCH2, LUNCH1]"
+        // TEST FIVE - should print "[LUNCH6, LUNCH5, LUNCH3, LUNCH2, LUNCH1, LUNCH6]"
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        System.out.println("TEST FIVE - should print [LUNCH3, LUNCH2, LUNCH1]");
+        System.out.println("TEST FIVE - should print [LUNCH6, LUNCH5, LUNCH3, LUNCH2, LUNCH1, LUNCH6]");
         foods = new TreeMap<>();
         foods.put(-1.0, favorite);
         foods.put(-0.9, favorite2);
@@ -932,6 +956,108 @@ public class Player extends menu.sim.Player {
         availableFoods.put(FoodType.LUNCH3, 1);
         availableFoods.put(FoodType.LUNCH5, 1);
         availableFoods.put(FoodType.LUNCH6, 2);
+        cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
+        System.out.println(cycle);
+
+        // TEST SIX
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("TEST SIX");
+        foods = new TreeMap<>();
+        favorite = new ArrayList<>();
+        favorite.add(FoodType.LUNCH1);
+        favorite2 = new ArrayList<>();
+        favorite2.add(FoodType.LUNCH10);
+        favorite3 = new ArrayList<>();
+        favorite3.add(FoodType.LUNCH3);
+        favorite4 = new ArrayList<>();
+        favorite4.add(FoodType.LUNCH5);
+        favorite5 = new ArrayList<>();
+        favorite5.add(FoodType.LUNCH9);
+        List<FoodType> favorite6 = new ArrayList<>();
+        favorite6.add(FoodType.LUNCH7);
+        List<FoodType> favorite7 = new ArrayList<>();
+        favorite7.add(FoodType.LUNCH8);
+        List<FoodType> favorite8 = new ArrayList<>();
+        favorite8.add(FoodType.LUNCH2);
+        List<FoodType> favorite9 = new ArrayList<>();
+        favorite9.add(FoodType.LUNCH6);
+        List<FoodType> favorite10 = new ArrayList<>();
+        favorite10.add(FoodType.LUNCH4);
+        foods.put(-0.951, favorite);
+        foods.put(-0.948, favorite2);
+        foods.put(-0.866, favorite3);
+        foods.put(-0.679, favorite4);
+        foods.put(-0.619, favorite5);
+        foods.put(-0.451, favorite6);
+        foods.put(-0.278, favorite7);
+        foods.put(-0.195, favorite8);
+        foods.put(-0.192, favorite9);
+        foods.put(0.0, favorite10);
+        availableFoods = new HashMap<>();
+        availableFoods.put(FoodType.LUNCH1, 0);
+        availableFoods.put(FoodType.LUNCH2, 0);
+        availableFoods.put(FoodType.LUNCH3, 0);
+        availableFoods.put(FoodType.LUNCH4, 1);
+        availableFoods.put(FoodType.LUNCH5, 0);
+        availableFoods.put(FoodType.LUNCH6, 0);
+        availableFoods.put(FoodType.LUNCH7, 0);
+        availableFoods.put(FoodType.LUNCH8, 0);
+        availableFoods.put(FoodType.LUNCH9, 0);
+        availableFoods.put(FoodType.LUNCH10, 0);
+        cycle = player.getOptimalCycle(foods, availableFoods);
+        System.out.print("Food configuration: ");
+        System.out.println(foods);
+        System.out.print("Available foods: ");
+        System.out.println(availableFoods);
+        System.out.println(cycle);
+
+        // TEST SEVEN (RAHUL'S TEST)
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("TEST SEVEN - RAHUL'S TEST");
+        favorite = new ArrayList<>();
+        favorite.add(FoodType.LUNCH1);
+        favorite2 = new ArrayList<>();
+        favorite2.add(FoodType.LUNCH10);
+        favorite3 = new ArrayList<>();
+        favorite3.add(FoodType.LUNCH3);
+        favorite4 = new ArrayList<>();
+        favorite4.add(FoodType.LUNCH5);
+        favorite5 = new ArrayList<>();
+        favorite5.add(FoodType.LUNCH9);
+        favorite6 = new ArrayList<>();
+        favorite6.add(FoodType.LUNCH7);
+        favorite7 = new ArrayList<>();
+        favorite7.add(FoodType.LUNCH8);
+        favorite8 = new ArrayList<>();
+        favorite8.add(FoodType.LUNCH2);
+        favorite9 = new ArrayList<>();
+        favorite9.add(FoodType.LUNCH6);
+        favorite10 = new ArrayList<>();
+        favorite10.add(FoodType.LUNCH4);
+        foods = new TreeMap<>();
+        foods.put(-0.951, favorite);
+        foods.put(-0.948, favorite2);
+        foods.put(-0.866, favorite3);
+        foods.put(-0.679, favorite4);
+        foods.put(-0.619, favorite5);
+        foods.put(-0.451, favorite6);
+        foods.put(-0.278, favorite7);
+        foods.put(-0.195, favorite8);
+        foods.put(-0.192, favorite9);
+        foods.put(0.0, favorite10);
+        availableFoods = new HashMap<>();
+        availableFoods.put(FoodType.LUNCH6, 0);
+        availableFoods.put(FoodType.LUNCH7, 0);
+        availableFoods.put(FoodType.LUNCH9, 0);
+        availableFoods.put(FoodType.LUNCH4, 1);
+        availableFoods.put(FoodType.LUNCH2, 0);
+        availableFoods.put(FoodType.LUNCH3, 0);
+        availableFoods.put(FoodType.LUNCH8, 0);
+        availableFoods.put(FoodType.LUNCH10, 0);
+        availableFoods.put(FoodType.LUNCH5, 0);
+        availableFoods.put(FoodType.LUNCH1, 0);
         cycle = player.getOptimalCycle(foods, availableFoods);
         System.out.println(cycle);
 
