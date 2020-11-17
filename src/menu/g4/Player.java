@@ -109,14 +109,13 @@ public class Player extends menu.sim.Player {
                 TreeMap<Double, List<FoodType>> orderedBreakfastFoods = new TreeMap<>();
                 TreeMap<Double, List<FoodType>> orderedLunchFoods = new TreeMap<>();
                 Map<FoodType, Double> foods = member.getFoodPreferenceMap();
-
                 for (Map.Entry<FoodType, Double> f : foods.entrySet()) {
                     FoodType foodType = f.getKey();
                     Double reward = f.getValue();
                     if (food.isBreakfastType(foodType)) {
                         addFoods(orderedBreakfastFoods, reward, foodType);
                     } else if (food.isLunchType(foodType)) {
-                        addFoods2(orderedLunchFoods, reward, foodType);
+                        addFoods(orderedLunchFoods, reward, foodType);
                     }
                 }
 
@@ -344,40 +343,29 @@ public class Player extends menu.sim.Player {
      *
      */
     private void addFoods(TreeMap<Double, List<FoodType>> map, Double reward, FoodType foodType) {
-        if (map.containsKey(-reward)) {
-            List<FoodType> temp = map.get(-reward);
-            temp.add(foodType);
-            if (reward == 0)
-                map.put(reward, temp);   // using -reward since TreeMap orders smallest->largest
-            else
-                map.put(-reward, temp);
+        if (reward == 0.0) {
+            if (map.containsKey(0.0)) {
+                List<FoodType> temp =  map.get(0.0);
+                temp.add(foodType);
+                map.put(0.0, temp);
+            }
+            else {
+                List<FoodType> temp = new ArrayList<>();
+                temp.add(foodType);
+                map.put(0.0, temp);
+            }
         }
         else {
-            List<FoodType> temp = new ArrayList<>();
-            temp.add(foodType);
-            if (reward == 0)
-                map.put(reward, temp);   // using -reward since TreeMap orders smallest->largest
-            else
+            if (map.containsKey(-reward)) {
+                List<FoodType> temp =  map.get(-reward);
+                temp.add(foodType);
                 map.put(-reward, temp);
-        }
-    }
-
-    private void addFoods2(TreeMap<Double, List<FoodType>> map, Double reward, FoodType foodType) {
-        if (map.containsKey(-reward)) {
-            List<FoodType> temp = map.get(-reward);
-            temp.add(foodType);
-            if (reward == 0)
-                map.put(reward, temp);
-            else
-                map.put(-reward, temp);      // using -reward since TreeMap orders smallest->largest
-        }
-        else {
-            List<FoodType> temp = new ArrayList<>();
-            temp.add(foodType);
-            if (reward == 0)
-                map.put(reward, temp);
-            else
+            }
+            else {
+                List<FoodType> temp = new ArrayList<>();
+                temp.add(foodType);
                 map.put(-reward, temp);
+            }
         }
     }
 
@@ -1184,15 +1172,15 @@ public class Player extends menu.sim.Player {
         favorite4.add(FoodType.LUNCH5);
         favorite5 = new ArrayList<>();
         favorite5.add(FoodType.LUNCH9);
-        List<FoodType> favorite6 = new ArrayList<>();
+        favorite6 = new ArrayList<>();
         favorite6.add(FoodType.LUNCH7);
-        List<FoodType> favorite7 = new ArrayList<>();
+        favorite7 = new ArrayList<>();
         favorite7.add(FoodType.LUNCH8);
-        List<FoodType> favorite8 = new ArrayList<>();
+        favorite8 = new ArrayList<>();
         favorite8.add(FoodType.LUNCH2);
-        List<FoodType> favorite9 = new ArrayList<>();
+        favorite9 = new ArrayList<>();
         favorite9.add(FoodType.LUNCH6);
-        List<FoodType> favorite10 = new ArrayList<>();
+        favorite10 = new ArrayList<>();
         favorite10.add(FoodType.LUNCH4);
 
         foods = new TreeMap<>();
