@@ -48,7 +48,8 @@ public class Weighter {
         else {
             for (FamilyMember member : familyMembers) {
                 Double avgSat = mealHistory.getAverageSatisfaction(week - 1, member.getName());
-                Double weight = DEFAULT_SCALE / (avgSat * avgSat);
+                //Double weight = DEFAULT_SCALE / (avgSat * avgSat);
+                Double weight = DEFAULT_SCALE / Math.pow(avgSat,50);
                 memberWeights.put(member, weight);
             }
         }

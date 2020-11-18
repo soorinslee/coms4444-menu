@@ -3,7 +3,8 @@
 .idea*
 *.im
 *.iml
-
+*/.DS_Store
+src/configs/.DS_Store
 # Class files
 *.class
 src/*.class
